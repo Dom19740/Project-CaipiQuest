@@ -2,21 +2,17 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom"; // Removed Navigate
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Lobby from "./pages/Lobby";
+import FruitSelection from "./pages/FruitSelection"; // New import
 import GameRoom from "./pages/GameRoom";
-import { useSession } from "./components/SessionContextProvider"; // Still needed for user.id
+import { useSession } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
 
-// Removed ProtectedRoute component as login is no longer enforced
-
 const App = () => {
-  // We still need useSession to get the user.id for database operations,
-  // even if we're not forcing an explicit login flow.
-  // Supabase will provide an anonymous user.id if no user is logged in.
   const { isLoading } = useSession();
 
   if (isLoading) {
@@ -35,7 +31,8 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/lobby" element={<Lobby />} /> {/* Lobby is now directly accessible */}
+            <Route path="/lobby" element={<Lobby />} />
+            <Route path="/select-fruits" element={<FruitSelection />} /> {/* New route */}
             <Route path="/game/:roomId" element={<GameRoom />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

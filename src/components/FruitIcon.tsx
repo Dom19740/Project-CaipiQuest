@@ -1,24 +1,29 @@
 import React from 'react';
 
 interface FruitIconProps {
-  fruit: string;
+  fruit: string; // This will be the English name
   size?: 'sm' | 'md' | 'lg';
+  showPortuguese?: boolean; // New prop to show Portuguese name
 }
 
-const fruitEmojis: { [key: string]: string } = {
-  passionfruit: '💜', // Updated to purple heart
-  lemon: '🍋',
-  strawberry: '🍓',
-  mango: '🥭',
-  lime: '🟢', // Using green circle for lime to distinguish from lemon
-  pineapple: '🍍',
-  pitaya: '🐉', // Using dragon emoji for pitaya (dragon fruit)
-  plum: '🟣', // Updated to purple circle
-  ginger: '🌳', // Using tree emoji as a placeholder for ginger
+const fruitData: { [key: string]: { emoji: string; portuguese: string } } = {
+  lime: { emoji: '🟢', portuguese: 'Limão' },
+  passionfruit: { emoji: '💜', portuguese: 'Maracujá' },
+  lemon: { emoji: '🍋', portuguese: 'Limão Siciliano' },
+  strawberry: { emoji: '🍓', portuguese: 'Morango' },
+  mango: { emoji: '🥭', portuguese: 'Manga' },
+  pineapple: { emoji: '🍍', portuguese: 'Abacaxi' },
+  dragonfruit: { emoji: '🐉', portuguese: 'Pitaya' },
+  plum: { emoji: '🟣', portuguese: 'Ameixa' },
+  ginger: { emoji: '🌳', portuguese: 'Gengibre' },
+  banana: { emoji: '🍌', portuguese: 'Banana' },
+  kiwi: { emoji: '🥝', portuguese: 'Kiwi' },
 };
 
-const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
-  const emoji = fruitEmojis[fruit.toLowerCase()] || '❓';
+const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md', showPortuguese = false }) => {
+  const data = fruitData[fruit.toLowerCase()];
+  const emoji = data?.emoji || '❓';
+
   const sizeClasses = {
     sm: 'text-xl',
     md: 'text-2xl',
@@ -26,8 +31,8 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   };
 
   return (
-    <span className={`inline-block ${sizeClasses[size]}`} role="img" aria-label={fruit}>
-      {emoji}
+    <span className={`inline-flex items-center ${sizeClasses[size]}`} role="img" aria-label={fruit}>
+      {emoji} {showPortuguese && <span className="ml-2 text-base">{data?.portuguese}</span>}
     </span>
   );
 };

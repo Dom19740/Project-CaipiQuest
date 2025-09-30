@@ -76,16 +76,9 @@ const Lobby: React.FC = () => {
       if (roomError) throw roomError;
       console.log("Lobby - Room created:", roomData);
 
-      // Create initial game state for the creator
-      const { error: gameStateError } = await supabase
-        .from('game_states')
-        .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)) });
-
-      if (gameStateError) throw gameStateError;
-      console.log("Lobby - Initial game state created for creator.");
-
+      // No longer creating game state here, it will be done after fruit selection
       showSuccess(`Room "${newRoomCode}" created!`);
-      navigate(`/game/${roomData.id}`);
+      navigate(`/select-fruits`, { state: { roomId: roomData.id } }); // Navigate to fruit selection
     } catch (error: any) {
       console.error('Lobby - Error creating room:', error.message);
       showError(`Failed to create room: ${error.message}`);
@@ -121,40 +114,9 @@ const Lobby: React.FC = () => {
       }
       console.log("Lobby - Found room:", roomData);
 
-      // Check if player already has a game state in this room
-      const { data: existingGameState, error: existingGameStateError } = await supabase
-        .from('game_states')
-        .select('id, player_name')
-        .eq('room_id', roomData.id)
-        .eq('player_id', user.id)
-        .single();
-
-      if (existingGameStateError && existingGameStateError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
-        console.error('Lobby - Error checking existing game state:', existingGameStateError.message);
-        throw existingGameStateError;
-      }
-      console.log("Lobby - Existing game state for player:", existingGameState);
-
-      if (!existingGameState) {
-        // Create initial game state for the joining player
-        const { error: gameStateError } = await supabase
-          .from('game_states')
-          .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)) });
-
-        if (gameStateError) throw gameStateError;
-        console.log("Lobby - New game state created for joining player.");
-      } else if (existingGameState.player_name !== playerName) {
-        // If game state exists but player name changed, update it
-        const { error: updatePlayerNameError } = await supabase
-          .from('game_states')
-          .update({ player_name: playerName, updated_at: new Date().toISOString() })
-          .eq('id', existingGameState.id);
-        if (updatePlayerNameError) console.error('Lobby - Error updating player name in game state:', updatePlayerNameError.message);
-        console.log("Lobby - Updated player name in existing game state.");
-      }
-
-      showSuccess(`Joined room "${roomCodeInput.toUpperCase()}"!`);
-      navigate(`/game/${roomData.id}`);
+      // No longer checking/creating game state here, it will be done after fruit selection
+      showSuccess(`Found room "${roomCodeInput.toUpperCase()}"!`);
+      navigate(`/select-fruits`, { state: { roomId: roomData.id } }); // Navigate to fruit selection
     } catch (error: any) {
       console.error('Lobby - Error joining room:', error.message);
       showError(`Failed to join room: ${error.message}`);
@@ -215,7 +177,7 @@ const Lobby: React.FC = () => {
                 value={roomCodeInput}
                 onChange={(e) => setRoomCodeInput(e.target.value)}
                 className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
-                disabled={isCreating || isJoining || !isSessionReady}
+                disabled={isCreating || isJoining || roomCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
               />
               <Button
                 onClick={handleJoinRoom}

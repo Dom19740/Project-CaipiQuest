@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
-const fruits = ['passionfruit', 'lemon', 'strawberry', 'mango', 'lime']; // Reduced to 5 fruits
-const NUM_PLAYABLE_CELLS = 5; // Changed from 9 to 5
+const NUM_PLAYABLE_CELLS = 5;
 const CSS_GRID_DIMENSION = NUM_PLAYABLE_CELLS + 1; // 6 total rows/columns for CSS grid (including labels)
+const CENTER_CELL_INDEX = Math.floor(NUM_PLAYABLE_CELLS / 2); // For a 5x5 grid, this is 2
 
 interface BingoGridProps {
   onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
   resetKey: number; // New prop to trigger reset
   initialGridState: boolean[][]; // Controlled state
   onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
+  selectedFruits: string[]; // New prop for selected fruits
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits }) => {
   const checkedCells = initialGridState;
   const completedBingosRef = useRef<Set<string>>(new Set());
 
@@ -86,12 +87,24 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Update the ref
     completedBingosRef.current = newCompletedBingos;
-  }, [checkedCells, onBingo]); // Only depend on checkedCells and onBingo
+  }, [checkedCells, onBingo]);
 
-  // This effect runs when initialGridState changes, triggering bingo check
   useEffect(() => {
     checkBingo();
-  }, [initialGridState, checkBingo]); // Depend on initialGridState and the memoized checkBingo
+  }, [initialGridState, checkBingo]);
+
+  // Ensure selectedFruits has 5 items, with 'lime' at index 2 for the center
+  const displayFruits = [...selectedFruits];
+  const limeIndex = displayFruits.indexOf('lime');
+  if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
+    // Swap lime to the center position if it's not already there
+    [displayFruits[CENTER_CELL_INDEX], displayFruits[limeIndex]] = [displayFruits[limeIndex], displayFruits[CENTER_CELL_INDEX]];
+  } else if (limeIndex === -1) {
+    // This case should ideally not happen if FruitSelection enforces 'lime'
+    console.warn("Lime not found in selected fruits, adding it to center.");
+    displayFruits[CENTER_CELL_INDEX] = 'lime';
+  }
+
 
   return (
     <div
@@ -105,7 +118,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       <div className="w-16 h-16 flex items-center justify-center"></div>
 
       {/* Top row labels */}
-      {fruits.map((fruit, index) => (
+      {displayFruits.map((fruit, index) => (
         <div key={`col-label-${index}`} className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
@@ -116,24 +129,31 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
           <div className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
-            <FruitIcon fruit={fruits[rowIndex]} size="lg" />
+            <FruitIcon fruit={displayFruits[rowIndex]} size="lg" />
           </div>
 
           {/* Playable cells */}
-          {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, colIndex) => (
-            <div
-              key={`cell-${rowIndex}-${colIndex}`}
-              className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm cursor-pointer transition-colors duration-200 border border-gray-200
-                ${checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300' : 'bg-white hover:bg-orange-50'}
-              `}
-              onClick={() => onCellToggle(rowIndex, colIndex)}
-            >
-              <div className="flex space-x-1 mb-1">
-                <FruitIcon fruit={fruits[rowIndex]} size="sm" />
-                <FruitIcon fruit={fruits[colIndex]} size="sm" />
+          {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, colIndex) => {
+            const isCenterCell = rowIndex === CENTER_CELL_INDEX && colIndex === CENTER_CELL_INDEX;
+            const fruit1 = displayFruits[rowIndex];
+            const fruit2 = displayFruits[colIndex];
+
+            return (
+              <div
+                key={`cell-${rowIndex}-${colIndex}`}
+                className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm transition-colors duration-200 border border-gray-200
+                  ${isCenterCell ? 'bg-lime-300 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300' : 'bg-white hover:bg-orange-50'}
+                `}
+                onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
+              >
+                <div className="flex space-x-1 mb-1">
+                  <FruitIcon fruit={fruit1} size="sm" />
+                  <FruitIcon fruit={fruit2} size="sm" />
+                </div>
+                {isCenterCell && <span className="text-xs font-bold text-lime-800">FREE</span>}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </React.Fragment>
       ))}
     </div>
