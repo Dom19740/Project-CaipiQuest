@@ -3,15 +3,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import FruitIcon from './FruitIcon';
 import { showSuccess } from '@/utils/toast';
 
-const fruits = ['lime', 'passionfruit', 'pineapple', 'mango', 'strawberry', 'cashew', 'ginger'];
-const GRID_SIZE = 7; // 1 for labels + 6 for playable cells
+const fruits = ['passionfruit', 'lemon', 'strawberry', 'mango', 'lime', 'pineapple', 'pitaya', 'plum', 'ginger'];
+const GRID_SIZE = 9; // 1 for labels + 8 for playable cells
 
 interface BingoGridProps {
   onBingo: (type: string) => void;
 }
 
 const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
-  // State to store the checked status of each playable cell (6x6 grid)
+  // State to store the checked status of each playable cell (8x8 grid)
   const [checkedCells, setCheckedCells] = useState<boolean[][]>(
     Array(GRID_SIZE - 1).fill(null).map(() => Array(GRID_SIZE - 1).fill(false))
   );
@@ -26,11 +26,10 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
   };
 
   const checkBingo = useCallback(() => {
-    const numRows = GRID_SIZE - 1;
-    const numCols = GRID_SIZE - 1;
+    const numPlayableCells = GRID_SIZE - 1;
 
     // Check rows
-    for (let i = 0; i < numRows; i++) {
+    for (let i = 0; i < numPlayableCells; i++) {
       if (checkedCells[i].every(cell => cell)) {
         onBingo(`row ${i + 1}`);
         return;
@@ -38,7 +37,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
     }
 
     // Check columns
-    for (let j = 0; j < numCols; j++) {
+    for (let j = 0; j < numPlayableCells; j++) {
       if (checkedCells.every(row => row[j])) {
         onBingo(`column ${j + 1}`);
         return;
@@ -46,13 +45,13 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
     }
 
     // Check main diagonal (top-left to bottom-right)
-    if (Array(numRows).fill(null).every((_, i) => checkedCells[i][i])) {
+    if (Array(numPlayableCells).fill(null).every((_, i) => checkedCells[i][i])) {
       onBingo('main diagonal');
       return;
     }
 
     // Check anti-diagonal (top-right to bottom-left)
-    if (Array(numRows).fill(null).every((_, i) => checkedCells[i][numCols - 1 - i])) {
+    if (Array(numPlayableCells).fill(null).every((_, i) => checkedCells[i][numPlayableCells - 1 - i])) {
       onBingo('anti-diagonal');
       return;
     }
