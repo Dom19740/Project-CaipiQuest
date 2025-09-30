@@ -215,18 +215,18 @@ const GameRoom: React.FC = () => {
           // Handle global bingo alerts
           if (updatedRoom.bingo_alerts) {
             setRoomBingoAlerts(prevRoomBingoAlerts => {
-              const newAlerts = (updatedRoom.bingo_alerts || []).filter(
-                (newAlert: BingoAlert) => !prevRoomBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
+              const incomingAlerts = updatedRoom.bingo_alerts || [];
+              // Trigger confetti only if there are truly new alerts compared to the previous state
+              const newAlertsForConfetti = incomingAlerts.filter(
+                (incomingAlert: BingoAlert) => !prevRoomBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
               );
 
-              if (newAlerts.length > 0) {
+              if (newAlertsForConfetti.length > 0) {
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 2000);
-                const combinedAlerts = [...newAlerts, ...prevRoomBingoAlerts];
-                console.log("Realtime - New bingo alerts from room:", combinedAlerts);
-                return combinedAlerts;
               }
-              return prevRoomBingoAlerts;
+              // Always update the state to the latest from the database
+              return incomingAlerts;
             });
           }
         }
@@ -302,7 +302,6 @@ const GameRoom: React.FC = () => {
 
     const { error: updateRoomAlertsError } = await supabase
       .from('rooms')
-      // Removed updated_at from here, as it defaults to NOW()
       .update({ bingo_alerts: updatedAlerts })
       .eq('id', roomId);
 
@@ -321,7 +320,6 @@ const GameRoom: React.FC = () => {
       .from('game_states')
       .update({
         grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)),
-        // Removed bingo_alerts: [] from here, as alerts are now global in the rooms table
         updated_at: new Date().toISOString(),
       })
       .eq('id', myGameStateId);
