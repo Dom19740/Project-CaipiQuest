@@ -84,6 +84,7 @@ const GameRoom: React.FC = () => {
   useEffect(() => {
     if (isLoading || !user || !roomId) {
       if (!isLoading && !user) {
+        console.warn("GameRoom - No user session or room ID, redirecting to lobby.");
         navigate('/lobby');
       }
       return;
@@ -99,7 +100,7 @@ const GameRoom: React.FC = () => {
 
       if (roomError) {
         showError('Failed to load room. It might not exist or you do not have access.');
-        console.error('Error fetching room:', roomError);
+        console.error('GameRoom - Error fetching room:', roomError);
         navigate('/lobby');
         return;
       }
@@ -113,7 +114,9 @@ const GameRoom: React.FC = () => {
 
       if (allGameStatesError) {
         showError('Failed to load game states for the room.');
-        console.error('Error fetching all game states:', allGameStatesError);
+        console.error('GameRoom - Error fetching all game states:', allGameStatesError);
+        // Log the full error object for detailed debugging
+        console.error('GameRoom - Full game states fetch error object:', JSON.stringify(allGameStatesError, null, 2));
         navigate('/lobby');
         return;
       }
@@ -133,7 +136,7 @@ const GameRoom: React.FC = () => {
 
       if (!myGameState) {
         showError('Your game state not found. Please try rejoining the room.');
-        console.error('My game state not found for user:', user.id, 'in room:', roomId);
+        console.error('GameRoom - My game state not found for user:', user.id, 'in room:', roomId);
         navigate('/lobby');
         return;
       }
