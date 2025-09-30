@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import FruitIcon from './FruitIcon';
-import { showSuccess } from '@/utils/toast';
 
 const fruits = ['passionfruit', 'lemon', 'strawberry', 'mango', 'lime', 'pineapple', 'pitaya', 'plum', 'ginger'];
 const NUM_PLAYABLE_CELLS = fruits.length; // 9 playable rows/columns
@@ -9,9 +7,10 @@ const CSS_GRID_DIMENSION = NUM_PLAYABLE_CELLS + 1; // 10 total rows/columns for 
 
 interface BingoGridProps {
   onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
+  resetKey: number; // New prop to trigger reset
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey }) => {
   // State to store the checked status of each playable cell (9x9 grid)
   const [checkedCells, setCheckedCells] = useState<boolean[][]>(() => {
     const initialGrid: boolean[][] = [];
@@ -23,6 +22,16 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
 
   // State to keep track of completed bingo lines to prevent duplicate alerts
   const [completedBingos, setCompletedBingos] = useState<Set<string>>(new Set());
+
+  // Effect to reset the grid when resetKey changes
+  useEffect(() => {
+    const initialGrid: boolean[][] = [];
+    for (let i = 0; i < NUM_PLAYABLE_CELLS; i++) {
+      initialGrid.push(Array(NUM_PLAYABLE_CELLS).fill(false));
+    }
+    setCheckedCells(initialGrid);
+    setCompletedBingos(new Set());
+  }, [resetKey]);
 
   const toggleCell = (row: number, col: number) => {
     setCheckedCells(prev => {
@@ -138,18 +147,16 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
           {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, colIndex) => (
             <div
               key={`cell-${rowIndex}-${colIndex}`}
-              className="w-16 h-16 flex flex-col items-center justify-center bg-white rounded-md shadow-sm cursor-pointer hover:bg-orange-50 transition-colors duration-200 border border-gray-200"
+              className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm cursor-pointer transition-colors duration-200 border border-gray-200
+                ${checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300' : 'bg-white hover:bg-orange-50'}
+              `}
               onClick={() => toggleCell(rowIndex, colIndex)}
             >
               <div className="flex space-x-1 mb-1">
                 <FruitIcon fruit={fruits[rowIndex]} size="sm" />
                 <FruitIcon fruit={fruits[colIndex]} size="sm" />
               </div>
-              <Checkbox
-                checked={checkedCells[rowIndex][colIndex]}
-                onCheckedChange={() => toggleCell(rowIndex, colIndex)}
-                className="w-4 h-4 border-lime-500 data-[state=checked]:bg-lime-500 data-[state=checked]:text-white"
-              />
+              {/* Checkbox removed */}
             </div>
           ))}
         </React.Fragment>

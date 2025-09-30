@@ -4,6 +4,18 @@ import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showSuccess } from '@/utils/toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Confetti from 'react-confetti';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface BingoAlert {
   id: string;
@@ -21,6 +33,7 @@ const CaipiQuest: React.FC = () => {
     initialVelocityX: { min: -5, max: 5 },
     initialVelocityY: { min: -10, max: -5 },
   });
+  const [resetKey, setResetKey] = useState(0); // State to trigger BingoGrid reset
 
   const handleBingo = (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => {
     showSuccess(message);
@@ -52,6 +65,11 @@ const CaipiQuest: React.FC = () => {
     }, type === 'fullGrid' ? 5000 : 2000); // Longer duration for full grid
   };
 
+  const handleResetGame = () => {
+    setResetKey(prev => prev + 1); // Increment key to force BingoGrid reset
+    setBingoAlerts([]); // Clear alerts in CaipiQuest
+  };
+
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
     switch (type) {
       case 'rowCol':
@@ -72,25 +90,46 @@ const CaipiQuest: React.FC = () => {
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <BingoGrid onBingo={handleBingo} />
-        <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
-          <CardHeader className="bg-lime-200 border-b border-lime-400">
-            <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            {bingoAlerts.length === 0 ? (
-              <p className="text-gray-600 italic">No bingo alerts yet...</p>
-            ) : (
-              <ul className="space-y-2">
-                {bingoAlerts.map((alert) => (
-                  <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
-                    {alert.message}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <BingoGrid onBingo={handleBingo} resetKey={resetKey} />
+        <div className="flex flex-col gap-4">
+          <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
+            <CardHeader className="bg-lime-200 border-b border-lime-400">
+              <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              {bingoAlerts.length === 0 ? (
+                <p className="text-gray-600 italic">No bingo alerts yet...</p>
+              ) : (
+                <ul className="space-y-2">
+                  {bingoAlerts.map((alert) => (
+                    <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
+                      {alert.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full lg:w-80 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
+                Reset Game
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action will clear the current bingo grid and all alerts, starting a new game.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetGame}>Continue</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
       <MadeWithDyad />
     </div>
