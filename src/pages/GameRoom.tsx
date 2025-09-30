@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import BingoGrid from '@/components/BingoGrid';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showSuccess, showError } from '@/utils/toast';
@@ -35,8 +35,6 @@ interface PlayerScore {
   isMe: boolean;
 }
 
-const NUM_PLAYABLE_CELLS = 5;
-
 let alertIdCounter = 0;
 const generateAlertId = () => {
   alertIdCounter += 1;
@@ -46,18 +44,19 @@ const generateAlertId = () => {
 const GameRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const location = useLocation(); // Get location object
-  const { selectedFruits } = (location.state || {}) as { selectedFruits?: string[] }; // Get selectedFruits from state
+  const location = useLocation();
+  const { selectedFruits, gridSize: initialGridSize } = (location.state || {}) as { selectedFruits?: string[]; gridSize?: number };
   const { user, isLoading } = useSession();
 
+  const [gridSize, setGridSize] = useState<number>(initialGridSize || 5); // Default to 5
   const [roomCode, setRoomCode] = useState<string>('');
   const [roomCreatorId, setRoomCreatorId] = useState<string | null>(null);
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
-  const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+  const [myGridData, setMyGridData] = useState<boolean[][]>(Array(gridSize).fill(Array(gridSize).fill(false)));
   const [roomBingoAlerts, setRoomBingoAlerts] = useState<BingoAlert[]>([]);
   const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
-  const [playerSelectedFruits, setPlayerSelectedFruits] = useState<string[]>([]); // New state for player's selected fruits
+  const [playerSelectedFruits, setPlayerSelectedFruits] = useState<string[]>([]);
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({
@@ -84,30 +83,31 @@ const GameRoom: React.FC = () => {
   }, [user]);
 
   // Function to initialize or update player's game state
-  const initializeOrUpdateGameState = useCallback(async (currentRoomId: string, currentUser: any, currentSelectedFruits: string[]) => {
-    if (!currentUser || !currentRoomId || !currentSelectedFruits || currentSelectedFruits.length !== NUM_PLAYABLE_CELLS) {
-      console.error("Missing data for initializeOrUpdateGameState:", { currentUser, currentRoomId, currentSelectedFruits });
+  const initializeOrUpdateGameState = useCallback(async (currentRoomId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => {
+    if (!currentUser || !currentRoomId || !currentSelectedFruits || currentSelectedFruits.length !== currentGridSize) {
+      console.error("Missing data for initializeOrUpdateGameState:", { currentUser, currentRoomId, currentSelectedFruits, currentGridSize });
       return;
     }
 
     const playerNameFromStorage = localStorage.getItem('playerName') || `Player ${Math.floor(Math.random() * 1000)}`;
+    const centerCellIndex = Math.floor(currentGridSize / 2);
 
     // Check if player already has a game state in this room
     const { data: existingGameState, error: existingGameStateError } = await supabase
       .from('game_states')
-      .select('id, player_name, grid_data, selected_fruits') // Fetch selected_fruits
+      .select('id, player_name, grid_data, selected_fruits')
       .eq('room_id', currentRoomId)
       .eq('player_id', currentUser.id)
       .single();
 
-    if (existingGameStateError && existingGameStateError.code !== 'PGRST116') { // PGRST116 means no rows found
+    if (existingGameStateError && existingGameStateError.code !== 'PGRST116') {
       console.error('GameRoom - Error checking existing game state:', existingGameStateError.message);
       showError('Failed to load your game state.');
       return;
     }
 
-    let initialGrid = Array(NUM_PLAYABLE_CELLS).fill(null).map(() => Array(NUM_PLAYABLE_CELLS).fill(false));
-    initialGrid[2][2] = true; // Center cell (Lime) is always pre-checked
+    let initialGrid = Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false));
+    initialGrid[centerCellIndex][centerCellIndex] = true; // Center cell (Lime) is always pre-checked
 
     if (!existingGameState) {
       // Create new game state
@@ -118,7 +118,7 @@ const GameRoom: React.FC = () => {
           player_id: currentUser.id,
           player_name: playerNameFromStorage,
           grid_data: initialGrid,
-          selected_fruits: currentSelectedFruits, // Save selected fruits
+          selected_fruits: currentSelectedFruits,
         })
         .select()
         .single();
@@ -131,7 +131,7 @@ const GameRoom: React.FC = () => {
       setMyGameStateId(newGameState.id);
       setMyGridData(newGameState.grid_data);
       setMyPlayerName(newGameState.player_name);
-      setPlayerSelectedFruits(newGameState.selected_fruits); // Set player's selected fruits
+      setPlayerSelectedFruits(newGameState.selected_fruits);
       showSuccess('Your game state has been initialized!');
     } else {
       // Update existing game state (e.g., if player name changed or fruits changed)
@@ -141,14 +141,16 @@ const GameRoom: React.FC = () => {
         updated_at: new Date().toISOString(),
       };
 
-      // Only reset grid_data if selected_fruits have changed
-      if (JSON.stringify(existingGameState.selected_fruits) !== JSON.stringify(currentSelectedFruits)) {
+      // Only reset grid_data if selected_fruits or gridSize have changed
+      const existingGrid = existingGameState.grid_data || Array(currentGridSize).fill(Array(currentGridSize).fill(false));
+      const existingFruits = existingGameState.selected_fruits || [];
+
+      if (JSON.stringify(existingFruits) !== JSON.stringify(currentSelectedFruits) || existingGrid.length !== currentGridSize) {
         updatePayload.grid_data = initialGrid;
-        showSuccess('Your fruits have been updated and grid reset!');
+        showSuccess('Your fruits or grid size have been updated and grid reset!');
       } else {
-        // If fruits haven't changed, use existing grid data, ensuring center is checked
-        const existingGrid = existingGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false));
-        existingGrid[2][2] = true;
+        // If fruits and grid size haven't changed, use existing grid data, ensuring center is checked
+        existingGrid[centerCellIndex][centerCellIndex] = true;
         updatePayload.grid_data = existingGrid;
       }
 
@@ -167,12 +169,12 @@ const GameRoom: React.FC = () => {
       setMyGameStateId(updatedGameState.id);
       setMyGridData(updatedGameState.grid_data);
       setMyPlayerName(updatedGameState.player_name);
-      setPlayerSelectedFruits(updatedGameState.selected_fruits); // Set player's selected fruits
+      setPlayerSelectedFruits(updatedGameState.selected_fruits);
       showSuccess('Your game state has been updated!');
     }
-  }, [user]); // Depend on user for useCallback
+  }, [user]);
 
-  const fetchAndSetAllGameStates = useCallback(async () => {
+  const fetchAndSetAllGameStates = useCallback(async (currentGridSize: number) => {
     if (!roomId || !user) return;
 
     console.log("GameRoom - Fetching all game states...");
@@ -198,20 +200,22 @@ const GameRoom: React.FC = () => {
     const myGameState = allGameStates.find(gs => gs.player_id === user.id);
     if (myGameState) {
       setMyGameStateId(myGameState.id);
-      // Ensure grid_data is initialized to NUM_PLAYABLE_CELLS x NUM_PLAYABLE_CELLS if it's null or different size
-      const fetchedGrid = myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false));
-      if (fetchedGrid.length !== NUM_PLAYABLE_CELLS || (fetchedGrid.length > 0 && fetchedGrid[0].length !== NUM_PLAYABLE_CELLS)) {
+      const centerCellIndex = Math.floor(currentGridSize / 2);
+
+      // Ensure grid_data is initialized to currentGridSize x currentGridSize if it's null or different size
+      const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(Array(currentGridSize).fill(false));
+      if (fetchedGrid.length !== currentGridSize || (fetchedGrid.length > 0 && fetchedGrid[0].length !== currentGridSize)) {
         // If grid size is wrong, re-initialize with center checked
-        const newGrid = Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false));
-        newGrid[2][2] = true;
+        const newGrid = Array(currentGridSize).fill(Array(currentGridSize).fill(false));
+        newGrid[centerCellIndex][centerCellIndex] = true;
         setMyGridData(newGrid);
       } else {
         // Ensure center is checked even if loaded from DB
-        fetchedGrid[2][2] = true;
+        fetchedGrid[centerCellIndex][centerCellIndex] = true;
         setMyGridData(fetchedGrid);
       }
       setMyPlayerName(myGameState.player_name);
-      setPlayerSelectedFruits(myGameState.selected_fruits || []); // Fetch and set selected fruits
+      setPlayerSelectedFruits(myGameState.selected_fruits || []);
     }
   }, [roomId, user]);
 
@@ -224,15 +228,10 @@ const GameRoom: React.FC = () => {
       return;
     }
 
-    // If selectedFruits are not provided from location state, it means the user
-    // might have refreshed the page or navigated directly. In this case, we
-    // should try to load them from the database. If not found, redirect to selection.
-    const initialSelectedFruits = selectedFruits || [];
-
     const fetchInitialData = async () => {
       const { data: room, error: roomError } = await supabase
         .from('rooms')
-        .select('code, created_by, bingo_alerts')
+        .select('code, created_by, bingo_alerts, grid_size') // Fetch grid_size
         .eq('id', roomId)
         .single();
 
@@ -245,6 +244,8 @@ const GameRoom: React.FC = () => {
       setRoomCode(room.code);
       setRoomCreatorId(room.created_by);
       setRoomBingoAlerts(room.bingo_alerts || []);
+      const currentRoomGridSize = room.grid_size || 5; // Use room's grid_size
+      setGridSize(currentRoomGridSize);
 
       // Fetch player's existing game state to get their selected fruits
       const { data: playerGameState, error: playerGameStateError } = await supabase
@@ -261,23 +262,22 @@ const GameRoom: React.FC = () => {
         return;
       }
 
-      const fruitsToUse = initialSelectedFruits.length === NUM_PLAYABLE_CELLS
-        ? initialSelectedFruits
+      const fruitsToUse = selectedFruits && selectedFruits.length === currentRoomGridSize
+        ? selectedFruits
         : (playerGameState?.selected_fruits || []);
 
-      if (!fruitsToUse || fruitsToUse.length !== NUM_PLAYABLE_CELLS) {
-        showError("Please select your fruits before entering the game room.");
-        navigate('/select-fruits', { state: { roomId } });
+      if (!fruitsToUse || fruitsToUse.length !== currentRoomGridSize) {
+        showError(`Please select exactly ${currentRoomGridSize} fruits before entering the game room.`);
+        navigate('/select-fruits', { state: { roomId, gridSize: currentRoomGridSize } });
         return;
       }
 
-      // Initialize or update game state with the determined selected fruits
-      await initializeOrUpdateGameState(roomId, user, fruitsToUse);
-      await fetchAndSetAllGameStates();
+      await initializeOrUpdateGameState(roomId, user, fruitsToUse, currentRoomGridSize);
+      await fetchAndSetAllGameStates(currentRoomGridSize);
     };
 
     fetchInitialData();
-  }, [user, roomId, navigate, isLoading, selectedFruits, initializeOrUpdateGameState, fetchAndSetAllGameStates]);
+  }, [user, roomId, navigate, isLoading, selectedFruits, initialGridSize, initializeOrUpdateGameState, fetchAndSetAllGameStates]);
 
   useEffect(() => {
     if (!roomId || !user) return;
@@ -303,10 +303,10 @@ const GameRoom: React.FC = () => {
               setNewPlayerJoinedName(newGameState.player_name);
               setShowNewPlayerAlert(true);
             }
-            await fetchAndSetAllGameStates();
+            await fetchAndSetAllGameStates(gridSize);
 
           } else if (payload.eventType === 'DELETE') {
-            await fetchAndSetAllGameStates();
+            await fetchAndSetAllGameStates(gridSize);
 
           } else if (payload.eventType === 'UPDATE') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][]; selected_fruits: string[] };
@@ -324,11 +324,12 @@ const GameRoom: React.FC = () => {
             });
 
             if (updatedGameState.player_id === user.id) {
+              const centerCellIndex = Math.floor(gridSize / 2);
               // Ensure center is checked even if loaded from DB
-              const updatedGrid = updatedGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false));
-              updatedGrid[2][2] = true;
+              const updatedGrid = updatedGameState.grid_data || Array(gridSize).fill(Array(gridSize).fill(false));
+              updatedGrid[centerCellIndex][centerCellIndex] = true;
               setMyGridData(updatedGrid);
-              setPlayerSelectedFruits(updatedGameState.selected_fruits || []); // Update selected fruits from realtime
+              setPlayerSelectedFruits(updatedGameState.selected_fruits || []);
             }
           }
         }
@@ -343,12 +344,12 @@ const GameRoom: React.FC = () => {
         },
         async (payload) => {
           console.log(`Realtime - rooms table UPDATE event received for room ${roomId}:`, payload.new);
-          const updatedRoom = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[] };
+          const updatedRoom = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number };
 
           // Handle global refresh signal
           if (updatedRoom.last_refreshed_at) {
             console.log("Realtime - Room refresh signal received. Triggering full game states fetch.");
-            await fetchAndSetAllGameStates();
+            await fetchAndSetAllGameStates(gridSize);
           }
 
           // Handle global bingo alerts
@@ -366,6 +367,14 @@ const GameRoom: React.FC = () => {
               return incomingAlerts;
             });
           }
+          // Handle grid size update (though typically set at room creation)
+          if (updatedRoom.grid_size && updatedRoom.grid_size !== gridSize) {
+            setGridSize(updatedRoom.grid_size);
+            // Potentially trigger a grid reset or re-initialization if grid size changes mid-game
+            showError(`Room grid size changed to ${updatedRoom.grid_size}x${updatedRoom.grid_size}. Your grid might reset.`);
+            await initializeOrUpdateGameState(roomId, user, playerSelectedFruits, updatedRoom.grid_size);
+            setResetKey(prev => prev + 1); // Force BingoGrid reset
+          }
         }
       )
       .subscribe();
@@ -374,11 +383,12 @@ const GameRoom: React.FC = () => {
       console.log(`GameRoom - Unsubscribing from room:${roomId}`);
       supabase.removeChannel(channel);
     };
-  }, [roomId, user, fetchAndSetAllGameStates]);
+  }, [roomId, user, gridSize, playerSelectedFruits, fetchAndSetAllGameStates, initializeOrUpdateGameState]);
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
     if (!myGameStateId || !user || !roomId) return;
-    if (row === 2 && col === 2) return; // Prevent toggling the center cell (Lime)
+    const centerCellIndex = Math.floor(gridSize / 2);
+    if (row === centerCellIndex && col === centerCellIndex) return; // Prevent toggling the center cell (Lime)
 
     const newGridData = myGridData.map(r => [...r]);
     const newState = !newGridData[row][col];
@@ -397,7 +407,7 @@ const GameRoom: React.FC = () => {
       showError('Failed to update grid state.');
       console.error('Error updating grid:', updateGameStateError);
     } else {
-      await fetchAndSetAllGameStates();
+      await fetchAndSetAllGameStates(gridSize);
 
       if (user.id === roomCreatorId) {
         console.log("GameRoom - Player is room creator, triggering global refresh via rooms table update.");
@@ -414,7 +424,7 @@ const GameRoom: React.FC = () => {
         console.log("GameRoom - Player is not room creator, global refresh not triggered from cell toggle due to RLS.");
       }
     }
-  }, [myGridData, myGameStateId, user, roomId, roomCreatorId, fetchAndSetAllGameStates]);
+  }, [myGridData, myGameStateId, user, roomId, roomCreatorId, gridSize, fetchAndSetAllGameStates]);
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
     if (!roomId || !user || !myPlayerName) return;
@@ -453,15 +463,16 @@ const GameRoom: React.FC = () => {
   const handleResetGame = async () => {
     if (!myGameStateId || !user || !playerSelectedFruits) return;
 
-    let initialGrid = Array(NUM_PLAYABLE_CELLS).fill(null).map(() => Array(NUM_PLAYABLE_CELLS).fill(false));
-    initialGrid[2][2] = true; // Center cell (Lime) is always pre-checked
+    const centerCellIndex = Math.floor(gridSize / 2);
+    let initialGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+    initialGrid[centerCellIndex][centerCellIndex] = true; // Center cell (Lime) is always pre-checked
 
     const { error } = await supabase
       .from('game_states')
       .update({
         grid_data: initialGrid,
         updated_at: new Date().toISOString(),
-        selected_fruits: playerSelectedFruits, // Ensure fruits are also reset/re-applied
+        selected_fruits: playerSelectedFruits,
       })
       .eq('id', myGameStateId);
 
@@ -478,7 +489,7 @@ const GameRoom: React.FC = () => {
   const handleGlobalRefresh = async () => {
     if (!roomId || !user) return;
 
-    await fetchAndSetAllGameStates();
+    await fetchAndSetAllGameStates(gridSize);
     showSuccess('Your data has been refreshed!');
 
     console.log("GameRoom - Triggering global refresh by updating rooms.last_refreshed_at");
@@ -507,7 +518,7 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  if (isLoading || !user || !roomId || playerSelectedFruits.length !== NUM_PLAYABLE_CELLS) { // Check playerSelectedFruits
+  if (isLoading || !user || !roomId || playerSelectedFruits.length !== gridSize) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-100 to-emerald-200">
         <p className="text-xl text-gray-700">Loading game room...</p>
@@ -527,7 +538,8 @@ const GameRoom: React.FC = () => {
           resetKey={resetKey}
           initialGridState={myGridData}
           onCellToggle={handleCellToggle}
-          selectedFruits={playerSelectedFruits} // Pass player's selected fruits
+          selectedFruits={playerSelectedFruits}
+          gridSize={gridSize} // Pass gridSize
         />
         <div className="flex flex-col gap-4">
           {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}

@@ -27,27 +27,30 @@ const allFruitsData = [
 const FruitSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { roomId } = location.state || {};
+  const { roomId, gridSize: initialGridSize } = location.state || {};
 
+  const [gridSize, setGridSize] = useState<number>(initialGridSize || 5); // Default to 5 if not provided
   const [selectedFruits, setSelectedFruits] = useState<string[]>(['lime']); // Lime is pre-selected
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!roomId) {
-      showError("No room ID found. Please create or join a room first.");
+    if (!roomId || !initialGridSize) {
+      showError("Room ID or grid size not found. Please create or join a room first.");
       navigate('/lobby');
+    } else {
+      setGridSize(initialGridSize);
     }
-  }, [roomId, navigate]);
+  }, [roomId, initialGridSize, navigate]);
 
   const handleFruitToggle = (fruitName: string, isChecked: boolean) => {
     if (fruitName === 'lime') return; // Lime is always selected and cannot be deselected
 
     if (isChecked) {
-      if (selectedFruits.length < 5) {
+      if (selectedFruits.length < gridSize) {
         setSelectedFruits(prev => [...prev, fruitName]);
         setError(null);
       } else {
-        setError("You can select a maximum of 5 fruits.");
+        setError(`You can select a maximum of ${gridSize} fruits.`);
       }
     } else {
       setSelectedFruits(prev => prev.filter(f => f !== fruitName));
@@ -56,14 +59,14 @@ const FruitSelection: React.FC = () => {
   };
 
   const handleProceed = () => {
-    if (selectedFruits.length !== 5) {
-      setError(`Please select exactly 5 fruits. You have selected ${selectedFruits.length}.`);
+    if (selectedFruits.length !== gridSize) {
+      setError(`Please select exactly ${gridSize} fruits. You have selected ${selectedFruits.length}.`);
       return;
     }
-    navigate(`/game/${roomId}`, { state: { selectedFruits } });
+    navigate(`/game/${roomId}`, { state: { selectedFruits, gridSize } }); // Pass gridSize to GameRoom
   };
 
-  const isProceedDisabled = selectedFruits.length !== 5;
+  const isProceedDisabled = selectedFruits.length !== gridSize;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-lime-50 to-emerald-100 p-4">
@@ -73,7 +76,7 @@ const FruitSelection: React.FC = () => {
             Choose Your Fruits
           </CardTitle>
           <CardDescription className="text-xl text-gray-700 mb-6">
-            Select 5 fruits for your bingo grid. Lime is already chosen for the center!
+            Select exactly {gridSize} fruits for your {gridSize}x{gridSize} bingo grid. Lime is already chosen for the center!
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -100,7 +103,7 @@ const FruitSelection: React.FC = () => {
             disabled={isProceedDisabled}
             className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg"
           >
-            Start Game ({selectedFruits.length}/5)
+            Start Game ({selectedFruits.length}/{gridSize})
           </Button>
         </CardContent>
       </Card>

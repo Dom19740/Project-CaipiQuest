@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
-const NUM_PLAYABLE_CELLS = 5;
-const CSS_GRID_DIMENSION = NUM_PLAYABLE_CELLS + 1; // 6 total rows/columns for CSS grid (including labels)
-const CENTER_CELL_INDEX = Math.floor(NUM_PLAYABLE_CELLS / 2); // For a 5x5 grid, this is 2
-
 interface BingoGridProps {
   onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
   resetKey: number; // New prop to trigger reset
   initialGridState: boolean[][]; // Controlled state
   onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
   selectedFruits: string[]; // New prop for selected fruits
+  gridSize: number; // New prop for dynamic grid size
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize }) => {
   const checkedCells = initialGridState;
   const completedBingosRef = useRef<Set<string>>(new Set());
+
+  const CSS_GRID_DIMENSION = gridSize + 1; // Total rows/columns for CSS grid (including labels)
+  const CENTER_CELL_INDEX = Math.floor(gridSize / 2); // For any NxN grid, this is N/2
 
   useEffect(() => {
     completedBingosRef.current = new Set();
@@ -28,7 +28,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     let fullGridBingoTriggered = false;
 
     // Check rows
-    for (let i = 0; i < NUM_PLAYABLE_CELLS; i++) {
+    for (let i = 0; i < gridSize; i++) {
       const rowId = `row-${i}`;
       if (checkedCells[i] && checkedCells[i].every(cell => cell)) {
         if (!newCompletedBingos.has(rowId)) {
@@ -39,7 +39,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     }
 
     // Check columns
-    for (let j = 0; j < NUM_PLAYABLE_CELLS; j++) {
+    for (let j = 0; j < gridSize; j++) {
       const colId = `col-${j}`;
       if (checkedCells.every(row => row && row[j])) {
         if (!newCompletedBingos.has(colId)) {
@@ -51,7 +51,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Check main diagonal (top-left to bottom-right)
     const mainDiagId = 'diag-main';
-    if (Array(NUM_PLAYABLE_CELLS).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][i])) {
+    if (Array(gridSize).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][i])) {
       if (!newCompletedBingos.has(mainDiagId)) {
         diagonalBingoTriggered = true;
         newCompletedBingos.add(mainDiagId);
@@ -60,7 +60,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Check anti-diagonal (top-right to bottom-left)
     const antiDiagId = 'diag-anti';
-    if (Array(NUM_PLAYABLE_CELLS).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][NUM_PLAYABLE_CELLS - 1 - i])) {
+    if (Array(gridSize).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][gridSize - 1 - i])) {
       if (!newCompletedBingos.has(antiDiagId)) {
         diagonalBingoTriggered = true;
         newCompletedBingos.add(antiDiagId);
@@ -87,13 +87,13 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Update the ref
     completedBingosRef.current = newCompletedBingos;
-  }, [checkedCells, onBingo]);
+  }, [checkedCells, onBingo, gridSize]);
 
   useEffect(() => {
     checkBingo();
   }, [initialGridState, checkBingo]);
 
-  // Ensure selectedFruits has 5 items, with 'lime' at index 2 for the center
+  // Ensure selectedFruits has `gridSize` items, with 'lime' at the center
   const displayFruits = [...selectedFruits];
   const limeIndex = displayFruits.indexOf('lime');
   if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
@@ -125,7 +125,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       ))}
 
       {/* Grid cells */}
-      {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, rowIndex) => (
+      {Array(gridSize).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
           <div className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
@@ -133,7 +133,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
           </div>
 
           {/* Playable cells */}
-          {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, colIndex) => {
+          {Array(gridSize).fill(null).map((_, colIndex) => {
             const isCenterCell = rowIndex === CENTER_CELL_INDEX && colIndex === CENTER_CELL_INDEX;
             const fruit1 = displayFruits[rowIndex];
             const fruit2 = displayFruits[colIndex];

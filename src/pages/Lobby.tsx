@@ -7,14 +7,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from '@/components/made-with-dyad';
-
-const NUM_PLAYABLE_CELLS = 5; // Define for consistency with GameRoom
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const Lobby: React.FC = () => {
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [gridSize, setGridSize] = useState<number>(5); // New state for grid size
   const navigate = useNavigate();
   const { user, isLoading } = useSession();
 
@@ -66,19 +67,18 @@ const Lobby: React.FC = () => {
     setIsCreating(true);
     const newRoomCode = generateRoomCode();
     try {
-      // Create the room
+      // Create the room with the selected grid size
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName })
+        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName, grid_size: gridSize })
         .select()
         .single();
 
       if (roomError) throw roomError;
       console.log("Lobby - Room created:", roomData);
 
-      // No longer creating game state here, it will be done after fruit selection
       showSuccess(`Room "${newRoomCode}" created!`);
-      navigate(`/select-fruits`, { state: { roomId: roomData.id } }); // Navigate to fruit selection
+      navigate(`/select-fruits`, { state: { roomId: roomData.id, gridSize: gridSize } }); // Pass gridSize
     } catch (error: any) {
       console.error('Lobby - Error creating room:', error.message);
       showError(`Failed to create room: ${error.message}`);
@@ -99,10 +99,10 @@ const Lobby: React.FC = () => {
 
     setIsJoining(true);
     try {
-      // Find the room by code
+      // Find the room by code and fetch its grid_size
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('id')
+        .select('id, grid_size')
         .eq('code', roomCodeInput.toUpperCase())
         .single();
 
@@ -114,9 +114,8 @@ const Lobby: React.FC = () => {
       }
       console.log("Lobby - Found room:", roomData);
 
-      // No longer checking/creating game state here, it will be done after fruit selection
       showSuccess(`Found room "${roomCodeInput.toUpperCase()}"!`);
-      navigate(`/select-fruits`, { state: { roomId: roomData.id } }); // Navigate to fruit selection
+      navigate(`/select-fruits`, { state: { roomId: roomData.id, gridSize: roomData.grid_size } }); // Pass gridSize from existing room
     } catch (error: any) {
       console.error('Lobby - Error joining room:', error.message);
       showError(`Failed to join room: ${error.message}`);
@@ -126,6 +125,14 @@ const Lobby: React.FC = () => {
   };
 
   const isSessionReady = !isLoading && user; // True when session is loaded and a user (even anonymous) is present
+
+  const gridGraphics = {
+    5: "5x5 grid (25 cells)",
+    6: "6x6 grid (36 cells)",
+    7: "7x7 grid (49 cells)",
+    8: "8x8 grid (64 cells)",
+    9: "9x9 grid (81 cells)",
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-lime-50 to-emerald-100 p-4">
@@ -149,12 +156,38 @@ const Lobby: React.FC = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
-          <Card className="w-full max-w-sm bg-lime-50 border-lime-300 shadow-lg">
+          <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg"> {/* Increased max-w-sm to max-w-md */}
             <CardHeader>
               <CardTitle className="text-lime-800">Create New Room</CardTitle>
               <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="grid-size" className="text-lg font-medium text-lime-800 mb-2 block">
+                  Select Grid Size (Fruits to choose)
+                </Label>
+                <Select value={String(gridSize)} onValueChange={(value) => setGridSize(Number(value))} disabled={isCreating || isJoining || !isSessionReady}>
+                  <SelectTrigger id="grid-size" className="w-full border-lime-400 focus:border-lime-600 focus:ring-lime-600">
+                    <SelectValue placeholder="Select grid size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[5, 6, 7, 8, 9].map(size => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}x{size} Grid ({size} Fruits)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-600 mt-2">
+                  A {gridSize}x{gridSize} grid means you'll select {gridSize} fruits.
+                </p>
+                <div className="mt-4 p-3 bg-lime-100 border border-lime-300 rounded-md text-sm text-lime-800">
+                  <p className="font-semibold">Grid Visualizer:</p>
+                  <p>5 fruits = 5x5 grid (25 cells)</p>
+                  <p>6 fruits = 6x6 grid (36 cells)</p>
+                  <p>... up to 9 fruits = 9x9 grid (81 cells)</p>
+                </div>
+              </div>
               <Button
                 onClick={handleCreateRoom}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
