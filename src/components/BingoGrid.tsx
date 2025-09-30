@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
 const fruits = ['passionfruit', 'lemon', 'strawberry', 'mango', 'lime', 'pineapple', 'pitaya', 'plum', 'ginger'];
@@ -16,23 +16,16 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   // Use initialGridState directly, no internal checkedCells state
   const checkedCells = initialGridState;
 
-  // State to keep track of completed bingo lines to prevent duplicate alerts
-  const [completedBingos, setCompletedBingos] = useState<Set<string>>(new Set());
+  // Use a ref to store completed bingos to avoid it being a dependency of checkBingo
+  const completedBingosRef = useRef<Set<string>>(new Set());
 
   // Effect to reset the grid when resetKey changes
   useEffect(() => {
-    setCompletedBingos(new Set());
+    completedBingosRef.current = new Set();
   }, [resetKey]);
 
-  // Update internal completedBingos when initialGridState changes (e.g., on reset from parent)
-  useEffect(() => {
-    // Re-evaluate bingos when grid state changes from parent
-    checkBingo();
-  }, [initialGridState]);
-
-
   const checkBingo = useCallback(() => {
-    const newCompletedBingos = new Set(completedBingos);
+    const newCompletedBingos = new Set(completedBingosRef.current);
     let rowColBingoTriggered = false;
     let diagonalBingoTriggered = false;
     let fullGridBingoTriggered = false;
@@ -95,13 +88,14 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       onBingo('rowCol', 'completed a row or column!');
     }
 
-    // Update the completed bingos state
-    setCompletedBingos(newCompletedBingos);
-  }, [checkedCells, onBingo, completedBingos]);
+    // Update the ref
+    completedBingosRef.current = newCompletedBingos;
+  }, [checkedCells, onBingo]); // Only depend on checkedCells and onBingo
 
+  // This effect runs when initialGridState changes, triggering bingo check
   useEffect(() => {
     checkBingo();
-  }, [checkedCells, checkBingo]);
+  }, [initialGridState, checkBingo]); // Depend on initialGridState and the memoized checkBingo
 
   return (
     <div

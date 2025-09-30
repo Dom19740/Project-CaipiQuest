@@ -28,13 +28,13 @@ const Lobby: React.FC = () => {
   useEffect(() => {
     const ensureSession = async () => {
       if (!isLoading && !user) {
-        console.log("Attempting anonymous sign-in...");
+        console.log("Lobby - Attempting anonymous sign-in...");
         const { error } = await supabase.auth.signInAnonymously();
         if (error) {
-          console.error('Error signing in anonymously:', error.message);
+          console.error('Lobby - Error signing in anonymously:', error.message);
           showError(`Failed to establish a session: ${error.message}. Please try again.`);
         } else {
-          console.log("Anonymous sign-in successful.");
+          console.log("Lobby - Anonymous sign-in successful.");
         }
       }
     };
@@ -72,6 +72,7 @@ const Lobby: React.FC = () => {
         .single();
 
       if (roomError) throw roomError;
+      console.log("Lobby - Room created:", roomData);
 
       // Create initial game state for the creator
       const { error: gameStateError } = await supabase
@@ -79,11 +80,12 @@ const Lobby: React.FC = () => {
         .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
 
       if (gameStateError) throw gameStateError;
+      console.log("Lobby - Initial game state created for creator.");
 
       showSuccess(`Room "${newRoomCode}" created!`);
       navigate(`/game/${roomData.id}`);
     } catch (error: any) {
-      console.error('Error creating room:', error.message);
+      console.error('Lobby - Error creating room:', error.message);
       showError(`Failed to create room: ${error.message}`);
     } finally {
       setIsCreating(false);
@@ -115,18 +117,22 @@ const Lobby: React.FC = () => {
         }
         throw roomError;
       }
+      console.log("Lobby - Found room:", roomData);
 
       // Check if player already has a game state in this room
+      // Changed select('id, player_name') to select('*') to debug 406 error
       const { data: existingGameState, error: existingGameStateError } = await supabase
         .from('game_states')
-        .select('id, player_name') // Select player_name to check if it needs updating
+        .select('*') 
         .eq('room_id', roomData.id)
         .eq('player_id', user.id)
         .single();
 
       if (existingGameStateError && existingGameStateError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+        console.error('Lobby - Error checking existing game state:', existingGameStateError.message);
         throw existingGameStateError;
       }
+      console.log("Lobby - Existing game state for player:", existingGameState);
 
       if (!existingGameState) {
         // Create initial game state for the joining player
@@ -135,30 +141,34 @@ const Lobby: React.FC = () => {
           .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
 
         if (gameStateError) throw gameStateError;
+        console.log("Lobby - New game state created for joining player.");
       } else if (existingGameState.player_name !== playerName) {
         // If game state exists but player name changed, update it
         const { error: updatePlayerNameError } = await supabase
           .from('game_states')
           .update({ player_name: playerName, updated_at: new Date().toISOString() })
           .eq('id', existingGameState.id);
-        if (updatePlayerNameError) console.error('Error updating player name in game state:', updatePlayerNameError.message);
+        if (updatePlayerNameError) console.error('Lobby - Error updating player name in game state:', updatePlayerNameError.message);
+        console.log("Lobby - Updated player name in existing game state.");
       }
 
       // Update player_names in the room if this player's name isn't already there
       let updatedPlayerNames = roomData.player_names || [];
+      console.log("Lobby - Current player names in room before update:", updatedPlayerNames);
       if (!updatedPlayerNames.includes(playerName)) {
         updatedPlayerNames = [...updatedPlayerNames, playerName];
         const { error: updateRoomError } = await supabase
           .from('rooms')
           .update({ player_names: updatedPlayerNames })
           .eq('id', roomData.id);
-        if (updateRoomError) console.error('Error updating room player names:', updateRoomError.message);
+        if (updateRoomError) console.error('Lobby - Error updating room player names:', updateRoomError.message);
+        console.log("Lobby - Updated room player names to:", updatedPlayerNames);
       }
 
       showSuccess(`Joined room "${roomCodeInput.toUpperCase()}"!`);
       navigate(`/game/${roomData.id}`);
     } catch (error: any) {
-      console.error('Error joining room:', error.message);
+      console.error('Lobby - Error joining room:', error.message);
       showError(`Failed to join room: ${error.message}`);
     } finally {
       setIsJoining(false);
