@@ -13,11 +13,12 @@ const fruitData: { [key: string]: { emoji: string; portuguese: string } } = {
   strawberry: { emoji: '🍓', portuguese: 'Morango' },
   mango: { emoji: '🥭', portuguese: 'Manga' },
   pineapple: { emoji: '🍍', portuguese: 'Abacaxi' },
-  dragonfruit: { emoji: '🐉', portuguese: 'Pitaya' },
-  plum: { emoji: '🟣', portuguese: 'Ameixa' },
+  red_fruits: { emoji: '🍒', portuguese: 'Frutas Vermelhas' }, // Changed from dragonfruit/Pitaya
+  guava: { emoji: '🍑', portuguese: 'Goiaba' }, // Changed from plum/Ameixa
   ginger: { emoji: '🌳', portuguese: 'Gengibre' },
-  banana: { emoji: '🍌', portuguese: 'Banana' },
+  tangerine: { emoji: '🍊', portuguese: 'Tangerina' }, // Changed from banana/Banana
   kiwi: { emoji: '🥝', portuguese: 'Kiwi' },
+  cashew: { emoji: '🌰', portuguese: 'Caju' }, // Added Caju
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md', showPortuguese = false }) => {
@@ -25,9 +26,9 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md', showPortugues
   const emoji = data?.emoji || '❓';
 
   const sizeClasses = {
-    sm: 'text-xl',
-    md: 'text-2xl',
-    lg: 'text-3xl',
+    sm: 'text-base', // Reduced from text-xl
+    md: 'text-xl',   // Reduced from text-2xl
+    lg: 'text-2xl',   // Reduced from text-3xl
   };
 
   return (

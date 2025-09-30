@@ -16,11 +16,12 @@ const allFruitsData = [
   { name: 'strawberry', portuguese: 'Morango', emoji: '🍓' },
   { name: 'mango', portuguese: 'Manga', emoji: '🥭' },
   { name: 'pineapple', portuguese: 'Abacaxi', emoji: '🍍' },
-  { name: 'dragonfruit', portuguese: 'Pitaya', emoji: '🐉' },
-  { name: 'plum', portuguese: 'Ameixa', emoji: '🟣' },
+  { name: 'red_fruits', portuguese: 'Frutas Vermelhas', emoji: '🍒' }, // Changed from dragonfruit
+  { name: 'guava', portuguese: 'Goiaba', emoji: '🍑' }, // Changed from plum
   { name: 'ginger', portuguese: 'Gengibre', emoji: '🌳' },
-  { name: 'banana', portuguese: 'Banana', emoji: '🍌' },
+  { name: 'tangerine', portuguese: 'Tangerina', emoji: '🍊' }, // Changed from banana
   { name: 'kiwi', portuguese: 'Kiwi', emoji: '🥝' },
+  { name: 'cashew', portuguese: 'Caju', emoji: '🌰' }, // Added Caju
 ];
 
 const FruitSelection: React.FC = () => {
