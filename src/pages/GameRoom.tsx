@@ -50,10 +50,10 @@ const GameRoom: React.FC = () => {
   const { user, isLoading } = useSession();
 
   const [roomCode, setRoomCode] = useState<string>('');
-  const [roomCreatorId, setRoomCreatorId] = useState<string | null>(null); // New state for room creator
+  const [roomCreatorId, setRoomCreatorId] = useState<string | null>(null);
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
-  const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]);
+  const [roomBingoAlerts, setRoomBingoAlerts] = useState<BingoAlert[]>([]); // Alerts for the entire room
   const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
 
@@ -67,7 +67,6 @@ const GameRoom: React.FC = () => {
   });
   const [resetKey, setResetKey] = useState(0);
 
-  // State for new player joined alert
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
@@ -82,7 +81,6 @@ const GameRoom: React.FC = () => {
     }
   }, [user]);
 
-  // Function to fetch and update all game states and player scores
   const fetchAndSetAllGameStates = useCallback(async () => {
     if (!roomId || !user) return;
 
@@ -110,12 +108,10 @@ const GameRoom: React.FC = () => {
     if (myGameState) {
       setMyGameStateId(myGameState.id);
       setMyGridData(myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
-      setAllBingoAlerts(myGameState.bingo_alerts || []);
       setMyPlayerName(myGameState.player_name);
     }
   }, [roomId, user]);
 
-  // Fetch initial room and player data
   useEffect(() => {
     if (isLoading || !user || !roomId) {
       if (!isLoading && !user) {
@@ -128,7 +124,7 @@ const GameRoom: React.FC = () => {
     const fetchInitialData = async () => {
       const { data: room, error: roomError } = await supabase
         .from('rooms')
-        .select('code, created_by') // Also fetch created_by
+        .select('code, created_by, bingo_alerts') // Fetch bingo_alerts from rooms
         .eq('id', roomId)
         .single();
 
@@ -139,15 +135,15 @@ const GameRoom: React.FC = () => {
         return;
       }
       setRoomCode(room.code);
-      setRoomCreatorId(room.created_by); // Set room creator ID
+      setRoomCreatorId(room.created_by);
+      setRoomBingoAlerts(room.bingo_alerts || []); // Set initial room alerts
 
-      await fetchAndSetAllGameStates(); // Initial fetch of all game states
+      await fetchAndSetAllGameStates();
     };
 
     fetchInitialData();
   }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates]);
 
-  // Realtime subscription for game states and room updates
   useEffect(() => {
     if (!roomId || !user) return;
 
@@ -168,23 +164,19 @@ const GameRoom: React.FC = () => {
 
           if (payload.eventType === 'INSERT') {
             const newGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][] };
-            // If a new player (not me) joined, show an alert
             if (newGameState.player_id !== user.id) {
               setNewPlayerJoinedName(newGameState.player_name);
               setShowNewPlayerAlert(true);
             }
-            // Re-fetch all game states to update the player list and scores
             await fetchAndSetAllGameStates();
 
           } else if (payload.eventType === 'DELETE') {
-            // Re-fetch all game states to update the player list and scores
             await fetchAndSetAllGameStates();
 
           } else if (payload.eventType === 'UPDATE') {
-            const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
+            const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][] };
             console.log("Realtime - game_states update received:", updatedGameState);
 
-            // Update player scores for the specific player who updated their state
             setPlayerScores(prevScores => {
               const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
               const updatedScores = prevScores.map(score =>
@@ -196,30 +188,13 @@ const GameRoom: React.FC = () => {
               return updatedScores;
             });
 
-            // Handle bingo alerts from any player in the room
-            setAllBingoAlerts(prevAllBingoAlerts => {
-              const newAlerts = (updatedGameState.bingo_alerts || []).filter(
-                (newAlert: BingoAlert) => !prevAllBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
-              ).map((alert: BingoAlert) => ({ ...alert, playerName: updatedGameState.player_name }));
-
-              if (newAlerts.length > 0) {
-                setShowConfetti(true);
-                setTimeout(() => setShowConfetti(false), 2000);
-                const combinedAlerts = [...newAlerts, ...prevAllBingoAlerts];
-                console.log("Realtime - New bingo alerts:", combinedAlerts);
-                return combinedAlerts;
-              }
-              return prevAllBingoAlerts;
-            });
-
-            // If it's *my* game state being updated, update my grid data
             if (updatedGameState.player_id === user.id) {
               setMyGridData(updatedGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
             }
           }
         }
       )
-      .on( // Listen for room updates for global refresh signal
+      .on(
         'postgres_changes',
         {
           event: 'UPDATE',
@@ -229,10 +204,30 @@ const GameRoom: React.FC = () => {
         },
         async (payload) => {
           console.log(`Realtime - rooms table UPDATE event received for room ${roomId}:`, payload.new);
-          // If the room's last_refreshed_at was updated, trigger a full data refresh
-          if (payload.new && (payload.new as any).last_refreshed_at) {
+          const updatedRoom = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[] };
+
+          // Handle global refresh signal
+          if (updatedRoom.last_refreshed_at) {
             console.log("Realtime - Room refresh signal received. Triggering full game states fetch.");
             await fetchAndSetAllGameStates();
+          }
+
+          // Handle global bingo alerts
+          if (updatedRoom.bingo_alerts) {
+            setRoomBingoAlerts(prevRoomBingoAlerts => {
+              const newAlerts = (updatedRoom.bingo_alerts || []).filter(
+                (newAlert: BingoAlert) => !prevRoomBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
+              );
+
+              if (newAlerts.length > 0) {
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 2000);
+                const combinedAlerts = [...newAlerts, ...prevRoomBingoAlerts];
+                console.log("Realtime - New bingo alerts from room:", combinedAlerts);
+                return combinedAlerts;
+              }
+              return prevRoomBingoAlerts;
+            });
           }
         }
       )
@@ -264,53 +259,59 @@ const GameRoom: React.FC = () => {
       showError('Failed to update grid state.');
       console.error('Error updating grid:', updateGameStateError);
     } else {
-      // 1. Immediately refresh data for the current player
-      await fetchAndSetAllGameStates(); // Explicitly call for immediate local refresh
+      await fetchAndSetAllGameStates();
 
-      // 2. Trigger global refresh for other players by updating rooms.last_refreshed_at
-      // This will only succeed if the current user is the room creator due to RLS
       if (user.id === roomCreatorId) {
         console.log("GameRoom - Player is room creator, triggering global refresh via rooms table update.");
         const { error: updateRoomError } = await supabase
           .from('rooms')
           .update({ last_refreshed_at: new Date().toISOString() })
           .eq('id', roomId)
-          .eq('created_by', user.id); // Ensure only creator can update
+          .eq('created_by', user.id);
 
         if (updateRoomError) {
           console.error('Error triggering global refresh from cell toggle:', updateRoomError);
-          // No showError here, as it's expected to fail for non-creators
         }
       } else {
         console.log("GameRoom - Player is not room creator, global refresh not triggered from cell toggle due to RLS.");
       }
     }
-  }, [myGridData, myGameStateId, user, roomId, roomCreatorId, fetchAndSetAllGameStates]); // Added fetchAndSetAllGameStates to dependencies
+  }, [myGridData, myGameStateId, user, roomId, roomCreatorId, fetchAndSetAllGameStates]);
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
-    if (!myGameStateId || !user || !myPlayerName) return;
+    if (!roomId || !user || !myPlayerName) return;
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
     const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName };
-    
-    setAllBingoAlerts(prevAllBingoAlerts => {
-      const updatedAlerts = [newAlert, ...prevAllBingoAlerts];
-      
-      supabase
-        .from('game_states')
-        .update({ bingo_alerts: updatedAlerts, updated_at: new Date().toISOString() })
-        .eq('id', myGameStateId)
-        .then(({ error }) => {
-          if (error) {
-            showError('Failed to record bingo alert.');
-            console.error('Error recording bingo:', error);
-          } else {
-            showSuccess(message);
-          }
-        });
-      return updatedAlerts;
-    });
-  }, [myGameStateId, user, myPlayerName]);
+
+    // Fetch current alerts from the room, add the new one, then update the room
+    const { data: currentRoom, error: fetchRoomError } = await supabase
+      .from('rooms')
+      .select('bingo_alerts')
+      .eq('id', roomId)
+      .single();
+
+    if (fetchRoomError) {
+      showError('Failed to fetch room alerts.');
+      console.error('Error fetching room alerts for bingo:', fetchRoomError);
+      return;
+    }
+
+    const existingAlerts = currentRoom?.bingo_alerts || [];
+    const updatedAlerts = [newAlert, ...existingAlerts];
+
+    const { error: updateRoomAlertsError } = await supabase
+      .from('rooms')
+      .update({ bingo_alerts: updatedAlerts, updated_at: new Date().toISOString() })
+      .eq('id', roomId);
+
+    if (updateRoomAlertsError) {
+      showError('Failed to record bingo alert globally.');
+      console.error('Error recording global bingo:', updateRoomAlertsError);
+    } else {
+      showSuccess(message);
+    }
+  }, [roomId, user, myPlayerName]);
 
   const handleResetGame = async () => {
     if (!myGameStateId || !user) return;
@@ -319,7 +320,6 @@ const GameRoom: React.FC = () => {
       .from('game_states')
       .update({
         grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)),
-        bingo_alerts: [],
         updated_at: new Date().toISOString(),
       })
       .eq('id', myGameStateId);
@@ -337,23 +337,20 @@ const GameRoom: React.FC = () => {
   const handleGlobalRefresh = async () => {
     if (!roomId || !user) return;
 
-    // 1. Immediately refresh data for the current player
     await fetchAndSetAllGameStates();
     showSuccess('Your data has been refreshed!');
 
-    // 2. Trigger global refresh for other players by updating rooms.last_refreshed_at
     console.log("GameRoom - Triggering global refresh by updating rooms.last_refreshed_at");
     const { error } = await supabase
       .from('rooms')
       .update({ last_refreshed_at: new Date().toISOString() })
       .eq('id', roomId)
-      .eq('created_by', user.id); // Only room creator can trigger this for now
+      .eq('created_by', user.id);
 
     if (error) {
       showError('Failed to trigger global refresh for others. Only the room creator can do this.');
       console.error('Error triggering global refresh:', error);
     }
-    // Removed the success toast here as requested
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
@@ -398,11 +395,11 @@ const GameRoom: React.FC = () => {
               <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              {allBingoAlerts.length === 0 ? (
+              {roomBingoAlerts.length === 0 ? (
                 <p className="text-gray-600 italic">No bingo alerts yet...</p>
               ) : (
                 <ul className="space-y-2">
-                  {allBingoAlerts.map((alert) => (
+                  {roomBingoAlerts.map((alert) => (
                     <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
                       {alert.message}
                     </li>
@@ -439,7 +436,6 @@ const GameRoom: React.FC = () => {
         </div>
       </div>
 
-      {/* New Player Joined Alert Dialog */}
       <AlertDialog open={showNewPlayerAlert} onOpenChange={setShowNewPlayerAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
