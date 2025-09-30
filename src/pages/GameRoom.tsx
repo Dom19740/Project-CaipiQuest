@@ -118,16 +118,19 @@ const GameRoom: React.FC = () => {
             const updatedGameState = payload.new as { player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             
             // Handle bingo alerts from any player in the room
-            const newAlerts = (updatedGameState.bingo_alerts || []).filter(
-              (newAlert: BingoAlert) => !allBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
-            ).map((alert: BingoAlert) => ({ ...alert, playerName: updatedGameState.player_name }));
+            setAllBingoAlerts(prevAllBingoAlerts => {
+              const newAlerts = (updatedGameState.bingo_alerts || []).filter(
+                (newAlert: BingoAlert) => !prevAllBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
+              ).map((alert: BingoAlert) => ({ ...alert, playerName: updatedGameState.player_name }));
 
-            if (newAlerts.length > 0) {
-              setAllBingoAlerts(prev => [...newAlerts, ...prev]);
-              // Trigger confetti for any new bingo
-              setShowConfetti(true);
-              setTimeout(() => setShowConfetti(false), 2000);
-            }
+              if (newAlerts.length > 0) {
+                // Trigger confetti for any new bingo
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 2000);
+                return [...newAlerts, ...prevAllBingoAlerts];
+              }
+              return prevAllBingoAlerts;
+            });
 
             // If it's *my* game state being updated, update my grid data
             if (updatedGameState.player_id === user.id) {
@@ -160,7 +163,7 @@ const GameRoom: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, user, allBingoAlerts]); // Depend on allBingoAlerts to correctly filter new alerts
+  }, [roomId, user]); // Removed allBingoAlerts from dependencies as it's handled by functional update
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
     if (!myGameStateId || !user) return;
@@ -190,22 +193,28 @@ const GameRoom: React.FC = () => {
     if (!myGameStateId || !user) return;
 
     const newAlert: BingoAlert = { id: Date.now().toString(), type, message };
-    const updatedAlerts = [newAlert, ...allBingoAlerts]; // Add new alert to the beginning
-
-    const { error } = await supabase
-      .from('game_states')
-      .update({ bingo_alerts: updatedAlerts, updated_at: new Date().toISOString() })
-      .eq('id', myGameStateId);
-
-    if (error) {
-      showError('Failed to record bingo alert.');
-      console.error('Error recording bingo:', error);
-    } else {
-      showSuccess(message); // Show toast for the current player
-    }
+    
+    // Use functional update for allBingoAlerts to ensure we have the latest state for adding
+    setAllBingoAlerts(prevAllBingoAlerts => {
+      const updatedAlerts = [newAlert, ...prevAllBingoAlerts];
+      
+      supabase
+        .from('game_states')
+        .update({ bingo_alerts: updatedAlerts, updated_at: new Date().toISOString() })
+        .eq('id', myGameStateId)
+        .then(({ error }) => {
+          if (error) {
+            showError('Failed to record bingo alert.');
+            console.error('Error recording bingo:', error);
+          } else {
+            showSuccess(message); // Show toast for the current player
+          }
+        });
+      return updatedAlerts;
+    });
 
     // Confetti is handled by the realtime listener for all players
-  }, [myGameStateId, user, allBingoAlerts]);
+  }, [myGameStateId, user]); // Removed allBingoAlerts from dependencies
 
   const handleResetGame = async () => {
     if (!myGameStateId || !user) return;
@@ -270,9 +279,7 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4">
           {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerNamesInRoom.length} />}
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
-            <CardHeader className="bg-lime-200 border-b border-lime-400">
-              <CardTitle className="text-lime-800 text-2xl">Global Alerts</CardTitle>
-            </CardHeader>
+            {/* Removed CardHeader and CardTitle for Global Alerts */}
             <CardContent className="p-4">
               {allBingoAlerts.length === 0 ? (
                 <p className="text-gray-600 italic">No bingo alerts yet...</p>
