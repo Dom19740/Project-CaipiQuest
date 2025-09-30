@@ -264,7 +264,10 @@ const GameRoom: React.FC = () => {
       showError('Failed to update grid state.');
       console.error('Error updating grid:', updateGameStateError);
     } else {
-      // After successfully updating my game state, also trigger a global refresh
+      // 1. Immediately refresh data for the current player
+      await fetchAndSetAllGameStates(); // Explicitly call for immediate local refresh
+
+      // 2. Trigger global refresh for other players by updating rooms.last_refreshed_at
       // This will only succeed if the current user is the room creator due to RLS
       if (user.id === roomCreatorId) {
         console.log("GameRoom - Player is room creator, triggering global refresh via rooms table update.");
@@ -282,7 +285,7 @@ const GameRoom: React.FC = () => {
         console.log("GameRoom - Player is not room creator, global refresh not triggered from cell toggle due to RLS.");
       }
     }
-  }, [myGridData, myGameStateId, user, roomId, roomCreatorId]);
+  }, [myGridData, myGameStateId, user, roomId, roomCreatorId, fetchAndSetAllGameStates]); // Added fetchAndSetAllGameStates to dependencies
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
     if (!myGameStateId || !user || !myPlayerName) return;
