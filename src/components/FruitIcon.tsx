@@ -14,7 +14,7 @@ const fruitEmojis: { [key: string]: string } = {
   pineapple: '🍍',
   pitaya: '🐉', // Using dragon emoji for pitaya (dragon fruit)
   plum: '🍑', // Using peach emoji for plum
-  ginger: '🫚', // Using ginger root emoji
+  ginger: '🌳', // Using tree emoji as a placeholder for ginger
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
