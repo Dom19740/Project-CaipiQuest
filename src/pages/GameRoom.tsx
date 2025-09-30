@@ -160,48 +160,31 @@ const GameRoom: React.FC = () => {
         async (payload) => {
           console.log(`Realtime - Event received by user ${user.id} in room ${roomId}:`, payload.eventType, payload.new);
 
-          if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
-            // For new players joining or leaving, re-fetch all game states to get the complete list
-            const { data: allGameStates, error: allGameStatesError } = await supabase
-              .from('game_states')
-              .select('*')
-              .eq('room_id', roomId);
+          // Always re-fetch all game states to ensure player list and scores are fully consistent
+          // This handles INSERT (new player), DELETE (player leaves), and UPDATE (square click, bingo alert)
+          const { data: allGameStates, error: allGameStatesError } = await supabase
+            .from('game_states')
+            .select('*')
+            .eq('room_id', roomId);
 
-            if (allGameStatesError) {
-              console.error('Realtime - Error fetching all game states on INSERT/DELETE:', allGameStatesError);
-              return;
-            }
-
-            const scores: PlayerScore[] = allGameStates.map(gs => ({
-              id: gs.player_id,
-              name: gs.player_name,
-              squaresClicked: countCheckedSquares(gs.grid_data || []),
-              isMe: gs.player_id === user.id,
-            }));
-            setPlayerScores(scores);
-            console.log("Realtime - Updated player scores (INSERT/DELETE):", scores);
-
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
-            console.log("Realtime - game_states update received:", updatedGameState);
-            console.log("Realtime - Updated grid_data for player:", updatedGameState.player_id, updatedGameState.grid_data); // NEW LOG
-
-            // Update player scores for the specific player who updated their state
-            setPlayerScores(prevScores => {
-              const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
-              const updatedScores = prevScores.map(score =>
-                score.id === updatedGameState.player_id
-                  ? { ...score, squaresClicked: newSquaresClicked, name: updatedGameState.player_name }
-                  : score
-              );
-              console.log("Realtime - Updated player scores (UPDATE):", updatedScores);
-              return updatedScores;
-            });
+          if (allGameStatesError) {
+            console.error('Realtime - Error fetching all game states on any event:', allGameStatesError);
+            return;
           }
+
+          const scores: PlayerScore[] = allGameStates.map(gs => ({
+            id: gs.player_id,
+            name: gs.player_name,
+            squaresClicked: countCheckedSquares(gs.grid_data || []),
+            isMe: gs.player_id === user.id,
+          }));
+          console.log("Realtime - About to set player scores (all events):", scores);
+          setPlayerScores(scores);
 
           // Handle bingo alerts from any player in the room
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
+            
             setAllBingoAlerts(prevAllBingoAlerts => {
               const newAlerts = (updatedGameState.bingo_alerts || []).filter(
                 (newAlert: BingoAlert) => !prevAllBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
