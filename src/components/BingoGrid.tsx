@@ -33,16 +33,17 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
   const checkBingo = useCallback(() => {
     const newCompletedBingos = new Set(completedBingos);
-    let bingoTriggered = false;
+    let rowColBingoTriggered = false;
+    let diagonalBingoTriggered = false;
+    let fullGridBingoTriggered = false;
 
     // Check rows
     for (let i = 0; i < NUM_PLAYABLE_CELLS; i++) {
       const rowId = `row-${i}`;
       if (checkedCells[i] && checkedCells[i].every(cell => cell)) {
         if (!newCompletedBingos.has(rowId)) {
-          onBingo('rowCol', `BINGO! Row ${i + 1} completed!`);
+          rowColBingoTriggered = true;
           newCompletedBingos.add(rowId);
-          bingoTriggered = true;
         }
       }
     }
@@ -52,9 +53,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       const colId = `col-${j}`;
       if (checkedCells.every(row => row && row[j])) {
         if (!newCompletedBingos.has(colId)) {
-          onBingo('rowCol', `BINGO! Column ${j + 1} completed!`);
+          rowColBingoTriggered = true;
           newCompletedBingos.add(colId);
-          bingoTriggered = true;
         }
       }
     }
@@ -63,9 +63,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     const mainDiagId = 'diag-main';
     if (Array(NUM_PLAYABLE_CELLS).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][i])) {
       if (!newCompletedBingos.has(mainDiagId)) {
-        onBingo('diagonal', 'BINGO! Main diagonal completed!');
+        diagonalBingoTriggered = true;
         newCompletedBingos.add(mainDiagId);
-        bingoTriggered = true;
       }
     }
 
@@ -73,9 +72,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     const antiDiagId = 'diag-anti';
     if (Array(NUM_PLAYABLE_CELLS).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][NUM_PLAYABLE_CELLS - 1 - i])) {
       if (!newCompletedBingos.has(antiDiagId)) {
-        onBingo('diagonal', 'BINGO! Anti-diagonal completed!');
+        diagonalBingoTriggered = true;
         newCompletedBingos.add(antiDiagId);
-        bingoTriggered = true;
       }
     }
 
@@ -83,15 +81,22 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     const fullGridId = 'full-grid';
     if (checkedCells.every(row => row && row.every(cell => cell))) {
       if (!newCompletedBingos.has(fullGridId)) {
-        onBingo('fullGrid', 'MEGA BINGO! Full grid completed!');
+        fullGridBingoTriggered = true;
         newCompletedBingos.add(fullGridId);
-        bingoTriggered = true;
       }
     }
 
-    if (bingoTriggered) {
-      setCompletedBingos(newCompletedBingos);
+    // Trigger onBingo callbacks based on aggregated new bingos
+    if (fullGridBingoTriggered) {
+      onBingo('fullGrid', 'completed the full grid!');
+    } else if (diagonalBingoTriggered) {
+      onBingo('diagonal', 'completed a diagonal!');
+    } else if (rowColBingoTriggered) {
+      onBingo('rowCol', 'completed a row or column!');
     }
+
+    // Update the completed bingos state
+    setCompletedBingos(newCompletedBingos);
   }, [checkedCells, onBingo, completedBingos]);
 
   useEffect(() => {

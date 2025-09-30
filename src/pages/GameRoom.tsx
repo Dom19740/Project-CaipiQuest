@@ -240,9 +240,10 @@ const GameRoom: React.FC = () => {
     }
   }, [myGridData, myGameStateId, user]);
 
-  const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => {
+  const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
     if (!myGameStateId || !user || !myPlayerName) return; // Ensure myPlayerName is available
 
+    const message = `BINGO! ${myPlayerName} ${baseMessage}`;
     const newAlert: BingoAlert = { id: Date.now().toString(), type, message, playerName: myPlayerName };
     
     setAllBingoAlerts(prevAllBingoAlerts => {
@@ -334,7 +335,7 @@ const GameRoom: React.FC = () => {
                 <ul className="space-y-2">
                   {allBingoAlerts.map((alert) => (
                     <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
-                      {alert.playerName ? `${alert.playerName}: ` : ''}{alert.message}
+                      {alert.message}
                     </li>
                   ))}
                 </ul>
