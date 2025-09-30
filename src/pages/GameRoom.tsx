@@ -35,7 +35,7 @@ interface PlayerScore {
   isMe: boolean;
 }
 
-const NUM_PLAYABLE_CELLS = 9;
+const NUM_PLAYABLE_CELLS = 5; // Changed from 9 to 5
 
 let alertIdCounter = 0;
 const generateAlertId = () => {
@@ -106,7 +106,13 @@ const GameRoom: React.FC = () => {
     const myGameState = allGameStates.find(gs => gs.player_id === user.id);
     if (myGameState) {
       setMyGameStateId(myGameState.id);
-      setMyGridData(myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+      // Ensure grid_data is initialized to NUM_PLAYABLE_CELLS x NUM_PLAYABLE_CELLS if it's null or different size
+      const fetchedGrid = myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false));
+      if (fetchedGrid.length !== NUM_PLAYABLE_CELLS || (fetchedGrid.length > 0 && fetchedGrid[0].length !== NUM_PLAYABLE_CELLS)) {
+        setMyGridData(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+      } else {
+        setMyGridData(fetchedGrid);
+      }
       setMyPlayerName(myGameState.player_name);
     }
   }, [roomId, user]);
@@ -352,20 +358,18 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  // The getAlertClasses function is no longer needed as the alerts panel is removed.
-  // Keeping it commented out in case it's needed for future features.
-  // const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
-  //   switch (type) {
-  //     case 'rowCol':
-  //       return 'text-green-700 bg-green-100 border-green-300';
-  //     case 'diagonal':
-  //       return 'text-blue-700 bg-blue-100 border-blue-300';
-  //     case 'fullGrid':
-  //       return 'text-white bg-gradient-to-r from-purple-600 to-pink-700 border-purple-800 text-3xl font-extrabold p-4 animate-pulse';
-  //     default:
-  //       return 'text-gray-700 bg-gray-100 border-gray-300';
-  //   }
-  // };
+  const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
+    switch (type) {
+      case 'rowCol':
+        return 'text-green-700 bg-green-100 border-green-300';
+      case 'diagonal':
+        return 'text-blue-700 bg-blue-100 border-blue-300';
+      case 'fullGrid':
+        return 'text-white bg-gradient-to-r from-purple-600 to-pink-700 border-purple-800 text-3xl font-extrabold p-4 animate-pulse';
+      default:
+        return 'text-gray-700 bg-gray-100 border-gray-300';
+    }
+  };
 
   if (isLoading || !user || !roomId) {
     return (
@@ -389,10 +393,26 @@ const GameRoom: React.FC = () => {
           onCellToggle={handleCellToggle}
         />
         <div className="flex flex-col gap-4">
-          {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />} {/* Use the new RoomSidebar */}
+          {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
           
-          {/* The Alerts panel is removed from here */}
-
+          <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
+            <CardHeader className="bg-lime-200 border-b border-lime-400">
+              <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              {roomBingoAlerts.length === 0 ? (
+                <p className="text-gray-600 italic">No bingo alerts yet...</p>
+              ) : (
+                <ul className="space-y-2">
+                  {roomBingoAlerts.map((alert) => (
+                    <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
+                      {alert.message}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="w-full lg:w-80 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">

@@ -8,6 +8,8 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
+const NUM_PLAYABLE_CELLS = 5; // Define for consistency with GameRoom
+
 const Lobby: React.FC = () => {
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [roomCodeInput, setRoomCodeInput] = useState('');
@@ -67,7 +69,7 @@ const Lobby: React.FC = () => {
       // Create the room
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName }) // Removed player_names
+        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName })
         .select()
         .single();
 
@@ -77,7 +79,7 @@ const Lobby: React.FC = () => {
       // Create initial game state for the creator
       const { error: gameStateError } = await supabase
         .from('game_states')
-        .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
+        .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)) });
 
       if (gameStateError) throw gameStateError;
       console.log("Lobby - Initial game state created for creator.");
@@ -107,7 +109,7 @@ const Lobby: React.FC = () => {
       // Find the room by code
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('id') // Only need room ID now
+        .select('id')
         .eq('code', roomCodeInput.toUpperCase())
         .single();
 
@@ -122,7 +124,7 @@ const Lobby: React.FC = () => {
       // Check if player already has a game state in this room
       const { data: existingGameState, error: existingGameStateError } = await supabase
         .from('game_states')
-        .select('id, player_name') // Select specific columns
+        .select('id, player_name')
         .eq('room_id', roomData.id)
         .eq('player_id', user.id)
         .single();
@@ -137,7 +139,7 @@ const Lobby: React.FC = () => {
         // Create initial game state for the joining player
         const { error: gameStateError } = await supabase
           .from('game_states')
-          .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
+          .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)) });
 
         if (gameStateError) throw gameStateError;
         console.log("Lobby - New game state created for joining player.");
@@ -150,8 +152,6 @@ const Lobby: React.FC = () => {
         if (updatePlayerNameError) console.error('Lobby - Error updating player name in game state:', updatePlayerNameError.message);
         console.log("Lobby - Updated player name in existing game state.");
       }
-
-      // No need to update player_names in the room table anymore
 
       showSuccess(`Joined room "${roomCodeInput.toUpperCase()}"!`);
       navigate(`/game/${roomData.id}`);

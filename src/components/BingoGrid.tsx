@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
-const fruits = ['passionfruit', 'lemon', 'strawberry', 'mango', 'lime', 'pineapple', 'pitaya', 'plum', 'ginger'];
-const NUM_PLAYABLE_CELLS = fruits.length; // 9 playable rows/columns
-const CSS_GRID_DIMENSION = NUM_PLAYABLE_CELLS + 1; // 10 total rows/columns for CSS grid (including labels)
+const fruits = ['passionfruit', 'lemon', 'strawberry', 'mango', 'lime']; // Reduced to 5 fruits
+const NUM_PLAYABLE_CELLS = 5; // Changed from 9 to 5
+const CSS_GRID_DIMENSION = NUM_PLAYABLE_CELLS + 1; // 6 total rows/columns for CSS grid (including labels)
 
 interface BingoGridProps {
   onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
@@ -13,13 +13,9 @@ interface BingoGridProps {
 }
 
 const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle }) => {
-  // Use initialGridState directly, no internal checkedCells state
   const checkedCells = initialGridState;
-
-  // Use a ref to store completed bingos to avoid it being a dependency of checkBingo
   const completedBingosRef = useRef<Set<string>>(new Set());
 
-  // Effect to reset the grid when resetKey changes
   useEffect(() => {
     completedBingosRef.current = new Set();
   }, [resetKey]);
