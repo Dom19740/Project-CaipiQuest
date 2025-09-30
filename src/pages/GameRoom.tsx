@@ -70,9 +70,6 @@ const GameRoom: React.FC = () => {
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
-  // State to manually trigger a refresh of all game states
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const countCheckedSquares = (grid: boolean[][]): number => {
     if (!grid || grid.length === 0) return 0;
     return grid.flat().filter(Boolean).length;
@@ -117,7 +114,7 @@ const GameRoom: React.FC = () => {
     }
   }, [roomId, user]);
 
-  // Fetch initial room and player data, and also trigger on manual refresh
+  // Fetch initial room and player data
   useEffect(() => {
     if (isLoading || !user || !roomId) {
       if (!isLoading && !user) {
@@ -146,16 +143,16 @@ const GameRoom: React.FC = () => {
     };
 
     fetchInitialData();
-  }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates, refreshTrigger]); // Added refreshTrigger here
+  }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates]);
 
   // Realtime subscription for game states
   useEffect(() => {
     if (!roomId || !user) return;
 
-    console.log(`GameRoom - Subscribing to room:${roomId} for user: ${user.id}`);
+    console.log(`GameRoom - Subscribing to game_states in room:${roomId} for user: ${user.id}`);
 
-    const channel = supabase
-      .channel(`room:${roomId}`)
+    const gameStateChannel = supabase
+      .channel(`game_states_room:${roomId}`)
       .on(
         'postgres_changes',
         {
@@ -165,7 +162,7 @@ const GameRoom: React.FC = () => {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          console.log(`Realtime - Event received by user ${user.id} in room ${roomId}:`, payload.eventType, payload.new);
+          console.log(`Realtime - game_states event received by user ${user.id} in room ${roomId}:`, payload.eventType, payload.new);
 
           if (payload.eventType === 'INSERT') {
             const newGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][] };
@@ -222,9 +219,33 @@ const GameRoom: React.FC = () => {
       )
       .subscribe();
 
+    // Realtime subscription for room updates (for global refresh)
+    console.log(`GameRoom - Subscribing to rooms table for room:${roomId} for user: ${user.id}`);
+    const roomChannel = supabase
+      .channel(`rooms_room:${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        async (payload) => {
+          console.log(`Realtime - rooms table UPDATE event received for room ${roomId}:`, payload.new);
+          // If the room's last_refreshed_at was updated, trigger a full data refresh
+          if (payload.new && (payload.new as any).last_refreshed_at) {
+            console.log("Realtime - Room refresh signal received. Triggering full game states fetch.");
+            await fetchAndSetAllGameStates();
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      console.log(`GameRoom - Unsubscribing from room:${roomId} for user: ${user.id}`);
-      supabase.removeChannel(channel);
+      console.log(`GameRoom - Unsubscribing from game_states_room:${roomId} and rooms_room:${roomId}`);
+      supabase.removeChannel(gameStateChannel);
+      supabase.removeChannel(roomChannel);
     };
   }, [roomId, user, fetchAndSetAllGameStates]);
 
@@ -294,6 +315,24 @@ const GameRoom: React.FC = () => {
       showSuccess('Your game has been reset!');
       setResetKey(prev => prev + 1);
       setMyGridData(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+    }
+  };
+
+  const handleGlobalRefresh = async () => {
+    if (!roomId || !user) return;
+
+    console.log("GameRoom - Triggering global refresh by updating rooms.last_refreshed_at");
+    const { error } = await supabase
+      .from('rooms')
+      .update({ last_refreshed_at: new Date().toISOString() })
+      .eq('id', roomId)
+      .eq('created_by', user.id); // Only room creator can trigger this for now
+
+    if (error) {
+      showError('Failed to trigger global refresh. Only the room creator can do this.');
+      console.error('Error triggering global refresh:', error);
+    } else {
+      showSuccess('Global refresh signal sent!');
     }
   };
 
@@ -371,8 +410,8 @@ const GameRoom: React.FC = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
-          <Button onClick={() => setRefreshTrigger(prev => prev + 1)} className="w-full lg:w-80 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
-            Refresh Data
+          <Button onClick={handleGlobalRefresh} className="w-full lg:w-80 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
+            Refresh Data (Global)
           </Button>
           <Button onClick={() => navigate('/lobby')} className="w-full lg:w-80 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
             Leave Room
