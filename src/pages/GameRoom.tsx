@@ -50,6 +50,7 @@ const GameRoom: React.FC = () => {
   const { user, isLoading } = useSession();
 
   const [roomCode, setRoomCode] = useState<string>('');
+  const [roomCreatorId, setRoomCreatorId] = useState<string | null>(null); // New state for room creator
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
   const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]);
@@ -127,7 +128,7 @@ const GameRoom: React.FC = () => {
     const fetchInitialData = async () => {
       const { data: room, error: roomError } = await supabase
         .from('rooms')
-        .select('code')
+        .select('code, created_by') // Also fetch created_by
         .eq('id', roomId)
         .single();
 
@@ -138,6 +139,7 @@ const GameRoom: React.FC = () => {
         return;
       }
       setRoomCode(room.code);
+      setRoomCreatorId(room.created_by); // Set room creator ID
 
       await fetchAndSetAllGameStates(); // Initial fetch of all game states
     };
@@ -243,7 +245,7 @@ const GameRoom: React.FC = () => {
   }, [roomId, user, fetchAndSetAllGameStates]);
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
-    if (!myGameStateId || !user) return;
+    if (!myGameStateId || !user || !roomId) return;
 
     const newGridData = myGridData.map(r => [...r]);
     const newState = !newGridData[row][col];
@@ -253,16 +255,34 @@ const GameRoom: React.FC = () => {
     }
     setMyGridData(newGridData);
 
-    const { error } = await supabase
+    const { error: updateGameStateError } = await supabase
       .from('game_states')
       .update({ grid_data: newGridData, updated_at: new Date().toISOString() })
       .eq('id', myGameStateId);
 
-    if (error) {
+    if (updateGameStateError) {
       showError('Failed to update grid state.');
-      console.error('Error updating grid:', error);
+      console.error('Error updating grid:', updateGameStateError);
+    } else {
+      // After successfully updating my game state, also trigger a global refresh
+      // This will only succeed if the current user is the room creator due to RLS
+      if (user.id === roomCreatorId) {
+        console.log("GameRoom - Player is room creator, triggering global refresh via rooms table update.");
+        const { error: updateRoomError } = await supabase
+          .from('rooms')
+          .update({ last_refreshed_at: new Date().toISOString() })
+          .eq('id', roomId)
+          .eq('created_by', user.id); // Ensure only creator can update
+
+        if (updateRoomError) {
+          console.error('Error triggering global refresh from cell toggle:', updateRoomError);
+          // No showError here, as it's expected to fail for non-creators
+        }
+      } else {
+        console.log("GameRoom - Player is not room creator, global refresh not triggered from cell toggle due to RLS.");
+      }
     }
-  }, [myGridData, myGameStateId, user]);
+  }, [myGridData, myGameStateId, user, roomId, roomCreatorId]);
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
     if (!myGameStateId || !user || !myPlayerName) return;
@@ -329,9 +349,8 @@ const GameRoom: React.FC = () => {
     if (error) {
       showError('Failed to trigger global refresh for others. Only the room creator can do this.');
       console.error('Error triggering global refresh:', error);
-    } else {
-      showSuccess('Global refresh signal sent to other players!');
     }
+    // Removed the success toast here as requested
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
