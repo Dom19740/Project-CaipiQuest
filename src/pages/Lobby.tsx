@@ -28,10 +28,13 @@ const Lobby: React.FC = () => {
   useEffect(() => {
     const ensureSession = async () => {
       if (!isLoading && !user) {
+        console.log("Attempting anonymous sign-in...");
         const { error } = await supabase.auth.signInAnonymously();
         if (error) {
           console.error('Error signing in anonymously:', error.message);
           showError('Failed to establish a session. Please try again.');
+        } else {
+          console.log("Anonymous sign-in successful.");
         }
       }
     };
@@ -148,6 +151,8 @@ const Lobby: React.FC = () => {
     }
   };
 
+  const isSessionReady = !isLoading && user; // True when session is loaded and a user (even anonymous) is present
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-lime-50 to-emerald-100 p-4">
       <div className="text-center bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border-4 border-lime-400 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8">
@@ -165,7 +170,7 @@ const Lobby: React.FC = () => {
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             className="text-center border-lime-400 focus:border-lime-600 focus:ring-lime-600 text-lg py-2"
-            disabled={isCreating || isJoining}
+            disabled={isCreating || isJoining || !isSessionReady}
           />
         </div>
 
@@ -178,7 +183,7 @@ const Lobby: React.FC = () => {
             <CardContent>
               <Button
                 onClick={handleCreateRoom}
-                disabled={isCreating || isJoining || !playerName.trim()}
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
                 className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
                 {isCreating ? 'Creating...' : 'Create Room'}
@@ -198,11 +203,11 @@ const Lobby: React.FC = () => {
                 value={roomCodeInput}
                 onChange={(e) => setRoomCodeInput(e.target.value)}
                 className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
-                disabled={isCreating || isJoining}
+                disabled={isCreating || isJoining || !isSessionReady}
               />
               <Button
                 onClick={handleJoinRoom}
-                disabled={isJoining || isCreating || roomCodeInput.trim() === '' || !playerName.trim()}
+                disabled={isJoining || isCreating || roomCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
                 {isJoining ? 'Joining...' : 'Join Room'}
