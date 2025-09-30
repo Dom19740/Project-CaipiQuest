@@ -67,7 +67,7 @@ const Lobby: React.FC = () => {
       // Create the room
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName, player_names: [playerName] })
+        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName }) // Removed player_names
         .select()
         .single();
 
@@ -107,7 +107,7 @@ const Lobby: React.FC = () => {
       // Find the room by code
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('id, player_names')
+        .select('id') // Only need room ID now
         .eq('code', roomCodeInput.toUpperCase())
         .single();
 
@@ -120,10 +120,9 @@ const Lobby: React.FC = () => {
       console.log("Lobby - Found room:", roomData);
 
       // Check if player already has a game state in this room
-      // Changed select('id, player_name') to select('*') to debug 406 error
       const { data: existingGameState, error: existingGameStateError } = await supabase
         .from('game_states')
-        .select('*') 
+        .select('id, player_name') // Select specific columns
         .eq('room_id', roomData.id)
         .eq('player_id', user.id)
         .single();
@@ -152,18 +151,7 @@ const Lobby: React.FC = () => {
         console.log("Lobby - Updated player name in existing game state.");
       }
 
-      // Update player_names in the room if this player's name isn't already there
-      let updatedPlayerNames = roomData.player_names || [];
-      console.log("Lobby - Current player names in room before update:", updatedPlayerNames);
-      if (!updatedPlayerNames.includes(playerName)) {
-        updatedPlayerNames = [...updatedPlayerNames, playerName];
-        const { error: updateRoomError } = await supabase
-          .from('rooms')
-          .update({ player_names: updatedPlayerNames })
-          .eq('id', roomData.id);
-        if (updateRoomError) console.error('Lobby - Error updating room player names:', updateRoomError.message);
-        console.log("Lobby - Updated room player names to:", updatedPlayerNames);
-      }
+      // No need to update player_names in the room table anymore
 
       showSuccess(`Joined room "${roomCodeInput.toUpperCase()}"!`);
       navigate(`/game/${roomData.id}`);

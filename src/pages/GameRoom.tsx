@@ -51,7 +51,7 @@ const GameRoom: React.FC = () => {
   const { user, isLoading } = useSession();
 
   const [roomCode, setRoomCode] = useState<string>('');
-  const [playerNamesInRoom, setPlayerNamesInRoom] = useState<string[]>([]);
+  // Removed playerNamesInRoom state, will derive from playerScores
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
   const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]); // Global alerts from all players
@@ -90,10 +90,10 @@ const GameRoom: React.FC = () => {
     }
 
     const fetchRoomAndGameStates = async () => {
-      // Fetch room details
+      // Fetch room details (only code, player_names is removed)
       const { data: room, error: roomError } = await supabase
         .from('rooms')
-        .select('code, player_names')
+        .select('code')
         .eq('id', roomId)
         .single();
 
@@ -104,11 +104,8 @@ const GameRoom: React.FC = () => {
         return;
       }
       setRoomCode(room.code);
-      setPlayerNamesInRoom(room.player_names || []);
-      console.log("Initial room player names:", room.player_names);
 
-
-      // Fetch all game states for this room
+      // Fetch all game states for this room to get players and their scores
       const { data: allGameStates, error: allGameStatesError } = await supabase
         .from('game_states')
         .select('*')
@@ -148,7 +145,7 @@ const GameRoom: React.FC = () => {
     fetchRoomAndGameStates();
   }, [user, roomId, navigate, isLoading]);
 
-  // Realtime subscription for player count and global alerts
+  // Realtime subscription for game states (to update player scores and global alerts)
   useEffect(() => {
     if (!roomId || !user) return;
 
@@ -159,39 +156,37 @@ const GameRoom: React.FC = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Listen for INSERT, UPDATE, DELETE
           schema: 'public',
           table: 'game_states',
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
+          // Re-fetch all game states to get the most current list of players and their data
+          const { data: allGameStates, error: allGameStatesError } = await supabase
+            .from('game_states')
+            .select('*')
+            .eq('room_id', roomId);
+
+          if (allGameStatesError) {
+            console.error('Realtime - Error fetching all game states on update:', allGameStatesError);
+            return;
+          }
+
+          const scores: PlayerScore[] = allGameStates.map(gs => ({
+            id: gs.player_id,
+            name: gs.player_name,
+            squaresClicked: countCheckedSquares(gs.grid_data || []),
+            isMe: gs.player_id === user.id,
+          }));
+          setPlayerScores(scores);
+          console.log("Realtime - Updated player scores:", scores);
+
+          // Process alerts and my grid data only if it's an UPDATE or INSERT
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             console.log("Realtime - game_states update received:", updatedGameState);
             
-            // Update player scores
-            setPlayerScores(prevScores => {
-              const existingIndex = prevScores.findIndex(p => p.id === updatedGameState.player_id);
-              const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
-              const updatedScore: PlayerScore = {
-                id: updatedGameState.player_id,
-                name: updatedGameState.player_name,
-                squaresClicked: newSquaresClicked,
-                isMe: updatedGameState.player_id === user.id,
-              };
-
-              let newScores;
-              if (existingIndex > -1) {
-                newScores = prevScores.map((score, index) =>
-                  index === existingIndex ? updatedScore : score
-                );
-              } else {
-                newScores = [...prevScores, updatedScore];
-              }
-              console.log("Realtime - Updated player scores:", newScores);
-              return newScores;
-            });
-
             // Handle bingo alerts from any player in the room
             setAllBingoAlerts(prevAllBingoAlerts => {
               const newAlerts = (updatedGameState.bingo_alerts || []).filter(
@@ -216,30 +211,8 @@ const GameRoom: React.FC = () => {
           }
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${roomId}`,
-        },
-        (payload) => {
-          const updatedRoom = payload.new as { player_names: string[] };
-          setPlayerNamesInRoom(updatedRoom.player_names || []);
-          console.log("Realtime - Updated room player names received:", updatedRoom.player_names);
-        }
-      )
+      // Removed subscription for 'rooms' table updates as player_names is no longer there
       .subscribe();
-
-    // Initial player count fetch (using player_names from rooms table)
-    supabase.from('rooms').select('player_names').eq('id', roomId).single()
-      .then(({ data, error }) => {
-        if (!error && data) {
-          setPlayerNamesInRoom(data.player_names || []);
-          console.log("Initial room player names (from direct fetch):", data.player_names);
-        }
-      });
 
     return () => {
       console.log(`GameRoom - Unsubscribing from room:${roomId} for user: ${user.id}`);
@@ -356,9 +329,12 @@ const GameRoom: React.FC = () => {
           onCellToggle={handleCellToggle}
         />
         <div className="flex flex-col gap-4">
-          {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerNamesInRoom.length} />}
+          {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerScores.length} />}
           <PlayerScoreList playerScores={playerScores} /> {/* New PlayerScoreList component */}
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
+            <CardHeader className="bg-lime-200 border-b border-lime-400">
+              <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
+            </CardHeader>
             <CardContent className="p-4">
               {allBingoAlerts.length === 0 ? (
                 <p className="text-gray-600 italic">No bingo alerts yet...</p>
