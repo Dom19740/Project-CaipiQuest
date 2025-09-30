@@ -20,13 +20,13 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import RoomInfo from '@/components/RoomInfo';
-import PlayerScoreList from '@/components/PlayerScoreList'; // Import the new component
+import PlayerScoreList from '@/components/PlayerScoreList';
 
 interface BingoAlert {
   id: string;
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
-  playerName?: string; // To show who got the bingo
+  playerName?: string;
 }
 
 interface PlayerScore {
@@ -36,13 +36,12 @@ interface PlayerScore {
   isMe: boolean;
 }
 
-const NUM_PLAYABLE_CELLS = 9; // Define this here for consistency
+const NUM_PLAYABLE_CELLS = 9;
 
-// Simple counter for generating unique alert IDs
 let alertIdCounter = 0;
 const generateAlertId = () => {
   alertIdCounter += 1;
-  return `alert-${alertIdCounter}-${Date.now()}`; // Combine counter with timestamp for uniqueness
+  return `alert-${alertIdCounter}-${Date.now()}`;
 };
 
 const GameRoom: React.FC = () => {
@@ -51,12 +50,11 @@ const GameRoom: React.FC = () => {
   const { user, isLoading } = useSession();
 
   const [roomCode, setRoomCode] = useState<string>('');
-  // Removed playerNamesInRoom state, will derive from playerScores
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
-  const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]); // Global alerts from all players
-  const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || ''); // Get player name from local storage
-  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]); // New state for player scores
+  const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]);
+  const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
+  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({
@@ -66,9 +64,8 @@ const GameRoom: React.FC = () => {
     initialVelocityX: { min: -5, max: 5 },
     initialVelocityY: { min: -10, max: -5 },
   });
-  const [resetKey, setResetKey] = useState(0); // Key to force BingoGrid reset
+  const [resetKey, setResetKey] = useState(0);
 
-  // Helper to count checked squares
   const countCheckedSquares = (grid: boolean[][]): number => {
     if (!grid || grid.length === 0) return 0;
     return grid.flat().filter(Boolean).length;
@@ -91,7 +88,6 @@ const GameRoom: React.FC = () => {
     }
 
     const fetchRoomAndGameStates = async () => {
-      // Fetch room details (only code, player_names is removed)
       const { data: room, error: roomError } = await supabase
         .from('rooms')
         .select('code')
@@ -106,7 +102,6 @@ const GameRoom: React.FC = () => {
       }
       setRoomCode(room.code);
 
-      // Fetch all game states for this room to get players and their scores
       const { data: allGameStates, error: allGameStatesError } = await supabase
         .from('game_states')
         .select('*')
@@ -115,7 +110,6 @@ const GameRoom: React.FC = () => {
       if (allGameStatesError) {
         showError('Failed to load game states for the room.');
         console.error('GameRoom - Error fetching all game states:', allGameStatesError);
-        // Log the full error object for detailed debugging
         console.error('GameRoom - Full game states fetch error object:', JSON.stringify(allGameStatesError, null, 2));
         navigate('/lobby');
         return;
@@ -130,8 +124,6 @@ const GameRoom: React.FC = () => {
       setPlayerScores(scores);
       console.log("Initial player scores:", scores);
 
-
-      // Find current player's game state
       const myGameState = allGameStates.find(gs => gs.player_id === user.id);
 
       if (!myGameState) {
@@ -143,12 +135,13 @@ const GameRoom: React.FC = () => {
       setMyGameStateId(myGameState.id);
       setMyGridData(myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
       setAllBingoAlerts(myGameState.bingo_alerts || []);
+      setMyPlayerName(myGameState.player_name); // Ensure myPlayerName is set from fetched data
     };
 
     fetchRoomAndGameStates();
   }, [user, roomId, navigate, isLoading]);
 
-  // Realtime subscription for game states (to update player scores and global alerts)
+  // Realtime subscription for game states
   useEffect(() => {
     if (!roomId || !user) return;
 
@@ -159,45 +152,61 @@ const GameRoom: React.FC = () => {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen for INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
           table: 'game_states',
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          // Re-fetch all game states to get the most current list of players and their data
-          const { data: allGameStates, error: allGameStatesError } = await supabase
-            .from('game_states')
-            .select('*')
-            .eq('room_id', roomId);
+          console.log(`Realtime - Event received by user ${user.id} in room ${roomId}:`, payload.eventType, payload.new);
 
-          if (allGameStatesError) {
-            console.error('Realtime - Error fetching all game states on update:', allGameStatesError);
-            return;
-          }
+          if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+            // For new players joining or leaving, re-fetch all game states to get the complete list
+            const { data: allGameStates, error: allGameStatesError } = await supabase
+              .from('game_states')
+              .select('*')
+              .eq('room_id', roomId);
 
-          const scores: PlayerScore[] = allGameStates.map(gs => ({
-            id: gs.player_id,
-            name: gs.player_name,
-            squaresClicked: countCheckedSquares(gs.grid_data || []),
-            isMe: gs.player_id === user.id,
-          }));
-          setPlayerScores(scores);
-          console.log("Realtime - Updated player scores:", scores);
+            if (allGameStatesError) {
+              console.error('Realtime - Error fetching all game states on INSERT/DELETE:', allGameStatesError);
+              return;
+            }
 
-          // Process alerts and my grid data only if it's an UPDATE or INSERT
-          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const scores: PlayerScore[] = allGameStates.map(gs => ({
+              id: gs.player_id,
+              name: gs.player_name,
+              squaresClicked: countCheckedSquares(gs.grid_data || []),
+              isMe: gs.player_id === user.id,
+            }));
+            setPlayerScores(scores);
+            console.log("Realtime - Updated player scores (INSERT/DELETE):", scores);
+
+          } else if (payload.eventType === 'UPDATE') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             console.log("Realtime - game_states update received:", updatedGameState);
-            
-            // Handle bingo alerts from any player in the room
+
+            // Update player scores for the specific player who updated their state
+            setPlayerScores(prevScores => {
+              const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
+              const updatedScores = prevScores.map(score =>
+                score.id === updatedGameState.player_id
+                  ? { ...score, squaresClicked: newSquaresClicked, name: updatedGameState.player_name }
+                  : score
+              );
+              console.log("Realtime - Updated player scores (UPDATE):", updatedScores);
+              return updatedScores;
+            });
+          }
+
+          // Handle bingo alerts from any player in the room
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             setAllBingoAlerts(prevAllBingoAlerts => {
               const newAlerts = (updatedGameState.bingo_alerts || []).filter(
                 (newAlert: BingoAlert) => !prevAllBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
               ).map((alert: BingoAlert) => ({ ...alert, playerName: updatedGameState.player_name }));
 
               if (newAlerts.length > 0) {
-                // Trigger confetti for any new bingo
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 2000);
                 const combinedAlerts = [...newAlerts, ...prevAllBingoAlerts];
@@ -214,7 +223,6 @@ const GameRoom: React.FC = () => {
           }
         }
       )
-      // Removed subscription for 'rooms' table updates as player_names is no longer there
       .subscribe();
 
     return () => {
@@ -232,7 +240,7 @@ const GameRoom: React.FC = () => {
     if (row !== col) {
       newGridData[col][row] = newState;
     }
-    setMyGridData(newGridData); // Optimistic update
+    setMyGridData(newGridData);
 
     const { error } = await supabase
       .from('game_states')
@@ -242,13 +250,11 @@ const GameRoom: React.FC = () => {
     if (error) {
       showError('Failed to update grid state.');
       console.error('Error updating grid:', error);
-      // Revert optimistic update if error
-      // setMyGridData(prevGridData);
     }
   }, [myGridData, myGameStateId, user]);
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
-    if (!myGameStateId || !user || !myPlayerName) return; // Ensure myPlayerName is available
+    if (!myGameStateId || !user || !myPlayerName) return;
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
     const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName };
@@ -265,19 +271,16 @@ const GameRoom: React.FC = () => {
             showError('Failed to record bingo alert.');
             console.error('Error recording bingo:', error);
           } else {
-            showSuccess(message); // Show toast for the current player
+            showSuccess(message);
           }
         });
       return updatedAlerts;
     });
-
-    // Confetti is handled by the realtime listener for all players
   }, [myGameStateId, user, myPlayerName]);
 
   const handleResetGame = async () => {
     if (!myGameStateId || !user) return;
 
-    // Reset my grid data and alerts in the database
     const { error } = await supabase
       .from('game_states')
       .update({
@@ -292,7 +295,7 @@ const GameRoom: React.FC = () => {
       console.error('Error resetting game:', error);
     } else {
       showSuccess('Your game has been reset!');
-      setResetKey(prev => prev + 1); // Trigger BingoGrid reset
+      setResetKey(prev => prev + 1);
       setMyGridData(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
     }
   };
@@ -333,7 +336,7 @@ const GameRoom: React.FC = () => {
         />
         <div className="flex flex-col gap-4">
           {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerScores.length} />}
-          <PlayerScoreList playerScores={playerScores} /> {/* New PlayerScoreList component */}
+          <PlayerScoreList playerScores={playerScores} />
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
             <CardHeader className="bg-lime-200 border-b border-lime-400">
               <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
