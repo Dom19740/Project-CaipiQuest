@@ -12,9 +12,9 @@ const Index = () => {
         <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
           Embark on a fruity bingo adventure. Click the button below to start your quest!
         </p>
-        <Link to="/caipiquest">
+        <Link to="/lobby">
           <Button className="px-8 py-4 text-lg bg-lime-500 hover:bg-lime-600 text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
-            Start CaipiQuest
+            Play Multiplayer
           </Button>
         </Link>
       </div>

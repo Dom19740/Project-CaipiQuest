@@ -8,47 +8,28 @@ const CSS_GRID_DIMENSION = NUM_PLAYABLE_CELLS + 1; // 10 total rows/columns for 
 interface BingoGridProps {
   onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
   resetKey: number; // New prop to trigger reset
+  initialGridState: boolean[][]; // Controlled state
+  onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey }) => {
-  // State to store the checked status of each playable cell (9x9 grid)
-  const [checkedCells, setCheckedCells] = useState<boolean[][]>(() => {
-    const initialGrid: boolean[][] = [];
-    for (let i = 0; i < NUM_PLAYABLE_CELLS; i++) {
-      initialGrid.push(Array(NUM_PLAYABLE_CELLS).fill(false));
-    }
-    return initialGrid;
-  });
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle }) => {
+  // Use initialGridState directly, no internal checkedCells state
+  const checkedCells = initialGridState;
 
   // State to keep track of completed bingo lines to prevent duplicate alerts
   const [completedBingos, setCompletedBingos] = useState<Set<string>>(new Set());
 
   // Effect to reset the grid when resetKey changes
   useEffect(() => {
-    const initialGrid: boolean[][] = [];
-    for (let i = 0; i < NUM_PLAYABLE_CELLS; i++) {
-      initialGrid.push(Array(NUM_PLAYABLE_CELLS).fill(false));
-    }
-    setCheckedCells(initialGrid);
     setCompletedBingos(new Set());
   }, [resetKey]);
 
-  const toggleCell = (row: number, col: number) => {
-    setCheckedCells(prev => {
-      const newCheckedCells = prev.map(r => [...r]); // Create a deep copy
+  // Update internal completedBingos when initialGridState changes (e.g., on reset from parent)
+  useEffect(() => {
+    // Re-evaluate bingos when grid state changes from parent
+    checkBingo();
+  }, [initialGridState]);
 
-      const newState = !newCheckedCells[row][col]; // Determine the new state
-
-      newCheckedCells[row][col] = newState; // Apply to the clicked cell
-
-      // If it's not a diagonal cell, also toggle its symmetrical counterpart
-      if (row !== col) {
-        newCheckedCells[col][row] = newState;
-      }
-      
-      return newCheckedCells;
-    });
-  };
 
   const checkBingo = useCallback(() => {
     const newCompletedBingos = new Set(completedBingos);
@@ -150,13 +131,12 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey }) => {
               className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm cursor-pointer transition-colors duration-200 border border-gray-200
                 ${checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300' : 'bg-white hover:bg-orange-50'}
               `}
-              onClick={() => toggleCell(rowIndex, colIndex)}
+              onClick={() => onCellToggle(rowIndex, colIndex)}
             >
               <div className="flex space-x-1 mb-1">
                 <FruitIcon fruit={fruits[rowIndex]} size="sm" />
                 <FruitIcon fruit={fruits[colIndex]} size="sm" />
               </div>
-              {/* Checkbox removed */}
             </div>
           ))}
         </React.Fragment>

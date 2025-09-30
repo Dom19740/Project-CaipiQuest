@@ -1,0 +1,167 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useSession } from '@/components/SessionContextProvider';
+import { showSuccess, showError } from '@/utils/toast';
+import { MadeWithDyad } from '@/components/made-with-dyad';
+
+const Lobby: React.FC = () => {
+  const [roomCodeInput, setRoomCodeInput] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useSession();
+
+  const generateRoomCode = () => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
+  const handleCreateRoom = async () => {
+    if (!user) {
+      showError('You must be logged in to create a room.');
+      navigate('/login');
+      return;
+    }
+    setIsCreating(true);
+    const newRoomCode = generateRoomCode();
+    try {
+      // Create the room
+      const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .insert({ code: newRoomCode, created_by: user.id })
+        .select()
+        .single();
+
+      if (roomError) throw roomError;
+
+      // Create initial game state for the creator
+      const { error: gameStateError } = await supabase
+        .from('game_states')
+        .insert({ room_id: roomData.id, player_id: user.id, grid_data: Array(9).fill(Array(9).fill(false)) });
+
+      if (gameStateError) throw gameStateError;
+
+      showSuccess(`Room "${newRoomCode}" created!`);
+      navigate(`/game/${roomData.id}`);
+    } catch (error: any) {
+      console.error('Error creating room:', error.message);
+      showError(`Failed to create room: ${error.message}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleJoinRoom = async () => {
+    if (!user) {
+      showError('You must be logged in to join a room.');
+      navigate('/login');
+      return;
+    }
+    setIsJoining(true);
+    try {
+      // Find the room by code
+      const { data: roomData, error: roomError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('code', roomCodeInput.toUpperCase())
+        .single();
+
+      if (roomError) {
+        if (roomError.code === 'PGRST116') { // No rows found
+          throw new Error('Room not found. Please check the code.');
+        }
+        throw roomError;
+      }
+
+      // Check if player already has a game state in this room
+      const { data: existingGameState, error: existingGameStateError } = await supabase
+        .from('game_states')
+        .select('id')
+        .eq('room_id', roomData.id)
+        .eq('player_id', user.id)
+        .single();
+
+      if (existingGameStateError && existingGameStateError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+        throw existingGameStateError;
+      }
+
+      if (!existingGameState) {
+        // Create initial game state for the joining player
+        const { error: gameStateError } = await supabase
+          .from('game_states')
+          .insert({ room_id: roomData.id, player_id: user.id, grid_data: Array(9).fill(Array(9).fill(false)) });
+
+        if (gameStateError) throw gameStateError;
+      }
+
+      showSuccess(`Joined room "${roomCodeInput.toUpperCase()}"!`);
+      navigate(`/game/${roomData.id}`);
+    } catch (error: any) {
+      console.error('Error joining room:', error.message);
+      showError(`Failed to join room: ${error.message}`);
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-lime-50 to-emerald-100 p-4">
+      <div className="text-center bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border-4 border-lime-400 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8">
+        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-6 drop-shadow-lg">
+          CaipiQuest Lobby
+        </h1>
+        <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
+          Create a new game room or join an existing one with a code!
+        </p>
+
+        <div className="flex flex-col lg:flex-row gap-6 justify-center">
+          <Card className="w-full max-w-sm bg-lime-50 border-lime-300 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lime-800">Create New Room</CardTitle>
+              <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={handleCreateRoom}
+                disabled={isCreating || isJoining}
+                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
+              >
+                {isCreating ? 'Creating...' : 'Create Room'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full max-w-sm bg-emerald-50 border-emerald-300 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-emerald-800">Join Existing Room</CardTitle>
+              <CardDescription className="text-emerald-700">Enter a room code to join a game.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                type="text"
+                placeholder="Enter Room Code"
+                value={roomCodeInput}
+                onChange={(e) => setRoomCodeInput(e.target.value)}
+                className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
+                disabled={isCreating || isJoining}
+              />
+              <Button
+                onClick={handleJoinRoom}
+                disabled={isJoining || isCreating || roomCodeInput.trim() === ''}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
+              >
+                {isJoining ? 'Joining...' : 'Join Room'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      <MadeWithDyad />
+    </div>
+  );
+};
+
+export default Lobby;
