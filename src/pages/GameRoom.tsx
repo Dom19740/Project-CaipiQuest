@@ -66,6 +66,10 @@ const GameRoom: React.FC = () => {
   });
   const [resetKey, setResetKey] = useState(0);
 
+  // State for new player joined alert
+  const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
+  const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
+
   const countCheckedSquares = (grid: boolean[][]): number => {
     if (!grid || grid.length === 0) return 0;
     return grid.flat().filter(Boolean).length;
@@ -77,6 +81,38 @@ const GameRoom: React.FC = () => {
     }
   }, [user]);
 
+  // Function to fetch and update all game states and player scores
+  const fetchAndSetAllGameStates = useCallback(async () => {
+    if (!roomId || !user) return;
+
+    const { data: allGameStates, error: allGameStatesError } = await supabase
+      .from('game_states')
+      .select('*')
+      .eq('room_id', roomId);
+
+    if (allGameStatesError) {
+      console.error('Error fetching all game states:', allGameStatesError);
+      return;
+    }
+
+    const scores: PlayerScore[] = allGameStates.map(gs => ({
+      id: gs.player_id,
+      name: gs.player_name,
+      squaresClicked: countCheckedSquares(gs.grid_data || []),
+      isMe: gs.player_id === user.id,
+    }));
+    setPlayerScores(scores);
+    console.log("Fetched and set player scores:", scores);
+
+    const myGameState = allGameStates.find(gs => gs.player_id === user.id);
+    if (myGameState) {
+      setMyGameStateId(myGameState.id);
+      setMyGridData(myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+      setAllBingoAlerts(myGameState.bingo_alerts || []);
+      setMyPlayerName(myGameState.player_name);
+    }
+  }, [roomId, user]);
+
   // Fetch initial room and player data
   useEffect(() => {
     if (isLoading || !user || !roomId) {
@@ -87,7 +123,7 @@ const GameRoom: React.FC = () => {
       return;
     }
 
-    const fetchRoomAndGameStates = async () => {
+    const fetchInitialData = async () => {
       const { data: room, error: roomError } = await supabase
         .from('rooms')
         .select('code')
@@ -102,44 +138,11 @@ const GameRoom: React.FC = () => {
       }
       setRoomCode(room.code);
 
-      const { data: allGameStates, error: allGameStatesError } = await supabase
-        .from('game_states')
-        .select('*')
-        .eq('room_id', roomId);
-
-      if (allGameStatesError) {
-        showError('Failed to load game states for the room.');
-        console.error('GameRoom - Error fetching all game states:', allGameStatesError);
-        console.error('GameRoom - Full game states fetch error object:', JSON.stringify(allGameStatesError, null, 2));
-        navigate('/lobby');
-        return;
-      }
-
-      const scores: PlayerScore[] = allGameStates.map(gs => ({
-        id: gs.player_id,
-        name: gs.player_name,
-        squaresClicked: countCheckedSquares(gs.grid_data || []),
-        isMe: gs.player_id === user.id,
-      }));
-      setPlayerScores(scores);
-      console.log("Initial player scores:", scores);
-
-      const myGameState = allGameStates.find(gs => gs.player_id === user.id);
-
-      if (!myGameState) {
-        showError('Your game state not found. Please try rejoining the room.');
-        console.error('GameRoom - My game state not found for user:', user.id, 'in room:', roomId);
-        navigate('/lobby');
-        return;
-      }
-      setMyGameStateId(myGameState.id);
-      setMyGridData(myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
-      setAllBingoAlerts(myGameState.bingo_alerts || []);
-      setMyPlayerName(myGameState.player_name); // Ensure myPlayerName is set from fetched data
+      await fetchAndSetAllGameStates(); // Initial fetch of all game states
     };
 
-    fetchRoomAndGameStates();
-  }, [user, roomId, navigate, isLoading]);
+    fetchInitialData();
+  }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates]);
 
   // Realtime subscription for game states
   useEffect(() => {
@@ -160,31 +163,37 @@ const GameRoom: React.FC = () => {
         async (payload) => {
           console.log(`Realtime - Event received by user ${user.id} in room ${roomId}:`, payload.eventType, payload.new);
 
-          // Always re-fetch all game states to ensure player list and scores are fully consistent
-          // This handles INSERT (new player), DELETE (player leaves), and UPDATE (square click, bingo alert)
-          const { data: allGameStates, error: allGameStatesError } = await supabase
-            .from('game_states')
-            .select('*')
-            .eq('room_id', roomId);
+          if (payload.eventType === 'INSERT') {
+            const newGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][] };
+            // If a new player (not me) joined, show an alert
+            if (newGameState.player_id !== user.id) {
+              setNewPlayerJoinedName(newGameState.player_name);
+              setShowNewPlayerAlert(true);
+            }
+            // Re-fetch all game states to update the player list and scores
+            await fetchAndSetAllGameStates();
 
-          if (allGameStatesError) {
-            console.error('Realtime - Error fetching all game states on any event:', allGameStatesError);
-            return;
-          }
+          } else if (payload.eventType === 'DELETE') {
+            // Re-fetch all game states to update the player list and scores
+            await fetchAndSetAllGameStates();
 
-          const scores: PlayerScore[] = allGameStates.map(gs => ({
-            id: gs.player_id,
-            name: gs.player_name,
-            squaresClicked: countCheckedSquares(gs.grid_data || []),
-            isMe: gs.player_id === user.id,
-          }));
-          console.log("Realtime - About to set player scores (all events):", scores);
-          setPlayerScores(scores);
-
-          // Handle bingo alerts from any player in the room
-          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+          } else if (payload.eventType === 'UPDATE') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
-            
+            console.log("Realtime - game_states update received:", updatedGameState);
+
+            // Update player scores for the specific player who updated their state
+            setPlayerScores(prevScores => {
+              const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
+              const updatedScores = prevScores.map(score =>
+                score.id === updatedGameState.player_id
+                  ? { ...score, squaresClicked: newSquaresClicked, name: updatedGameState.player_name }
+                  : score
+              );
+              console.log("Realtime - Updated player scores (UPDATE):", updatedScores);
+              return updatedScores;
+            });
+
+            // Handle bingo alerts from any player in the room
             setAllBingoAlerts(prevAllBingoAlerts => {
               const newAlerts = (updatedGameState.bingo_alerts || []).filter(
                 (newAlert: BingoAlert) => !prevAllBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
@@ -213,7 +222,7 @@ const GameRoom: React.FC = () => {
       console.log(`GameRoom - Unsubscribing from room:${roomId} for user: ${user.id}`);
       supabase.removeChannel(channel);
     };
-  }, [roomId, user]);
+  }, [roomId, user, fetchAndSetAllGameStates]);
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
     if (!myGameStateId || !user) return;
@@ -363,6 +372,22 @@ const GameRoom: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* New Player Joined Alert Dialog */}
+      <AlertDialog open={showNewPlayerAlert} onOpenChange={setShowNewPlayerAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Player Joined!</AlertDialogTitle>
+            <AlertDialogDescription>
+              {newPlayerJoinedName} has entered the room!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowNewPlayerAlert(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <MadeWithDyad />
     </div>
   );
