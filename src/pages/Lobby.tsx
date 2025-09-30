@@ -177,7 +177,7 @@ const Lobby: React.FC = () => {
                 value={roomCodeInput}
                 onChange={(e) => setRoomCodeInput(e.target.value)}
                 className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
-                disabled={isCreating || isJoining || roomCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
               />
               <Button
                 onClick={handleJoinRoom}
