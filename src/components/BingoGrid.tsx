@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
 interface BingoGridProps {
-  // onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void; // Removed
+  onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
   resetKey: number; // New prop to trigger reset
   initialGridState: boolean[][]; // Controlled state
   onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
@@ -10,7 +10,7 @@ interface BingoGridProps {
   gridSize: number; // New prop for dynamic grid size
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ /* onBingo, */ resetKey, initialGridState, onCellToggle, selectedFruits, gridSize }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize }) => {
   const checkedCells = initialGridState;
   const completedBingosRef = useRef<Set<string>>(new Set());
 
@@ -22,8 +22,40 @@ const BingoGrid: React.FC<BingoGridProps> = ({ /* onBingo, */ resetKey, initialG
   }, [resetKey]);
 
   const checkBingo = useCallback(() => {
-    // Removed all bingo alert triggering logic
-  }, [checkedCells, gridSize]); // Dependencies updated
+    if (!checkedCells || checkedCells.length === 0) return;
+
+    const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, id: string) => {
+      if (line.every(cell => cell) && !completedBingosRef.current.has(id)) {
+        onBingo(type, message);
+        completedBingosRef.current.add(id);
+      }
+    };
+
+    // Check Rows
+    for (let i = 0; i < gridSize; i++) {
+      checkLine(checkedCells[i], 'rowCol', `completed a row!`, `row-${i}`);
+    }
+
+    // Check Columns
+    for (let j = 0; j < gridSize; j++) {
+      const column = Array(gridSize).fill(false).map((_, i) => checkedCells[i][j]);
+      checkLine(column, 'rowCol', `completed a column!`, `col-${j}`);
+    }
+
+    // Check Diagonals
+    const diagonal1 = Array(gridSize).fill(false).map((_, i) => checkedCells[i][i]);
+    checkLine(diagonal1, 'diagonal', `completed a diagonal!`, `diag-1`);
+
+    const diagonal2 = Array(gridSize).fill(false).map((_, i) => checkedCells[i][gridSize - 1 - i]);
+    checkLine(diagonal2, 'diagonal', `completed a diagonal!`, `diag-2`);
+
+    // Check Full Grid
+    const allCellsChecked = checkedCells.flat().every(cell => cell);
+    if (allCellsChecked && !completedBingosRef.current.has('full-grid')) {
+      onBingo('fullGrid', `completed the entire grid!`);
+      completedBingosRef.current.add('full-grid');
+    }
+  }, [checkedCells, gridSize, onBingo]);
 
   useEffect(() => {
     checkBingo();

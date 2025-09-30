@@ -7,7 +7,7 @@ import RoomSidebar from '@/components/RoomSidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import GameResetDialog from '@/components/GameResetDialog';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-// import RoomAlertsCard from '@/components/RoomAlertsCard'; // Removed Alerts Card
+import RoomAlertsCard from '@/components/RoomAlertsCard'; // Re-added Alerts Card
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -39,7 +39,7 @@ const GameRoom: React.FC = () => {
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, initialGridSizeFromState);
 
   const {
-    // roomBingoAlerts, // Removed
+    roomBingoAlerts, // Re-added
     playerScores,
     showConfetti,
     confettiConfig,
@@ -61,7 +61,7 @@ const GameRoom: React.FC = () => {
 
   const {
     handleCellToggle,
-    // handleBingo, // Removed
+    handleBingo, // Re-added
     handleResetGame,
     handleGlobalRefresh,
   } = useGameLogic(
@@ -93,7 +93,7 @@ const GameRoom: React.FC = () => {
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         <BingoGrid
-          // onBingo={handleBingo} // Removed
+          onBingo={handleBingo} // Re-added
           resetKey={resetKey}
           initialGridState={myGridData}
           onCellToggle={handleCellToggle}
@@ -103,9 +103,9 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4">
           {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
           
-          {/* Removed RoomAlertsCard */}
+          <RoomAlertsCard alerts={roomBingoAlerts} /> {/* Re-added Alerts Card */}
 
-          <div className="flex flex-row gap-2 justify-center w-full lg:w-80"> {/* New container for buttons */}
+          <div className="flex flex-row gap-2 justify-center w-full lg:w-80">
             <GameResetDialog onConfirm={handleResetGame} />
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
               Refresh

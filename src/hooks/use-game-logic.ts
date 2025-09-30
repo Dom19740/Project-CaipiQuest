@@ -1,7 +1,20 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
+
+interface BingoAlert {
+  id: string;
+  type: 'rowCol' | 'diagonal' | 'fullGrid';
+  message: string;
+  playerName?: string;
+}
+
+let alertIdCounter = 0;
+const generateAlertId = () => {
+  alertIdCounter += 1;
+  return `alert-${alertIdCounter}-${Date.now()}`;
+};
 
 export const useGameLogic = (
   roomId: string | undefined,
@@ -55,7 +68,39 @@ export const useGameLogic = (
     }
   }, [myGridData, myGameStateId, user, roomId, roomCreatorId, gridSize, fetchAndSetAllGameStates, setMyGridData]);
 
-  // Removed handleBingo function and related alert generation logic
+  const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
+    if (!roomId || !user || !myPlayerName) return;
+
+    const message = `BINGO! ${myPlayerName} ${baseMessage}`;
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName };
+
+    const { data: currentRoom, error: fetchRoomError } = await supabase
+      .from('rooms')
+      .select('bingo_alerts')
+      .eq('id', roomId)
+      .single();
+
+    if (fetchRoomError) {
+      showError('Failed to fetch room alerts.');
+      console.error('useGameLogic - Error fetching room alerts for bingo:', fetchRoomError);
+      return;
+    }
+
+    const existingAlerts = currentRoom?.bingo_alerts || [];
+    const updatedAlerts = [newAlert, ...existingAlerts];
+
+    const { error: updateRoomAlertsError } = await supabase
+      .from('rooms')
+      .update({ bingo_alerts: updatedAlerts })
+      .eq('id', roomId);
+
+    if (updateRoomAlertsError) {
+      showError('Failed to record bingo alert globally.');
+      console.error('useGameLogic - Error recording global bingo:', updateRoomAlertsError);
+    } else {
+      showSuccess(message);
+    }
+  }, [roomId, user, myPlayerName]);
 
   const handleResetGame = useCallback(async () => {
     if (!myGameStateId || !user || !playerSelectedFruits) return;
@@ -103,7 +148,7 @@ export const useGameLogic = (
 
   return {
     handleCellToggle,
-    // handleBingo, // Removed
+    handleBingo,
     handleResetGame,
     handleGlobalRefresh,
   };
