@@ -113,7 +113,7 @@ const Lobby: React.FC = () => {
       // Check if player already has a game state in this room
       const { data: existingGameState, error: existingGameStateError } = await supabase
         .from('game_states')
-        .select('id')
+        .select('id, player_name') // Select player_name to check if it needs updating
         .eq('room_id', roomData.id)
         .eq('player_id', user.id)
         .single();
@@ -129,11 +129,19 @@ const Lobby: React.FC = () => {
           .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
 
         if (gameStateError) throw gameStateError;
+      } else if (existingGameState.player_name !== playerName) {
+        // If game state exists but player name changed, update it
+        const { error: updatePlayerNameError } = await supabase
+          .from('game_states')
+          .update({ player_name: playerName, updated_at: new Date().toISOString() })
+          .eq('id', existingGameState.id);
+        if (updatePlayerNameError) console.error('Error updating player name in game state:', updatePlayerNameError.message);
       }
 
       // Update player_names in the room if this player's name isn't already there
-      if (!roomData.player_names.includes(playerName)) {
-        const updatedPlayerNames = [...roomData.player_names, playerName];
+      let updatedPlayerNames = roomData.player_names || [];
+      if (!updatedPlayerNames.includes(playerName)) {
+        updatedPlayerNames = [...updatedPlayerNames, playerName];
         const { error: updateRoomError } = await supabase
           .from('rooms')
           .update({ player_names: updatedPlayerNames })
