@@ -7,7 +7,7 @@ import RoomSidebar from '@/components/RoomSidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import GameResetDialog from '@/components/GameResetDialog';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-import RoomAlertsCard from '@/components/RoomAlertsCard';
+// import RoomAlertsCard from '@/components/RoomAlertsCard'; // Removed Alerts Card
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -103,16 +103,17 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4">
           {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
           
-          <RoomAlertsCard alerts={roomBingoAlerts} />
+          {/* Removed RoomAlertsCard */}
 
-          <GameResetDialog onConfirm={handleResetGame} />
-
-          <Button onClick={handleGlobalRefresh} className="w-full lg:w-80 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
-            Refresh Data (Global)
-          </Button>
-          <Button onClick={() => navigate('/lobby')} className="w-full lg:w-80 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
-            Leave Room
-          </Button>
+          <div className="flex flex-row gap-2 justify-center w-full lg:w-80"> {/* New container for buttons */}
+            <GameResetDialog onConfirm={handleResetGame} />
+            <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
+              Refresh
+            </Button>
+            <Button onClick={() => navigate('/lobby')} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
+              Leave
+            </Button>
+          </div>
         </div>
       </div>
 
