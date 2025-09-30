@@ -32,7 +32,7 @@ const Lobby: React.FC = () => {
         const { error } = await supabase.auth.signInAnonymously();
         if (error) {
           console.error('Error signing in anonymously:', error.message);
-          showError('Failed to establish a session. Please try again.');
+          showError(`Failed to establish a session: ${error.message}. Please try again.`); // Added error.message here
         } else {
           console.log("Anonymous sign-in successful.");
         }
