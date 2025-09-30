@@ -6,14 +6,14 @@ interface FruitIconProps {
 }
 
 const fruitEmojis: { [key: string]: string } = {
-  passionfruit: '🥭', // Using mango for passionfruit as a placeholder emoji
+  passionfruit: '💜', // Updated to purple heart
   lemon: '🍋',
   strawberry: '🍓',
   mango: '🥭',
   lime: '🟢', // Using green circle for lime to distinguish from lemon
   pineapple: '🍍',
   pitaya: '🐉', // Using dragon emoji for pitaya (dragon fruit)
-  plum: '🍑', // Using peach emoji for plum
+  plum: '🟣', // Updated to purple circle
   ginger: '🌳', // Using tree emoji as a placeholder for ginger
 };
 
