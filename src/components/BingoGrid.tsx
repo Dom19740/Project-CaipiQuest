@@ -26,10 +26,17 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
 
   const toggleCell = (row: number, col: number) => {
     setCheckedCells(prev => {
-      // Create a deep copy of the previous state to ensure immutability
-      const newCheckedCells = prev.map((r, rIdx) =>
-        r.map((c, cIdx) => (rIdx === row && cIdx === col ? !c : c))
-      );
+      const newCheckedCells = prev.map(r => [...r]); // Create a deep copy
+
+      const newState = !newCheckedCells[row][col]; // Determine the new state
+
+      newCheckedCells[row][col] = newState; // Apply to the clicked cell
+
+      // If it's not a diagonal cell, also toggle its symmetrical counterpart
+      if (row !== col) {
+        newCheckedCells[col][row] = newState;
+      }
+      
       return newCheckedCells;
     });
   };
