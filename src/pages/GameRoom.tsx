@@ -302,7 +302,8 @@ const GameRoom: React.FC = () => {
 
     const { error: updateRoomAlertsError } = await supabase
       .from('rooms')
-      .update({ bingo_alerts: updatedAlerts, updated_at: new Date().toISOString() })
+      // Removed updated_at from here, as it defaults to NOW()
+      .update({ bingo_alerts: updatedAlerts })
       .eq('id', roomId);
 
     if (updateRoomAlertsError) {
@@ -320,6 +321,7 @@ const GameRoom: React.FC = () => {
       .from('game_states')
       .update({
         grid_data: Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)),
+        // Removed bingo_alerts: [] from here, as alerts are now global in the rooms table
         updated_at: new Date().toISOString(),
       })
       .eq('id', myGameStateId);
