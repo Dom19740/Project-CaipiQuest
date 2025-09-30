@@ -39,7 +39,7 @@ const GameRoom: React.FC = () => {
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, initialGridSizeFromState);
 
   const {
-    roomBingoAlerts,
+    // roomBingoAlerts, // Removed
     playerScores,
     showConfetti,
     confettiConfig,
@@ -61,7 +61,7 @@ const GameRoom: React.FC = () => {
 
   const {
     handleCellToggle,
-    handleBingo,
+    // handleBingo, // Removed
     handleResetGame,
     handleGlobalRefresh,
   } = useGameLogic(
@@ -93,7 +93,7 @@ const GameRoom: React.FC = () => {
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         <BingoGrid
-          onBingo={handleBingo}
+          // onBingo={handleBingo} // Removed
           resetKey={resetKey}
           initialGridState={myGridData}
           onCellToggle={handleCellToggle}

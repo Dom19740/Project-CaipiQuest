@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
 interface BingoGridProps {
-  onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
+  // onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void; // Removed
   resetKey: number; // New prop to trigger reset
   initialGridState: boolean[][]; // Controlled state
   onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
@@ -10,7 +10,7 @@ interface BingoGridProps {
   gridSize: number; // New prop for dynamic grid size
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ /* onBingo, */ resetKey, initialGridState, onCellToggle, selectedFruits, gridSize }) => {
   const checkedCells = initialGridState;
   const completedBingosRef = useRef<Set<string>>(new Set());
 
@@ -22,72 +22,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   }, [resetKey]);
 
   const checkBingo = useCallback(() => {
-    const newCompletedBingos = new Set(completedBingosRef.current);
-    let rowColBingoTriggered = false;
-    let diagonalBingoTriggered = false;
-    let fullGridBingoTriggered = false;
-
-    // Check rows
-    for (let i = 0; i < gridSize; i++) {
-      const rowId = `row-${i}`;
-      if (checkedCells[i] && checkedCells[i].every(cell => cell)) {
-        if (!newCompletedBingos.has(rowId)) {
-          rowColBingoTriggered = true;
-          newCompletedBingos.add(rowId);
-        }
-      }
-    }
-
-    // Check columns
-    for (let j = 0; j < gridSize; j++) {
-      const colId = `col-${j}`;
-      if (checkedCells.every(row => row && row[j])) {
-        if (!newCompletedBingos.has(colId)) {
-          rowColBingoTriggered = true;
-          newCompletedBingos.add(colId);
-        }
-      }
-    }
-
-    // Check main diagonal (top-left to bottom-right)
-    const mainDiagId = 'diag-main';
-    if (Array(gridSize).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][i])) {
-      if (!newCompletedBingos.has(mainDiagId)) {
-        diagonalBingoTriggered = true;
-        newCompletedBingos.add(mainDiagId);
-      }
-    }
-
-    // Check anti-diagonal (top-right to bottom-left)
-    const antiDiagId = 'diag-anti';
-    if (Array(gridSize).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][gridSize - 1 - i])) {
-      if (!newCompletedBingos.has(antiDiagId)) {
-        diagonalBingoTriggered = true;
-        newCompletedBingos.add(antiDiagId);
-      }
-    }
-
-    // Check full grid
-    const fullGridId = 'full-grid';
-    if (checkedCells.every(row => row && row.every(cell => cell))) {
-      if (!newCompletedBingos.has(fullGridId)) {
-        fullGridBingoTriggered = true;
-        newCompletedBingos.add(fullGridId);
-      }
-    }
-
-    // Trigger onBingo callbacks based on aggregated new bingos
-    if (fullGridBingoTriggered) {
-      onBingo('fullGrid', 'completed the full grid!');
-    } else if (diagonalBingoTriggered) {
-      onBingo('diagonal', 'completed a diagonal!');
-    } else if (rowColBingoTriggered) {
-      onBingo('rowCol', 'completed a row or column!');
-    }
-
-    // Update the ref
-    completedBingosRef.current = newCompletedBingos;
-  }, [checkedCells, onBingo, gridSize]);
+    // Removed all bingo alert triggering logic
+  }, [checkedCells, gridSize]); // Dependencies updated
 
   useEffect(() => {
     checkBingo();

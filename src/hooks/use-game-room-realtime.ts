@@ -3,13 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess } from '@/utils/toast';
 
-interface BingoAlert {
-  id: string;
-  type: 'rowCol' | 'diagonal' | 'fullGrid';
-  message: string;
-  playerName?: string;
-}
-
 interface PlayerScore {
   id: string;
   name: string;
@@ -18,7 +11,6 @@ interface PlayerScore {
 }
 
 interface GameRoomRealtimeData {
-  roomBingoAlerts: BingoAlert[];
   playerScores: PlayerScore[];
   showConfetti: boolean;
   confettiConfig: {
@@ -58,7 +50,6 @@ export const useGameRoomRealtime = (
 ): GameRoomRealtimeData => {
   const { user } = useSession();
 
-  const [roomBingoAlerts, setRoomBingoAlerts] = useState<BingoAlert[]>([]);
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({
@@ -161,26 +152,14 @@ export const useGameRoomRealtime = (
           filter: `id=eq.${roomId}`,
         },
         async (payload) => {
-          const updatedRoom = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number };
+          const updatedRoom = payload.new as { last_refreshed_at?: string; grid_size?: number };
 
           if (updatedRoom.last_refreshed_at) {
             await fetchAndSetAllGameStates(gridSize);
           }
 
-          if (updatedRoom.bingo_alerts) {
-            setRoomBingoAlerts(prevRoomBingoAlerts => {
-              const incomingAlerts = updatedRoom.bingo_alerts || [];
-              const newAlertsForConfetti = incomingAlerts.filter(
-                (incomingAlert: BingoAlert) => !prevRoomBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
-              );
-
-              if (newAlertsForConfetti.length > 0) {
-                setShowConfetti(true);
-                setTimeout(() => setShowConfetti(false), 2000);
-              }
-              return incomingAlerts;
-            });
-          }
+          // Removed bingo_alerts handling
+          
           if (updatedRoom.grid_size && updatedRoom.grid_size !== gridSize) {
             setGridSize(updatedRoom.grid_size);
             showSuccess(`Room grid size changed to ${updatedRoom.grid_size}x${updatedRoom.grid_size}. Your grid might reset.`);
@@ -196,7 +175,6 @@ export const useGameRoomRealtime = (
   }, [roomId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores]);
 
   return {
-    roomBingoAlerts,
     playerScores,
     showConfetti,
     confettiConfig,
