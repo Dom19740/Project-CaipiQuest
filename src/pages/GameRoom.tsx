@@ -20,12 +20,20 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import RoomInfo from '@/components/RoomInfo';
+import PlayerScoreList from '@/components/PlayerScoreList'; // Import the new component
 
 interface BingoAlert {
   id: string;
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
   playerName?: string; // To show who got the bingo
+}
+
+interface PlayerScore {
+  id: string;
+  name: string;
+  squaresClicked: number;
+  isMe: boolean;
 }
 
 const NUM_PLAYABLE_CELLS = 9; // Define this here for consistency
@@ -40,6 +48,9 @@ const GameRoom: React.FC = () => {
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
   const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]); // Global alerts from all players
+  const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || ''); // Get player name from local storage
+  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]); // New state for player scores
+
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({
     numberOfPieces: 200,
@@ -50,17 +61,22 @@ const GameRoom: React.FC = () => {
   });
   const [resetKey, setResetKey] = useState(0); // Key to force BingoGrid reset
 
+  // Helper to count checked squares
+  const countCheckedSquares = (grid: boolean[][]): number => {
+    if (!grid || grid.length === 0) return 0;
+    return grid.flat().filter(Boolean).length;
+  };
+
   // Fetch initial room and player data
   useEffect(() => {
     if (isLoading || !user || !roomId) {
-      // Wait for session to load, or redirect if no user (should be handled by Lobby ensuring anonymous session)
       if (!isLoading && !user) {
-        navigate('/lobby'); // Redirect to lobby if no user session (should not happen if Lobby ensures anonymous session)
+        navigate('/lobby');
       }
       return;
     }
 
-    const fetchRoomAndGameState = async () => {
+    const fetchRoomAndGameStates = async () => {
       // Fetch room details
       const { data: room, error: roomError } = await supabase
         .from('rooms')
@@ -77,26 +93,41 @@ const GameRoom: React.FC = () => {
       setRoomCode(room.code);
       setPlayerNamesInRoom(room.player_names || []);
 
-      // Fetch current player's game state
-      const { data: gameState, error: gameStateError } = await supabase
+      // Fetch all game states for this room
+      const { data: allGameStates, error: allGameStatesError } = await supabase
         .from('game_states')
         .select('*')
-        .eq('room_id', roomId)
-        .eq('player_id', user.id)
-        .single();
+        .eq('room_id', roomId);
 
-      if (gameStateError) {
-        showError('Failed to load your game state. Please try rejoining the room.');
-        console.error('Error fetching game state:', gameStateError);
+      if (allGameStatesError) {
+        showError('Failed to load game states for the room.');
+        console.error('Error fetching all game states:', allGameStatesError);
         navigate('/lobby');
         return;
       }
-      setMyGameStateId(gameState.id);
-      setMyGridData(gameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
-      setAllBingoAlerts(gameState.bingo_alerts || []);
+
+      const scores: PlayerScore[] = allGameStates.map(gs => ({
+        id: gs.player_id,
+        name: gs.player_name,
+        squaresClicked: countCheckedSquares(gs.grid_data || []),
+        isMe: gs.player_id === user.id,
+      }));
+      setPlayerScores(scores);
+
+      // Find current player's game state
+      const myGameState = allGameStates.find(gs => gs.player_id === user.id);
+
+      if (!myGameState) {
+        showError('Your game state not found. Please try rejoining the room.');
+        navigate('/lobby');
+        return;
+      }
+      setMyGameStateId(myGameState.id);
+      setMyGridData(myGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+      setAllBingoAlerts(myGameState.bingo_alerts || []);
     };
 
-    fetchRoomAndGameState();
+    fetchRoomAndGameStates();
   }, [user, roomId, navigate, isLoading]);
 
   // Realtime subscription for player count and global alerts
@@ -115,8 +146,28 @@ const GameRoom: React.FC = () => {
         },
         async (payload) => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const updatedGameState = payload.new as { player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
+            const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             
+            // Update player scores
+            setPlayerScores(prevScores => {
+              const existingIndex = prevScores.findIndex(p => p.id === updatedGameState.player_id);
+              const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
+              const updatedScore: PlayerScore = {
+                id: updatedGameState.player_id,
+                name: updatedGameState.player_name,
+                squaresClicked: newSquaresClicked,
+                isMe: updatedGameState.player_id === user.id,
+              };
+
+              if (existingIndex > -1) {
+                return prevScores.map((score, index) =>
+                  index === existingIndex ? updatedScore : score
+                );
+              } else {
+                return [...prevScores, updatedScore];
+              }
+            });
+
             // Handle bingo alerts from any player in the room
             setAllBingoAlerts(prevAllBingoAlerts => {
               const newAlerts = (updatedGameState.bingo_alerts || []).filter(
@@ -163,7 +214,7 @@ const GameRoom: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, user]); // Removed allBingoAlerts from dependencies as it's handled by functional update
+  }, [roomId, user]);
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
     if (!myGameStateId || !user) return;
@@ -190,11 +241,10 @@ const GameRoom: React.FC = () => {
   }, [myGridData, myGameStateId, user]);
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => {
-    if (!myGameStateId || !user) return;
+    if (!myGameStateId || !user || !myPlayerName) return; // Ensure myPlayerName is available
 
-    const newAlert: BingoAlert = { id: Date.now().toString(), type, message };
+    const newAlert: BingoAlert = { id: Date.now().toString(), type, message, playerName: myPlayerName };
     
-    // Use functional update for allBingoAlerts to ensure we have the latest state for adding
     setAllBingoAlerts(prevAllBingoAlerts => {
       const updatedAlerts = [newAlert, ...prevAllBingoAlerts];
       
@@ -214,7 +264,7 @@ const GameRoom: React.FC = () => {
     });
 
     // Confetti is handled by the realtime listener for all players
-  }, [myGameStateId, user]); // Removed allBingoAlerts from dependencies
+  }, [myGameStateId, user, myPlayerName]);
 
   const handleResetGame = async () => {
     if (!myGameStateId || !user) return;
@@ -236,9 +286,6 @@ const GameRoom: React.FC = () => {
       showSuccess('Your game has been reset!');
       setResetKey(prev => prev + 1); // Trigger BingoGrid reset
       setMyGridData(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
-      // The global alerts will be updated via realtime listener if other players reset
-      // For local display, we might want to clear it immediately or wait for the update
-      // For now, let's rely on the realtime update to keep it consistent.
     }
   };
 
@@ -273,13 +320,13 @@ const GameRoom: React.FC = () => {
         <BingoGrid
           onBingo={handleBingo}
           resetKey={resetKey}
-          initialGridState={myGridData} // Pass initial state
-          onCellToggle={handleCellToggle} // Pass toggle handler
+          initialGridState={myGridData}
+          onCellToggle={handleCellToggle}
         />
         <div className="flex flex-col gap-4">
           {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerNamesInRoom.length} />}
+          <PlayerScoreList playerScores={playerScores} /> {/* New PlayerScoreList component */}
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
-            {/* Removed CardHeader and CardTitle for Global Alerts */}
             <CardContent className="p-4">
               {allBingoAlerts.length === 0 ? (
                 <p className="text-gray-600 italic">No bingo alerts yet...</p>
