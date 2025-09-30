@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import BingoGrid from '@/components/BingoGrid';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showSuccess } from '@/utils/toast';
@@ -23,6 +23,8 @@ interface BingoAlert {
   message: string;
 }
 
+const NUM_PLAYABLE_CELLS = 9; // Define for consistency
+
 const CaipiQuest: React.FC = () => {
   const [bingoAlerts, setBingoAlerts] = useState<BingoAlert[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -35,7 +37,25 @@ const CaipiQuest: React.FC = () => {
   });
   const [resetKey, setResetKey] = useState(0); // State to trigger BingoGrid reset
 
-  const handleBingo = (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => {
+  // Internal state for the bingo grid in single-player mode
+  const [checkedCells, setCheckedCells] = useState<boolean[][]>(
+    Array(NUM_PLAYABLE_CELLS).fill(null).map(() => Array(NUM_PLAYABLE_CELLS).fill(false))
+  );
+
+  const handleCellToggle = useCallback((row: number, col: number) => {
+    setCheckedCells(prevGrid => {
+      const newGrid = prevGrid.map(r => [...r]);
+      const newState = !newGrid[row][col];
+      newGrid[row][col] = newState;
+      if (row !== col) { // Mirror click for symmetry
+        newGrid[col][row] = newState;
+      }
+      return newGrid;
+    });
+  }, []);
+
+  const handleBingo = (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
+    const message = `BINGO! You ${baseMessage}`; // Prepend "You" for single-player
     showSuccess(message);
     setBingoAlerts(prev => [{ id: Date.now().toString(), type, message }, ...prev]); // Prepend new alerts
 
@@ -68,6 +88,7 @@ const CaipiQuest: React.FC = () => {
   const handleResetGame = () => {
     setResetKey(prev => prev + 1); // Increment key to force BingoGrid reset
     setBingoAlerts([]); // Clear alerts in CaipiQuest
+    setCheckedCells(Array(NUM_PLAYABLE_CELLS).fill(null).map(() => Array(NUM_PLAYABLE_CELLS).fill(false))); // Reset grid state
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
@@ -90,7 +111,12 @@ const CaipiQuest: React.FC = () => {
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <BingoGrid onBingo={handleBingo} resetKey={resetKey} />
+        <BingoGrid
+          onBingo={handleBingo}
+          resetKey={resetKey}
+          initialGridState={checkedCells} // Pass controlled state
+          onCellToggle={handleCellToggle} // Pass toggle handler
+        />
         <div className="flex flex-col gap-4">
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
             <CardHeader className="bg-lime-200 border-b border-lime-400">

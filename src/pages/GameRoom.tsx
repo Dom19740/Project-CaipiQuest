@@ -38,6 +38,13 @@ interface PlayerScore {
 
 const NUM_PLAYABLE_CELLS = 9; // Define this here for consistency
 
+// Simple counter for generating unique alert IDs
+let alertIdCounter = 0;
+const generateAlertId = () => {
+  alertIdCounter += 1;
+  return `alert-${alertIdCounter}-${Date.now()}`; // Combine counter with timestamp for uniqueness
+};
+
 const GameRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -244,7 +251,7 @@ const GameRoom: React.FC = () => {
     if (!myGameStateId || !user || !myPlayerName) return; // Ensure myPlayerName is available
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
-    const newAlert: BingoAlert = { id: Date.now().toString(), type, message, playerName: myPlayerName };
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName };
     
     setAllBingoAlerts(prevAllBingoAlerts => {
       const updatedAlerts = [newAlert, ...prevAllBingoAlerts];
