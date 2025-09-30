@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Users } from 'lucide-react';
+import { Users, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PlayerScore {
@@ -10,23 +10,31 @@ interface PlayerScore {
   isMe: boolean;
 }
 
-interface PlayerScoreListProps {
+interface RoomSidebarProps {
+  roomCode: string;
   playerScores: PlayerScore[];
 }
 
-const PlayerScoreList: React.FC<PlayerScoreListProps> = ({ playerScores }) => {
-  useEffect(() => {
-    console.log("PlayerScoreList - playerScores prop updated:", playerScores);
-  }, [playerScores]);
+const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => {
+  const playerCount = playerScores.length;
 
   return (
     <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">
-        <CardTitle className="text-lime-800 text-2xl flex items-center justify-between">
-          Players <Users className="ml-2 h-5 w-5" />
+        <CardTitle className="text-lime-800 text-2xl flex items-center justify-between mb-2">
+          <span className="flex items-center">
+            <Hash className="mr-2 h-6 w-6" /> Room: {roomCode}
+          </span>
+          <span className="flex items-center text-lg">
+            <Users className="mr-2 h-5 w-5" /> {playerCount}
+          </span>
         </CardTitle>
+        <p className="text-gray-700 text-sm">Share this code with friends to play together!</p>
       </CardHeader>
       <CardContent className="p-4">
+        <h3 className="text-xl font-semibold text-lime-800 mb-3 flex items-center">
+          Players <Users className="ml-2 h-5 w-5" />
+        </h3>
         {playerScores.length === 0 ? (
           <p className="text-gray-600 italic">No players in this room yet.</p>
         ) : (
@@ -50,4 +58,4 @@ const PlayerScoreList: React.FC<PlayerScoreListProps> = ({ playerScores }) => {
   );
 };
 
-export default PlayerScoreList;
+export default RoomSidebar;
