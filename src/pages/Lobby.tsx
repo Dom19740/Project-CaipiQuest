@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,29 +9,56 @@ import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Lobby: React.FC = () => {
+  const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const navigate = useNavigate();
-  const { user } = useSession();
+  const { user, isLoading } = useSession();
+
+  useEffect(() => {
+    if (playerName) {
+      localStorage.setItem('playerName', playerName);
+    } else {
+      localStorage.removeItem('playerName');
+    }
+  }, [playerName]);
+
+  // Ensure an anonymous session exists if no user is present
+  useEffect(() => {
+    const ensureSession = async () => {
+      if (!isLoading && !user) {
+        const { error } = await supabase.auth.signInAnonymously();
+        if (error) {
+          console.error('Error signing in anonymously:', error.message);
+          showError('Failed to establish a session. Please try again.');
+        }
+      }
+    };
+    ensureSession();
+  }, [user, isLoading]);
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
   const handleCreateRoom = async () => {
-    if (!user) {
-      showError('You must be logged in to create a room.');
-      navigate('/login');
+    if (!user || !user.id) {
+      showError('A session could not be established. Please refresh and try again.');
       return;
     }
+    if (!playerName.trim()) {
+      showError('Please enter your name to create a room.');
+      return;
+    }
+
     setIsCreating(true);
     const newRoomCode = generateRoomCode();
     try {
       // Create the room
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .insert({ code: newRoomCode, created_by: user.id })
+        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName, player_names: [playerName] })
         .select()
         .single();
 
@@ -40,7 +67,7 @@ const Lobby: React.FC = () => {
       // Create initial game state for the creator
       const { error: gameStateError } = await supabase
         .from('game_states')
-        .insert({ room_id: roomData.id, player_id: user.id, grid_data: Array(9).fill(Array(9).fill(false)) });
+        .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
 
       if (gameStateError) throw gameStateError;
 
@@ -55,17 +82,21 @@ const Lobby: React.FC = () => {
   };
 
   const handleJoinRoom = async () => {
-    if (!user) {
-      showError('You must be logged in to join a room.');
-      navigate('/login');
+    if (!user || !user.id) {
+      showError('A session could not be established. Please refresh and try again.');
       return;
     }
+    if (!playerName.trim()) {
+      showError('Please enter your name to join a room.');
+      return;
+    }
+
     setIsJoining(true);
     try {
       // Find the room by code
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .select('id')
+        .select('id, player_names')
         .eq('code', roomCodeInput.toUpperCase())
         .single();
 
@@ -92,9 +123,19 @@ const Lobby: React.FC = () => {
         // Create initial game state for the joining player
         const { error: gameStateError } = await supabase
           .from('game_states')
-          .insert({ room_id: roomData.id, player_id: user.id, grid_data: Array(9).fill(Array(9).fill(false)) });
+          .insert({ room_id: roomData.id, player_id: user.id, player_name: playerName, grid_data: Array(9).fill(Array(9).fill(false)) });
 
         if (gameStateError) throw gameStateError;
+      }
+
+      // Update player_names in the room if this player's name isn't already there
+      if (!roomData.player_names.includes(playerName)) {
+        const updatedPlayerNames = [...roomData.player_names, playerName];
+        const { error: updateRoomError } = await supabase
+          .from('rooms')
+          .update({ player_names: updatedPlayerNames })
+          .eq('id', roomData.id);
+        if (updateRoomError) console.error('Error updating room player names:', updateRoomError.message);
       }
 
       showSuccess(`Joined room "${roomCodeInput.toUpperCase()}"!`);
@@ -114,8 +155,19 @@ const Lobby: React.FC = () => {
           CaipiQuest Lobby
         </h1>
         <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
-          Create a new game room or join an existing one with a code!
+          Enter your name, then create a new game room or join an existing one with a code!
         </p>
+
+        <div className="mb-6 w-full max-w-md mx-auto">
+          <Input
+            type="text"
+            placeholder="Enter Your Name"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            className="text-center border-lime-400 focus:border-lime-600 focus:ring-lime-600 text-lg py-2"
+            disabled={isCreating || isJoining}
+          />
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
           <Card className="w-full max-w-sm bg-lime-50 border-lime-300 shadow-lg">
@@ -126,7 +178,7 @@ const Lobby: React.FC = () => {
             <CardContent>
               <Button
                 onClick={handleCreateRoom}
-                disabled={isCreating || isJoining}
+                disabled={isCreating || isJoining || !playerName.trim()}
                 className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
                 {isCreating ? 'Creating...' : 'Create Room'}
@@ -150,7 +202,7 @@ const Lobby: React.FC = () => {
               />
               <Button
                 onClick={handleJoinRoom}
-                disabled={isJoining || isCreating || roomCodeInput.trim() === ''}
+                disabled={isJoining || isCreating || roomCodeInput.trim() === '' || !playerName.trim()}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
                 {isJoining ? 'Joining...' : 'Join Room'}

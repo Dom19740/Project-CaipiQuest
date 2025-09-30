@@ -33,10 +33,10 @@ const NUM_PLAYABLE_CELLS = 9; // Define this here for consistency
 const GameRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const { user } = useSession();
+  const { user, isLoading } = useSession();
 
   const [roomCode, setRoomCode] = useState<string>('');
-  const [playerCount, setPlayerCount] = useState<number>(0);
+  const [playerNamesInRoom, setPlayerNamesInRoom] = useState<string[]>([]);
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
   const [allBingoAlerts, setAllBingoAlerts] = useState<BingoAlert[]>([]); // Global alerts from all players
@@ -52,8 +52,11 @@ const GameRoom: React.FC = () => {
 
   // Fetch initial room and player data
   useEffect(() => {
-    if (!user || !roomId) {
-      navigate('/login');
+    if (isLoading || !user || !roomId) {
+      // Wait for session to load, or redirect if no user (should be handled by Lobby ensuring anonymous session)
+      if (!isLoading && !user) {
+        navigate('/lobby'); // Redirect to lobby if no user session (should not happen if Lobby ensures anonymous session)
+      }
       return;
     }
 
@@ -61,7 +64,7 @@ const GameRoom: React.FC = () => {
       // Fetch room details
       const { data: room, error: roomError } = await supabase
         .from('rooms')
-        .select('code')
+        .select('code, player_names')
         .eq('id', roomId)
         .single();
 
@@ -72,6 +75,7 @@ const GameRoom: React.FC = () => {
         return;
       }
       setRoomCode(room.code);
+      setPlayerNamesInRoom(room.player_names || []);
 
       // Fetch current player's game state
       const { data: gameState, error: gameStateError } = await supabase
@@ -88,18 +92,17 @@ const GameRoom: React.FC = () => {
         return;
       }
       setMyGameStateId(gameState.id);
-      setMyGridData(gameState.grid_data || Array(NUM_PLAYABLE_CELLs).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+      setMyGridData(gameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
       setAllBingoAlerts(gameState.bingo_alerts || []);
     };
 
     fetchRoomAndGameState();
-  }, [user, roomId, navigate]);
+  }, [user, roomId, navigate, isLoading]);
 
   // Realtime subscription for player count and global alerts
   useEffect(() => {
     if (!roomId || !user) return;
 
-    // Subscribe to changes in game_states for this room
     const channel = supabase
       .channel(`room:${roomId}`)
       .on(
@@ -111,31 +114,13 @@ const GameRoom: React.FC = () => {
           filter: `room_id=eq.${roomId}`,
         },
         async (payload) => {
-          // Handle player count updates
-          const { data: playersInRoom, error: playersError } = await supabase
-            .from('game_states')
-            .select('player_id');
-          if (!playersError) {
-            setPlayerCount(playersInRoom.length);
-          }
-
-          // Handle bingo alerts from any player in the room
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const updatedGameState = payload.new as { player_id: string; bingo_alerts: BingoAlert[] };
+            const updatedGameState = payload.new as { player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             
-            // Fetch player's profile to get their name
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('first_name, last_name')
-              .eq('id', updatedGameState.player_id)
-              .single();
-
-            const playerName = profile && profile.first_name ? profile.first_name : 'A player';
-
-            // Only add new alerts that are not already present
+            // Handle bingo alerts from any player in the room
             const newAlerts = (updatedGameState.bingo_alerts || []).filter(
               (newAlert: BingoAlert) => !allBingoAlerts.some(existingAlert => existingAlert.id === newAlert.id)
-            ).map((alert: BingoAlert) => ({ ...alert, playerName }));
+            ).map((alert: BingoAlert) => ({ ...alert, playerName: updatedGameState.player_name }));
 
             if (newAlerts.length > 0) {
               setAllBingoAlerts(prev => [...newAlerts, ...prev]);
@@ -146,17 +131,30 @@ const GameRoom: React.FC = () => {
 
             // If it's *my* game state being updated, update my grid data
             if (updatedGameState.player_id === user.id) {
-              setMyGridData((payload.new as { grid_data: boolean[][] }).grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
+              setMyGridData(updatedGameState.grid_data || Array(NUM_PLAYABLE_CELLS).fill(Array(NUM_PLAYABLE_CELLS).fill(false)));
             }
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rooms',
+          filter: `id=eq.${roomId}`,
+        },
+        (payload) => {
+          const updatedRoom = payload.new as { player_names: string[] };
+          setPlayerNamesInRoom(updatedRoom.player_names || []);
+        }
+      )
       .subscribe();
 
-    // Initial player count fetch
-    supabase.from('game_states').select('player_id').eq('room_id', roomId)
+    // Initial player count fetch (using player_names from rooms table)
+    supabase.from('rooms').select('player_names').eq('id', roomId).single()
       .then(({ data, error }) => {
-        if (!error) setPlayerCount(data.length);
+        if (!error && data) setPlayerNamesInRoom(data.player_names || []);
       });
 
     return () => {
@@ -248,10 +246,10 @@ const GameRoom: React.FC = () => {
     }
   };
 
-  if (!user || !roomId) {
+  if (isLoading || !user || !roomId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-100 to-emerald-200">
-        <p className="text-xl text-gray-700">Redirecting to login...</p>
+        <p className="text-xl text-gray-700">Loading game room...</p>
       </div>
     );
   }
@@ -270,7 +268,7 @@ const GameRoom: React.FC = () => {
           onCellToggle={handleCellToggle} // Pass toggle handler
         />
         <div className="flex flex-col gap-4">
-          {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerCount} />}
+          {roomCode && <RoomInfo roomCode={roomCode} playerCount={playerNamesInRoom.length} />}
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
             <CardHeader className="bg-lime-200 border-b border-lime-400">
               <CardTitle className="text-lime-800 text-2xl">Global Alerts</CardTitle>

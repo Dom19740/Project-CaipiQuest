@@ -2,66 +2,48 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom"; // Removed Navigate
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
 import Lobby from "./pages/Lobby";
-import GameRoom from "./pages/GameRoom"; // This will be our new multiplayer game page
-import { useSession } from "./components/SessionContextProvider";
+import GameRoom from "./pages/GameRoom";
+import { useSession } from "./components/SessionContextProvider"; // Still needed for user.id
 
 const queryClient = new QueryClient();
 
-// ProtectedRoute component to ensure user is authenticated
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { session, isLoading } = useSession();
+// Removed ProtectedRoute component as login is no longer enforced
+
+const App = () => {
+  // We still need useSession to get the user.id for database operations,
+  // even if we're not forcing an explicit login flow.
+  // Supabase will provide an anonymous user.id if no user is logged in.
+  const { isLoading } = useSession();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-lime-100 to-emerald-200">
-        <p className="text-xl text-gray-700">Loading authentication...</p>
+        <p className="text-xl text-gray-700">Loading application...</p>
       </div>
     );
   }
 
-  if (!session) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/lobby" element={<Lobby />} /> {/* Lobby is now directly accessible */}
+            <Route path="/game/:roomId" element={<GameRoom />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/lobby"
-            element={
-              <ProtectedRoute>
-                <Lobby />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/game/:roomId"
-            element={
-              <ProtectedRoute>
-                <GameRoom />
-              </ProtectedRoute>
-            }
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
 
 export default App;
