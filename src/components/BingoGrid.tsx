@@ -73,7 +73,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
 
   return (
     <div
-      className="grid gap-1 p-4 bg-gradient-to-br from-yellow-200 to-orange-300 rounded-lg shadow-xl"
+      className="grid gap-1 p-4 bg-gradient-to-br from-amber-200 to-orange-400 rounded-xl shadow-2xl border-4 border-orange-500"
       style={{
         gridTemplateColumns: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
@@ -84,7 +84,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
 
       {/* Top row labels */}
       {fruits.map((fruit, index) => (
-        <div key={`col-label-${index}`} className="w-16 h-16 flex items-center justify-center bg-yellow-300 rounded-md shadow-sm">
+        <div key={`col-label-${index}`} className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
       ))}
@@ -93,7 +93,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
       {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
-          <div className="w-16 h-16 flex items-center justify-center bg-yellow-300 rounded-md shadow-sm">
+          <div className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
             <FruitIcon fruit={fruits[rowIndex]} size="lg" />
           </div>
 
@@ -101,7 +101,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
           {Array(NUM_PLAYABLE_CELLS).fill(null).map((_, colIndex) => (
             <div
               key={`cell-${rowIndex}-${colIndex}`}
-              className="w-16 h-16 flex flex-col items-center justify-center bg-white rounded-md shadow-sm cursor-pointer hover:bg-yellow-50 transition-colors duration-200"
+              className="w-16 h-16 flex flex-col items-center justify-center bg-white rounded-md shadow-sm cursor-pointer hover:bg-orange-50 transition-colors duration-200 border border-gray-200"
               onClick={() => toggleCell(rowIndex, colIndex)}
             >
               <div className="flex space-x-1 mb-1">
@@ -111,7 +111,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
               <Checkbox
                 checked={checkedCells[rowIndex][colIndex]}
                 onCheckedChange={() => toggleCell(rowIndex, colIndex)}
-                className="w-4 h-4"
+                className="w-4 h-4 border-lime-500 data-[state=checked]:bg-lime-500 data-[state=checked]:text-white"
               />
             </div>
           ))}
