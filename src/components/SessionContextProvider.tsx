@@ -20,12 +20,14 @@ export const SessionContextProvider: React.FC<{ children: React.ReactNode }> = (
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
+      console.log("SessionContextProvider - Auth state changed. User ID:", session?.user?.id);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user || null);
       setIsLoading(false);
+      console.log("SessionContextProvider - Initial session loaded. User ID:", session?.user?.id);
     });
 
     return () => subscription.unsubscribe();

@@ -152,6 +152,8 @@ const GameRoom: React.FC = () => {
   useEffect(() => {
     if (!roomId || !user) return;
 
+    console.log(`GameRoom - Subscribing to room:${roomId} for user: ${user.id}`);
+
     const channel = supabase
       .channel(`room:${roomId}`)
       .on(
@@ -165,6 +167,7 @@ const GameRoom: React.FC = () => {
         async (payload) => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
+            console.log("Realtime - game_states update received:", updatedGameState);
             
             // Update player scores
             setPlayerScores(prevScores => {
@@ -224,7 +227,7 @@ const GameRoom: React.FC = () => {
         (payload) => {
           const updatedRoom = payload.new as { player_names: string[] };
           setPlayerNamesInRoom(updatedRoom.player_names || []);
-          console.log("Realtime - Updated room player names:", updatedRoom.player_names);
+          console.log("Realtime - Updated room player names received:", updatedRoom.player_names);
         }
       )
       .subscribe();
@@ -239,6 +242,7 @@ const GameRoom: React.FC = () => {
       });
 
     return () => {
+      console.log(`GameRoom - Unsubscribing from room:${roomId} for user: ${user.id}`);
       supabase.removeChannel(channel);
     };
   }, [roomId, user]);
