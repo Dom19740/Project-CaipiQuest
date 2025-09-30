@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,10 @@ interface PlayerScoreListProps {
 }
 
 const PlayerScoreList: React.FC<PlayerScoreListProps> = ({ playerScores }) => {
+  useEffect(() => {
+    console.log("PlayerScoreList - playerScores prop updated:", playerScores);
+  }, [playerScores]);
+
   return (
     <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">

@@ -184,6 +184,7 @@ const GameRoom: React.FC = () => {
           } else if (payload.eventType === 'UPDATE') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; bingo_alerts: BingoAlert[]; grid_data: boolean[][] };
             console.log("Realtime - game_states update received:", updatedGameState);
+            console.log("Realtime - Updated grid_data for player:", updatedGameState.player_id, updatedGameState.grid_data); // NEW LOG
 
             // Update player scores for the specific player who updated their state
             setPlayerScores(prevScores => {
