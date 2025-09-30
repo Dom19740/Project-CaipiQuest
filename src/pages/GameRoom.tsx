@@ -74,6 +74,12 @@ const GameRoom: React.FC = () => {
     return grid.flat().filter(Boolean).length;
   };
 
+  useEffect(() => {
+    if (user) {
+      console.log("GameRoom - User ID for this session:", user.id);
+    }
+  }, [user]);
+
   // Fetch initial room and player data
   useEffect(() => {
     if (isLoading || !user || !roomId) {
@@ -99,6 +105,8 @@ const GameRoom: React.FC = () => {
       }
       setRoomCode(room.code);
       setPlayerNamesInRoom(room.player_names || []);
+      console.log("Initial room player names:", room.player_names);
+
 
       // Fetch all game states for this room
       const { data: allGameStates, error: allGameStatesError } = await supabase
@@ -120,12 +128,15 @@ const GameRoom: React.FC = () => {
         isMe: gs.player_id === user.id,
       }));
       setPlayerScores(scores);
+      console.log("Initial player scores:", scores);
+
 
       // Find current player's game state
       const myGameState = allGameStates.find(gs => gs.player_id === user.id);
 
       if (!myGameState) {
         showError('Your game state not found. Please try rejoining the room.');
+        console.error('My game state not found for user:', user.id, 'in room:', roomId);
         navigate('/lobby');
         return;
       }
@@ -166,13 +177,16 @@ const GameRoom: React.FC = () => {
                 isMe: updatedGameState.player_id === user.id,
               };
 
+              let newScores;
               if (existingIndex > -1) {
-                return prevScores.map((score, index) =>
+                newScores = prevScores.map((score, index) =>
                   index === existingIndex ? updatedScore : score
                 );
               } else {
-                return [...prevScores, updatedScore];
+                newScores = [...prevScores, updatedScore];
               }
+              console.log("Realtime - Updated player scores:", newScores);
+              return newScores;
             });
 
             // Handle bingo alerts from any player in the room
@@ -185,7 +199,9 @@ const GameRoom: React.FC = () => {
                 // Trigger confetti for any new bingo
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 2000);
-                return [...newAlerts, ...prevAllBingoAlerts];
+                const combinedAlerts = [...newAlerts, ...prevAllBingoAlerts];
+                console.log("Realtime - New bingo alerts:", combinedAlerts);
+                return combinedAlerts;
               }
               return prevAllBingoAlerts;
             });
@@ -208,6 +224,7 @@ const GameRoom: React.FC = () => {
         (payload) => {
           const updatedRoom = payload.new as { player_names: string[] };
           setPlayerNamesInRoom(updatedRoom.player_names || []);
+          console.log("Realtime - Updated room player names:", updatedRoom.player_names);
         }
       )
       .subscribe();
@@ -215,7 +232,10 @@ const GameRoom: React.FC = () => {
     // Initial player count fetch (using player_names from rooms table)
     supabase.from('rooms').select('player_names').eq('id', roomId).single()
       .then(({ data, error }) => {
-        if (!error && data) setPlayerNamesInRoom(data.player_names || []);
+        if (!error && data) {
+          setPlayerNamesInRoom(data.player_names || []);
+          console.log("Initial room player names (from direct fetch):", data.player_names);
+        }
       });
 
     return () => {

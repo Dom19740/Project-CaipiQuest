@@ -32,7 +32,7 @@ const Lobby: React.FC = () => {
         const { error } = await supabase.auth.signInAnonymously();
         if (error) {
           console.error('Error signing in anonymously:', error.message);
-          showError(`Failed to establish a session: ${error.message}. Please try again.`); // Added error.message here
+          showError(`Failed to establish a session: ${error.message}. Please try again.`);
         } else {
           console.log("Anonymous sign-in successful.");
         }
@@ -40,6 +40,12 @@ const Lobby: React.FC = () => {
     };
     ensureSession();
   }, [user, isLoading]);
+
+  useEffect(() => {
+    if (user) {
+      console.log("Lobby - User ID for this session:", user.id);
+    }
+  }, [user]);
 
   const generateRoomCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
