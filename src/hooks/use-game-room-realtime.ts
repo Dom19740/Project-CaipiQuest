@@ -108,8 +108,25 @@ export const useGameRoomRealtime = (
     }
   }, [roomId, user, setMyGridData, setPlayerSelectedFruits]);
 
+  const fetchInitialRoomAlerts = useCallback(async () => {
+    if (!roomId) return;
+    const { data: room, error } = await supabase
+      .from('rooms')
+      .select('bingo_alerts')
+      .eq('id', roomId)
+      .single();
+
+    if (error) {
+      console.error('useGameRoomRealtime - Error fetching initial room alerts:', error);
+      return;
+    }
+    setRoomBingoAlerts(room?.bingo_alerts || []);
+  }, [roomId]);
+
   useEffect(() => {
     if (!roomId || !user) return;
+
+    fetchInitialRoomAlerts(); // Call this on mount to get existing alerts
 
     const channel = supabase
       .channel(`room:${roomId}`)
@@ -194,7 +211,7 @@ export const useGameRoomRealtime = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores]);
+  }, [roomId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialRoomAlerts]);
 
   return {
     roomBingoAlerts,
