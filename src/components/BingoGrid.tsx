@@ -21,6 +21,9 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
     return initialGrid;
   });
 
+  // State to keep track of completed bingo lines to prevent duplicate alerts
+  const [completedBingos, setCompletedBingos] = useState<Set<string>>(new Set());
+
   const toggleCell = (row: number, col: number) => {
     setCheckedCells(prev => {
       // Create a deep copy of the previous state to ensure immutability
@@ -32,40 +35,67 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo }) => {
   };
 
   const checkBingo = useCallback(() => {
+    const newCompletedBingos = new Set(completedBingos);
+    let bingoTriggered = false;
+
     // Check rows
     for (let i = 0; i < NUM_PLAYABLE_CELLS; i++) {
+      const rowId = `row-${i}`;
       if (checkedCells[i] && checkedCells[i].every(cell => cell)) {
-        onBingo(`row ${i + 1}`);
-        return;
+        if (!newCompletedBingos.has(rowId)) {
+          onBingo(`row ${i + 1}`);
+          newCompletedBingos.add(rowId);
+          bingoTriggered = true;
+        }
       }
     }
 
     // Check columns
     for (let j = 0; j < NUM_PLAYABLE_CELLS; j++) {
+      const colId = `col-${j}`;
       if (checkedCells.every(row => row && row[j])) {
-        onBingo(`column ${j + 1}`);
-        return;
+        if (!newCompletedBingos.has(colId)) {
+          onBingo(`column ${j + 1}`);
+          newCompletedBingos.add(colId);
+          bingoTriggered = true;
+        }
       }
     }
 
     // Check main diagonal (top-left to bottom-right)
+    const mainDiagId = 'diag-main';
     if (Array(NUM_PLAYABLE_CELLS).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][i])) {
-      onBingo('main diagonal');
-      return;
+      if (!newCompletedBingos.has(mainDiagId)) {
+        onBingo('main diagonal');
+        newCompletedBingos.add(mainDiagId);
+        bingoTriggered = true;
+      }
     }
 
     // Check anti-diagonal (top-right to bottom-left)
+    const antiDiagId = 'diag-anti';
     if (Array(NUM_PLAYABLE_CELLS).fill(null).every((_, i) => checkedCells[i] && checkedCells[i][NUM_PLAYABLE_CELLS - 1 - i])) {
-      onBingo('anti-diagonal');
-      return;
+      if (!newCompletedBingos.has(antiDiagId)) {
+        onBingo('anti-diagonal');
+        newCompletedBingos.add(antiDiagId);
+        bingoTriggered = true;
+      }
     }
 
     // Check full grid
+    const fullGridId = 'full-grid';
     if (checkedCells.every(row => row && row.every(cell => cell))) {
-      onBingo('full grid');
-      return;
+      if (!newCompletedBingos.has(fullGridId)) {
+        onBingo('full grid');
+        newCompletedBingos.add(fullGridId);
+        bingoTriggered = true;
+      }
     }
-  }, [checkedCells, onBingo]);
+
+    if (bingoTriggered) {
+      setCompletedBingos(newCompletedBingos);
+    }
+  }, [checkedCells, onBingo, completedBingos]);
 
   useEffect(() => {
     checkBingo();
