@@ -70,6 +70,9 @@ const GameRoom: React.FC = () => {
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
+  // State to manually trigger a refresh of all game states
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const countCheckedSquares = (grid: boolean[][]): number => {
     if (!grid || grid.length === 0) return 0;
     return grid.flat().filter(Boolean).length;
@@ -85,6 +88,7 @@ const GameRoom: React.FC = () => {
   const fetchAndSetAllGameStates = useCallback(async () => {
     if (!roomId || !user) return;
 
+    console.log("GameRoom - Manually fetching all game states...");
     const { data: allGameStates, error: allGameStatesError } = await supabase
       .from('game_states')
       .select('*')
@@ -113,7 +117,7 @@ const GameRoom: React.FC = () => {
     }
   }, [roomId, user]);
 
-  // Fetch initial room and player data
+  // Fetch initial room and player data, and also trigger on manual refresh
   useEffect(() => {
     if (isLoading || !user || !roomId) {
       if (!isLoading && !user) {
@@ -142,7 +146,7 @@ const GameRoom: React.FC = () => {
     };
 
     fetchInitialData();
-  }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates]);
+  }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates, refreshTrigger]); // Added refreshTrigger here
 
   // Realtime subscription for game states
   useEffect(() => {
@@ -367,6 +371,9 @@ const GameRoom: React.FC = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          <Button onClick={() => setRefreshTrigger(prev => prev + 1)} className="w-full lg:w-80 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
+            Refresh Data
+          </Button>
           <Button onClick={() => navigate('/lobby')} className="w-full lg:w-80 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
             Leave Room
           </Button>
