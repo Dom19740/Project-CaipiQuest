@@ -85,7 +85,7 @@ const GameRoom: React.FC = () => {
   const fetchAndSetAllGameStates = useCallback(async () => {
     if (!roomId || !user) return;
 
-    console.log("GameRoom - Manually fetching all game states...");
+    console.log("GameRoom - Fetching all game states...");
     const { data: allGameStates, error: allGameStatesError } = await supabase
       .from('game_states')
       .select('*')
@@ -145,14 +145,14 @@ const GameRoom: React.FC = () => {
     fetchInitialData();
   }, [user, roomId, navigate, isLoading, fetchAndSetAllGameStates]);
 
-  // Realtime subscription for game states
+  // Realtime subscription for game states and room updates
   useEffect(() => {
     if (!roomId || !user) return;
 
-    console.log(`GameRoom - Subscribing to game_states in room:${roomId} for user: ${user.id}`);
+    console.log(`GameRoom - Subscribing to room:${roomId} for user: ${user.id}`);
 
-    const gameStateChannel = supabase
-      .channel(`game_states_room:${roomId}`)
+    const channel = supabase
+      .channel(`room:${roomId}`)
       .on(
         'postgres_changes',
         {
@@ -217,13 +217,7 @@ const GameRoom: React.FC = () => {
           }
         }
       )
-      .subscribe();
-
-    // Realtime subscription for room updates (for global refresh)
-    console.log(`GameRoom - Subscribing to rooms table for room:${roomId} for user: ${user.id}`);
-    const roomChannel = supabase
-      .channel(`rooms_room:${roomId}`)
-      .on(
+      .on( // Listen for room updates for global refresh signal
         'postgres_changes',
         {
           event: 'UPDATE',
@@ -243,9 +237,8 @@ const GameRoom: React.FC = () => {
       .subscribe();
 
     return () => {
-      console.log(`GameRoom - Unsubscribing from game_states_room:${roomId} and rooms_room:${roomId}`);
-      supabase.removeChannel(gameStateChannel);
-      supabase.removeChannel(roomChannel);
+      console.log(`GameRoom - Unsubscribing from room:${roomId}`);
+      supabase.removeChannel(channel);
     };
   }, [roomId, user, fetchAndSetAllGameStates]);
 
@@ -321,6 +314,11 @@ const GameRoom: React.FC = () => {
   const handleGlobalRefresh = async () => {
     if (!roomId || !user) return;
 
+    // 1. Immediately refresh data for the current player
+    await fetchAndSetAllGameStates();
+    showSuccess('Your data has been refreshed!');
+
+    // 2. Trigger global refresh for other players by updating rooms.last_refreshed_at
     console.log("GameRoom - Triggering global refresh by updating rooms.last_refreshed_at");
     const { error } = await supabase
       .from('rooms')
@@ -329,10 +327,10 @@ const GameRoom: React.FC = () => {
       .eq('created_by', user.id); // Only room creator can trigger this for now
 
     if (error) {
-      showError('Failed to trigger global refresh. Only the room creator can do this.');
+      showError('Failed to trigger global refresh for others. Only the room creator can do this.');
       console.error('Error triggering global refresh:', error);
     } else {
-      showSuccess('Global refresh signal sent!');
+      showSuccess('Global refresh signal sent to other players!');
     }
   };
 
