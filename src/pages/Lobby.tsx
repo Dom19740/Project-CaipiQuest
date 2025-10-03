@@ -126,14 +126,6 @@ const Lobby: React.FC = () => {
 
   const isSessionReady = !isLoading && user; // True when session is loaded and a user (even anonymous) is present
 
-  const gridGraphics = {
-    5: "5x5 grid (25 cells)",
-    6: "6x6 grid (36 cells)",
-    7: "7x7 grid (49 cells)",
-    8: "8x8 grid (64 cells)",
-    9: "9x9 grid (81 cells)",
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4">
       <div className="text-center bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border-4 border-lime-400 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8">
@@ -156,7 +148,7 @@ const Lobby: React.FC = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
-          <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg"> {/* Increased max-w-sm to max-w-md */}
+          <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg">
             <CardHeader>
               <CardTitle className="text-lime-800">Create New Room</CardTitle>
               <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
@@ -178,15 +170,6 @@ const Lobby: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-sm text-gray-600 mt-2">
-                  A {gridSize}x{gridSize} grid means you'll select {gridSize} fruits.
-                </p>
-                <div className="mt-4 p-3 bg-lime-100 border border-lime-300 rounded-md text-sm text-lime-800">
-                  <p className="font-semibold">Grid Visualizer:</p>
-                  <p>5 fruits = 5x5 grid (25 cells)</p>
-                  <p>6 fruits = 6x6 grid (36 cells)</p>
-                  <p>... up to 9 fruits = 9x9 grid (81 cells)</p>
-                </div>
               </div>
               <Button
                 onClick={handleCreateRoom}
@@ -210,7 +193,7 @@ const Lobby: React.FC = () => {
                 value={roomCodeInput}
                 onChange={(e) => setRoomCodeInput(e.target.value)}
                 className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
-                disabled={isCreating || isJoining || roomCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
               />
               <Button
                 onClick={handleJoinRoom}
