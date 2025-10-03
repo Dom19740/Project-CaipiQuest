@@ -28,11 +28,13 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   const CSS_GRID_DIMENSION = gridSize + 1; // Total rows/columns for CSS grid (including labels)
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2); // For any NxN grid, this is N/2
 
+  // Effect to reset completedBingosRef only when resetKey changes
   useEffect(() => {
-    // Reset on resetKey change
     completedBingosRef.current = new Set();
-    // Initialize with existing alerts from DB on mount or when alerts change
-    // Only populate ref if initial alerts are loaded
+  }, [resetKey]);
+
+  // Effect to populate completedBingosRef from partyBingoAlerts when they change
+  useEffect(() => {
     if (initialAlertsLoaded) {
       partyBingoAlerts.forEach(alert => {
         if (alert.canonicalId) {
@@ -40,7 +42,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
         }
       });
     }
-  }, [resetKey, partyBingoAlerts, initialAlertsLoaded]); // Add initialAlertsLoaded to dependencies
+  }, [partyBingoAlerts, initialAlertsLoaded]); // Only update when alerts change, don't reset here
 
   const checkBingo = useCallback(() => {
     if (!checkedCells || checkedCells.length === 0) return;
@@ -48,7 +50,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, canonicalId: string) => {
       if (line.every(cell => cell) && !completedBingosRef.current.has(canonicalId)) {
         onBingo(type, message, canonicalId); // Pass canonicalId to onBingo
-        completedBingosRef.current.add(canonicalId);
+        completedBingosRef.current.add(canonicalId); // This adds to local ref *before* DB update
       }
     };
 
