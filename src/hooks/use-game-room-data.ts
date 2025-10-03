@@ -145,33 +145,43 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
       const currentPartyGridSize = party.grid_size || 5;
       setGridSize(currentPartyGridSize);
 
-      const { data: playerGameState, error: playerGameStateError } = await supabase
-        .from('game_states')
-        .select('selected_fruits')
-        .eq('room_id', roomId)
-        .eq('player_id', user.id)
-        .single();
+      let fruitsToLoad: string[] | null = null;
 
-      if (playerGameStateError && playerGameStateError.code !== 'PGRST116') {
-        console.error('useGameRoomData - Error fetching player game state for fruits:', playerGameStateError);
-        showError('Failed to retrieve your fruit selection.');
-        navigate('/lobby');
-        setIsLoadingInitialData(false);
-        return;
+      // 1. Check if fruits are passed via location state (meaning user just came from fruit selection)
+      if (initialSelectedFruitsFromState && initialSelectedFruitsFromState.length === currentPartyGridSize) {
+        fruitsToLoad = initialSelectedFruitsFromState;
+      } else {
+        // 2. If not from state, try to load from existing game state in DB
+        const { data: playerGameState, error: playerGameStateError } = await supabase
+          .from('game_states')
+          .select('selected_fruits')
+          .eq('room_id', roomId)
+          .eq('player_id', user.id)
+          .single();
+
+        if (playerGameStateError && playerGameStateError.code !== 'PGRST116') {
+          console.error('useGameRoomData - Error fetching player game state for fruits:', playerGameStateError);
+          showError('Failed to retrieve your fruit selection.');
+          navigate('/lobby');
+          setIsLoadingInitialData(false);
+          return;
+        }
+
+        if (playerGameState?.selected_fruits && playerGameState.selected_fruits.length === currentPartyGridSize) {
+          fruitsToLoad = playerGameState.selected_fruits;
+        }
       }
 
-      const fruitsToUse = initialSelectedFruitsFromState && initialSelectedFruitsFromState.length === currentPartyGridSize
-        ? initialSelectedFruitsFromState
-        : (playerGameState?.selected_fruits || []);
-
-      if (!fruitsToUse || fruitsToUse.length !== currentPartyGridSize) {
+      // 3. If no valid fruits found, redirect to selection
+      if (!fruitsToLoad || fruitsToLoad.length !== currentPartyGridSize) {
         showError(`Please select exactly ${currentPartyGridSize} fruits before entering the game party.`);
         navigate('/select-fruits', { state: { roomId, gridSize: currentPartyGridSize } });
         setIsLoadingInitialData(false);
         return;
       }
 
-      await initializeOrUpdateGameState(roomId, user, fruitsToUse, currentPartyGridSize);
+      // 4. If valid fruits are found, proceed to initialize/update game state
+      await initializeOrUpdateGameState(roomId, user, fruitsToLoad, currentPartyGridSize);
       setIsLoadingInitialData(false);
     };
 
