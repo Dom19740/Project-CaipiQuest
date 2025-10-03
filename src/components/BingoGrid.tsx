@@ -7,7 +7,7 @@ interface BingoAlert { // Need to define this interface here or import it
   message: string;
   playerName?: string;
   playerId?: string;
-  canonicalId?: string; // Added canonicalId
+  canonicalId?: string;
 }
 
 interface BingoGridProps {
@@ -18,9 +18,10 @@ interface BingoGridProps {
   selectedFruits: string[]; // New prop for selected fruits
   gridSize: number; // New prop for dynamic grid size
   partyBingoAlerts: BingoAlert[]; // NEW PROP: Existing alerts from DB
+  initialAlertsLoaded: boolean; // NEW PROP: Flag to indicate initial alerts are loaded
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize, partyBingoAlerts }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize, partyBingoAlerts, initialAlertsLoaded }) => {
   const checkedCells = initialGridState;
   const completedBingosRef = useRef<Set<string>>(new Set());
 
@@ -31,12 +32,15 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     // Reset on resetKey change
     completedBingosRef.current = new Set();
     // Initialize with existing alerts from DB on mount or when alerts change
-    partyBingoAlerts.forEach(alert => {
-      if (alert.canonicalId) {
-        completedBingosRef.current.add(alert.canonicalId);
-      }
-    });
-  }, [resetKey, partyBingoAlerts]); // Add partyBingoAlerts to dependencies
+    // Only populate ref if initial alerts are loaded
+    if (initialAlertsLoaded) {
+      partyBingoAlerts.forEach(alert => {
+        if (alert.canonicalId) {
+          completedBingosRef.current.add(alert.canonicalId);
+        }
+      });
+    }
+  }, [resetKey, partyBingoAlerts, initialAlertsLoaded]); // Add initialAlertsLoaded to dependencies
 
   const checkBingo = useCallback(() => {
     if (!checkedCells || checkedCells.length === 0) return;
@@ -75,8 +79,11 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   }, [checkedCells, gridSize, onBingo]);
 
   useEffect(() => {
-    checkBingo();
-  }, [initialGridState, checkBingo]);
+    // Only check bingo if initial alerts are loaded
+    if (initialAlertsLoaded) {
+      checkBingo();
+    }
+  }, [initialGridState, checkBingo, initialAlertsLoaded]); // Add initialAlertsLoaded to dependencies
 
   // Ensure selectedFruits has `gridSize` items, with 'lime' at the center
   const displayFruits = [...selectedFruits];

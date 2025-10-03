@@ -42,6 +42,7 @@ interface GameRoomRealtimeData {
     initialVelocityX: { min: number; max: number; };
     initialVelocityY: { min: number; max: number; };
   }>>;
+  initialAlertsLoaded: boolean; // NEW: Flag to indicate initial alerts are loaded
 }
 
 // New function to count unique caipis
@@ -110,6 +111,7 @@ export const useGameRoomRealtime = (
   });
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
+  const [initialAlertsLoaded, setInitialAlertsLoaded] = useState(false); // NEW: State to track initial alerts load
 
   // Ref to hold the current state of partyBingoAlerts for comparison in real-time listener
   const partyBingoAlertsRef = useRef<BingoAlert[]>([]);
@@ -171,6 +173,7 @@ export const useGameRoomRealtime = (
     setPartyBingoAlerts(party?.bingo_alerts || []);
     // Also update the ref immediately after setting state for initial load
     partyBingoAlertsRef.current = party?.bingo_alerts || [];
+    setInitialAlertsLoaded(true); // NEW: Set flag to true after initial alerts are loaded
   }, [partyId]);
 
   useEffect(() => {
@@ -280,5 +283,6 @@ export const useGameRoomRealtime = (
     setShowConfetti,
     fetchAndSetAllGameStates,
     setConfettiConfig,
+    initialAlertsLoaded, // NEW: Return the flag
   };
 };

@@ -49,6 +49,7 @@ const GameRoom: React.FC = () => {
     setShowConfetti,
     fetchAndSetAllGameStates,
     setConfettiConfig,
+    initialAlertsLoaded, // NEW: Get the flag from the hook
   } = useGameRoomRealtime(
     roomId,
     gridSize,
@@ -111,7 +112,8 @@ const GameRoom: React.FC = () => {
             onCellToggle={handleCellToggle}
             selectedFruits={playerSelectedFruits}
             gridSize={gridSize}
-            partyBingoAlerts={partyBingoAlerts} // Pass the alerts here
+            partyBingoAlerts={partyBingoAlerts}
+            initialAlertsLoaded={initialAlertsLoaded} // NEW: Pass the flag
           />
         </div>
 
