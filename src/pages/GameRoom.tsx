@@ -6,8 +6,7 @@ import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-import PartyAlertsCard from '@/components/PartyAlertsCard';
-import LeavePartyDialog from '@/components/LeavePartyDialog';
+import LeavePartyDialog from '@/components/LeavePartyDialog'; // Removed PartyAlertsCard import
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -49,7 +48,7 @@ const GameRoom: React.FC = () => {
     setShowConfetti,
     fetchAndSetAllGameStates,
     setConfettiConfig,
-    initialAlertsLoaded, // NEW: Get the flag from the hook
+    initialAlertsLoaded,
   } = useGameRoomRealtime(
     roomId,
     gridSize,
@@ -101,8 +100,8 @@ const GameRoom: React.FC = () => {
       
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8"> {/* Added flex-col and gap-8 */}
-          <h1 className="text-3xl font-extrabold drop-shadow-lg text-center text-foreground w-full"> {/* Removed mb-8, added w-full */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-8">
+          <h1 className="text-3xl font-extrabold drop-shadow-lg text-center text-foreground w-full">
             🍹 <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800">CaipiQuest Bingo!</span> 🍹
           </h1>
           <BingoGrid
@@ -113,16 +112,20 @@ const GameRoom: React.FC = () => {
             selectedFruits={playerSelectedFruits}
             gridSize={gridSize}
             partyBingoAlerts={partyBingoAlerts}
-            initialAlertsLoaded={initialAlertsLoaded} // NEW: Pass the flag
+            initialAlertsLoaded={initialAlertsLoaded}
           />
         </div>
 
-        {/* Right Panel: Cards and Buttons */}
+        {/* Right Panel: Combined Card and Buttons */}
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
-          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-            <PartyAlertsCard alerts={partyBingoAlerts} currentUserId={user.id} />
-            {partyCode && <PartySidebar partyCode={partyCode} playerScores={playerScores} />}
-          </div>
+          {partyCode && (
+            <PartySidebar
+              partyCode={partyCode}
+              playerScores={playerScores}
+              alerts={partyBingoAlerts} // Pass alerts to the combined sidebar
+              currentUserId={user.id} // Pass current user ID for alert styling
+            />
+          )}
 
           {/* Buttons */}
           <div className="flex flex-row gap-2 justify-center w-full">
