@@ -34,8 +34,13 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
     lg: 'text-2xl',
   };
 
+  // Special handling for lime emoji when size is 'lg'
+  const effectiveSizeClass = (fruit.toLowerCase() === 'lime' && size === 'lg')
+    ? 'text-xl' // Use a slightly smaller size for lime in large contexts
+    : sizeClasses[size];
+
   return (
-    <span className={`inline-flex items-center ${sizeClasses[size]}`} role="img" aria-label={fruit}>
+    <span className={`inline-flex items-center ${effectiveSizeClass}`} role="img" aria-label={fruit}>
       {emoji}
     </span>
   );
