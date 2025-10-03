@@ -6,7 +6,6 @@ import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
-import FullGridCelebration from '@/components/FullGridCelebration'; // NEW: Import the new celebration component
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -45,8 +44,6 @@ const GameRoom: React.FC = () => {
     setShowNewPlayerAlert,
     fetchAndSetAllGameStates,
     initialAlertsLoaded,
-    showFullGridCelebration, // NEW: Get celebration state
-    setShowFullGridCelebration, // NEW: Get celebration setter
   } = useGameRoomRealtime(
     roomId,
     gridSize,
@@ -93,7 +90,6 @@ const GameRoom: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
-      {showFullGridCelebration && <FullGridCelebration onClose={() => setShowFullGridCelebration(false)} />} {/* NEW: Render celebration */}
       
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}

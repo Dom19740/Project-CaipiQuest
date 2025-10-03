@@ -27,8 +27,6 @@ interface GameRoomRealtimeData {
   setShowNewPlayerAlert: React.Dispatch<React.SetStateAction<boolean>>;
   fetchAndSetAllGameStates: (currentGridSize: number) => Promise<void>;
   initialAlertsLoaded: boolean;
-  showFullGridCelebration: boolean; // NEW: State for full grid celebration
-  setShowFullGridCelebration: React.Dispatch<React.SetStateAction<boolean>>; // NEW: Setter for full grid celebration
 }
 
 // New function to count unique caipis
@@ -82,7 +80,6 @@ export const useGameRoomRealtime = (
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
   const [initialAlertsLoaded, setInitialAlertsLoaded] = useState(false);
-  const [showFullGridCelebration, setShowFullGridCelebration] = useState(false); // NEW: State for full grid celebration
 
   const partyBingoAlertsRef = useRef<BingoAlert[]>([]);
 
@@ -206,19 +203,7 @@ export const useGameRoomRealtime = (
           }
 
           if (updatedParty.bingo_alerts) {
-            const incomingAlerts = updatedParty.bingo_alerts || [];
-            const currentAlertsInRef = partyBingoAlertsRef.current;
-
-            const newFullGridAlert = incomingAlerts.find(
-              (incomingAlert: BingoAlert) =>
-                incomingAlert.type === 'fullGrid' &&
-                !currentAlertsInRef.some(existingAlert => existingAlert.id === incomingAlert.id)
-            );
-
-            if (newFullGridAlert) {
-              setShowFullGridCelebration(true); // Trigger the new celebration
-            }
-            setPartyBingoAlerts(incomingAlerts);
+            setPartyBingoAlerts(updatedParty.bingo_alerts || []);
           }
         }
       )
@@ -237,7 +222,5 @@ export const useGameRoomRealtime = (
     setShowNewPlayerAlert,
     fetchAndSetAllGameStates,
     initialAlertsLoaded,
-    showFullGridCelebration,
-    setShowFullGridCelebration,
   };
 };

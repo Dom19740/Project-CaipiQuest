@@ -15,7 +15,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import FullGridCelebration from '@/components/FullGridCelebration';
 
 interface BingoAlert {
   id: string;
@@ -29,7 +28,6 @@ const CENTER_CELL_INDEX = Math.floor(FIXED_GRID_SIZE / 2);
 const CaipiQuest: React.FC = () => {
   const [bingoAlerts, setBingoAlerts] = useState<BingoAlert[]>([]);
   const [resetKey, setResetKey] = useState(0);
-  const [showFullGridCelebration, setShowFullGridCelebration] = useState(false);
 
   const initializeGrid = useCallback(() => {
     const newGrid = Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false));
@@ -57,17 +55,12 @@ const CaipiQuest: React.FC = () => {
     const message = `BINGO! You ${baseMessage}`;
     showSuccess(message);
     setBingoAlerts(prev => [{ id: Date.now().toString(), type, message }, ...prev]);
-
-    if (type === 'fullGrid') {
-      setShowFullGridCelebration(true);
-    }
   };
 
   const handleResetGame = () => {
     setResetKey(prev => prev + 1);
     setBingoAlerts([]);
     setCheckedCells(initializeGrid()); // Reset with center cell true
-    setShowFullGridCelebration(false);
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
@@ -85,7 +78,6 @@ const CaipiQuest: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
-      {showFullGridCelebration && <FullGridCelebration onClose={() => setShowFullGridCelebration(false)} />}
       <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-8 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
