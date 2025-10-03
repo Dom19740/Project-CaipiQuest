@@ -76,7 +76,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
   return (
     <div
-      className="grid gap-1 p-4 bg-gradient-to-br from-amber-200 to-orange-400 rounded-xl shadow-2xl border-4 border-orange-500"
+      className="grid gap-1 p-4 bg-white rounded-xl shadow-2xl border-4 border-lime-400"
       style={{
         gridTemplateColumns: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
@@ -87,7 +87,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
       {/* Top row labels */}
       {displayFruits.map((fruit, index) => (
-        <div key={`col-label-${index}`} className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
+        <div key={`col-label-${index}`} className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border border-lime-400">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
       ))}
@@ -96,7 +96,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       {Array(gridSize).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
-          <div className="w-16 h-16 flex items-center justify-center bg-orange-300 text-orange-800 font-semibold rounded-md shadow-md border border-orange-400">
+          <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border border-lime-400">
             <FruitIcon fruit={displayFruits[rowIndex]} size="lg" />
           </div>
 
@@ -110,7 +110,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
                 className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border border-gray-200
-                  ${isCenterCell ? 'bg-lime-300 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300 hover:scale-105' : 'bg-white hover:bg-orange-50 hover:scale-105'}
+                  ${isCenterCell ? 'bg-lime-300 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300 hover:scale-105' : 'bg-white hover:bg-lime-50 hover:scale-105'}
                 `}
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
               >

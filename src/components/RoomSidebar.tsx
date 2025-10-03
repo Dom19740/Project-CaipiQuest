@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Users } from 'lucide-react'; // Removed Hash icon as it's no longer needed
+import { Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PlayerScore {
@@ -23,7 +23,7 @@ const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => 
       <CardHeader className="bg-lime-200 border-b border-lime-400">
         <CardTitle className="text-lime-800 text-2xl flex items-center justify-between mb-2">
           <span className="flex items-center">
-            Room: {roomCode} {/* Removed Hash icon and 'Room:' prefix */}
+            Room: {roomCode}
           </span>
           <span className="flex items-center text-lg">
             <Users className="mr-2 h-5 w-5" /> {playerCount}
@@ -32,9 +32,6 @@ const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => 
         <p className="text-gray-700 text-sm">Share this code with friends to play together!</p>
       </CardHeader>
       <CardContent className="p-4">
-        <h3 className="text-xl font-semibold text-lime-800 mb-3 flex items-center">
-          Players <Users className="ml-2 h-5 w-5" />
-        </h3>
         {playerScores.length === 0 ? (
           <p className="text-gray-600 italic">No players in this room yet.</p>
         ) : (
