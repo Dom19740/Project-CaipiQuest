@@ -127,7 +127,7 @@ const Lobby: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4">
       <div className="text-center bg-white/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border-4 border-lime-400 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8">
-        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-6 drop-shadow-lg">
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-6 drop-shadow-lg">
           CaipiQuest Lobby
         </h1>
         <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
@@ -149,7 +149,7 @@ const Lobby: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
           <Card className="w-full max-w-sm bg-emerald-50 border-emerald-300 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-emerald-800">Join Existing Party</CardTitle> {/* Changed from Room */}
+              <CardTitle className="text-xl text-emerald-800">Join Existing Party</CardTitle> {/* Changed from Room */}
               <CardDescription className="text-emerald-700">Enter a party code to join a game.</CardDescription> {/* Changed from room */}
             </CardHeader>
             <CardContent className="space-y-4">
@@ -174,7 +174,7 @@ const Lobby: React.FC = () => {
 
           <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-lime-800">Create New Party</CardTitle> {/* Changed from Room */}
+              <CardTitle className="text-xl text-lime-800">Create New Party</CardTitle> {/* Changed from Room */}
               <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

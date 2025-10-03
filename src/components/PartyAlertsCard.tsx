@@ -33,7 +33,7 @@ const PartyAlertsCard: React.FC<PartyAlertsCardProps> = ({ alerts, currentUserId
   return (
     <Card className="w-full flex-1 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">
-        <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
+        <CardTitle className="text-xl text-lime-800">Alerts</CardTitle>
       </CardHeader>
       <CardContent className="p-4 max-h-[150px] overflow-y-auto">
         {alerts.length === 0 ? (

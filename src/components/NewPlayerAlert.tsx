@@ -20,7 +20,7 @@ const NewPlayerAlert: React.FC<NewPlayerAlertProps> = ({ playerName, isOpen, onC
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Player Joined!</AlertDialogTitle>
+          <AlertDialogTitle className="text-xl">Player Joined!</AlertDialogTitle>
           <AlertDialogDescription>
             {playerName} has entered the room!
           </AlertDialogDescription>
