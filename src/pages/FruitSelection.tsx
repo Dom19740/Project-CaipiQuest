@@ -6,26 +6,26 @@ import { showError } from '@/utils/toast';
 import FruitIcon from '@/components/FruitIcon';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
-// Full list of fruits with English names, Portuguese names, and emojis
+// Full list of fruits with English names and emojis
 const allFruitsData = [
-  { name: 'lime', portuguese: 'Limão', emoji: '🟢' },
-  { name: 'passionfruit', portuguese: 'Maracujá', emoji: '💜' },
-  { name: 'lemon', portuguese: 'Limão Siciliano', emoji: '🍋' },
-  { name: 'strawberry', portuguese: 'Morango', emoji: '🍓' },
-  { name: 'mango', portuguese: 'Manga', emoji: '🥭' },
-  { name: 'pineapple', portuguese: 'Abacaxi', emoji: '🍍' },
-  { name: 'red_fruits', portuguese: 'Frutas Vermelhas', emoji: '🍒' },
-  { name: 'guava', portuguese: 'Goiaba', emoji: '🍑' },
-  { name: 'ginger', portuguese: 'Gengibre', emoji: '🌳' },
-  { name: 'tangerine', portuguese: 'Tangerina', emoji: '🍊' },
-  { name: 'kiwi', portuguese: 'Kiwi' },
-  { name: 'cashew', portuguese: 'Caju', emoji: '🌰' },
+  { name: 'lime', emoji: '🟢' },
+  { name: 'passionfruit', emoji: '💜' },
+  { name: 'lemon', emoji: '🍋' },
+  { name: 'strawberry', emoji: '🍓' },
+  { name: 'mango', emoji: '🥭' },
+  { name: 'pineapple', emoji: '🍍' },
+  { name: 'red_fruits', emoji: '🍒' },
+  { name: 'guava', emoji: '🍑' },
+  { name: 'ginger', emoji: '🌳' },
+  { name: 'tangerine', emoji: '🍊' },
+  { name: 'kiwi', emoji: '🥝' },
+  { name: 'cashew', emoji: '🌰' },
 ];
 
 const FruitSelection: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { roomId } = location.state || {}; // Only need roomId now
+  const { roomId } = location.state || {};
 
   const fixedGridSize = 5; // Hardcode grid size to 5
   const [selectedFruits, setSelectedFruits] = useState<string[]>(['lime']); // Lime is pre-selected
@@ -33,7 +33,7 @@ const FruitSelection: React.FC = () => {
 
   useEffect(() => {
     if (!roomId) {
-      showError("Party ID not found. Please create or join a party first."); // Changed from Room ID, room
+      showError("Party ID not found. Please create or join a party first.");
       navigate('/lobby');
     }
   }, [roomId, navigate]);
@@ -88,7 +88,7 @@ const FruitSelection: React.FC = () => {
               >
                 <FruitIcon fruit={fruit.name} size="sm" />
                 <span className="mt-1 text-sm font-medium text-gray-800 text-center">
-                  {fruit.portuguese}
+                  {fruit.name.replace(/_/g, ' ')} {/* Display English name, replace underscores */}
                 </span>
               </div>
             ))}

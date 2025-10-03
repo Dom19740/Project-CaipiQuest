@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import PartyAlertsCard from '@/components/PartyAlertsCard';
-import LeavePartyDialog from '@/components/LeavePartyDialog'; // New import
+import LeavePartyDialog from '@/components/LeavePartyDialog';
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -77,6 +77,15 @@ const GameRoom: React.FC = () => {
     setResetKey
   );
 
+  // Effect to trigger a refresh of player list when entering the room
+  useEffect(() => {
+    if (!isLoadingInitialData && roomId && user) {
+      console.log("GameRoom - Initial data loaded, performing a refresh to update player list.");
+      fetchAndSetAllGameStates(gridSize);
+    }
+  }, [isLoadingInitialData, roomId, user, gridSize, fetchAndSetAllGameStates]);
+
+
   if (isLoadingSession || isLoadingInitialData || !user || !roomId || playerSelectedFruits.length !== gridSize) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400">
@@ -88,7 +97,7 @@ const GameRoom: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       {showConfetti && <Confetti {...confettiConfig} />}
-      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg text-center"> {/* Changed text-5xl to text-4xl and added text-center */}
+      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg text-center">
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl">
@@ -113,11 +122,10 @@ const GameRoom: React.FC = () => {
 
           {/* Buttons */}
           <div className="flex flex-row gap-2 justify-center w-full">
-            {/* Removed GameResetDialog */}
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
               Refresh
             </Button>
-            <LeavePartyDialog onConfirm={() => navigate('/lobby')} /> {/* Replaced Leave button with LeavePartyDialog */}
+            <LeavePartyDialog onConfirm={() => navigate('/lobby')} />
           </div>
         </div>
       </div>
