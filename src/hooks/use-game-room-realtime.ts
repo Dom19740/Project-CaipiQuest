@@ -110,8 +110,13 @@ export const useGameRoomRealtime = (
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
-  // Ref to track if initial alerts have been loaded to prevent re-triggering confetti on refresh
-  const initialAlertsLoadedRef = useRef(false);
+  // Ref to hold the current state of partyBingoAlerts for comparison in real-time listener
+  const partyBingoAlertsRef = useRef<BingoAlert[]>([]);
+
+  // Effect to keep the ref in sync with the state
+  useEffect(() => {
+    partyBingoAlertsRef.current = partyBingoAlerts;
+  }, [partyBingoAlerts]);
 
   const fetchAndSetAllGameStates = useCallback(async (currentGridSize: number) => {
     if (!partyId || !user) return;
@@ -163,13 +168,14 @@ export const useGameRoomRealtime = (
       return;
     }
     setPartyBingoAlerts(party?.bingo_alerts || []);
-    initialAlertsLoadedRef.current = true; // Mark initial alerts as loaded
+    // Also update the ref immediately after setting state for initial load
+    partyBingoAlertsRef.current = party?.bingo_alerts || [];
   }, [partyId]);
 
   useEffect(() => {
     if (!partyId || !user) return;
 
-    fetchInitialPartyAlerts(); // Fetch initial alerts and mark them as loaded
+    fetchInitialPartyAlerts(); // Fetch initial alerts and populate state and ref
 
     const channel = supabase
       .channel(`party:${partyId}`)
@@ -228,22 +234,18 @@ export const useGameRoomRealtime = (
           }
 
           if (updatedParty.bingo_alerts) {
-            setPartyBingoAlerts(prevPartyBingoAlerts => {
-              const incomingAlerts = updatedParty.bingo_alerts || [];
-              
-              // Only trigger confetti for genuinely new alerts AFTER initial load
-              if (initialAlertsLoadedRef.current) {
-                const newAlertsForConfetti = incomingAlerts.filter(
-                  (incomingAlert: BingoAlert) => !prevPartyBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
-                );
+            const incomingAlerts = updatedParty.bingo_alerts || [];
+            const currentAlertsInRef = partyBingoAlertsRef.current; // Use the ref for comparison
 
-                if (newAlertsForConfetti.length > 0) {
-                  setShowConfetti(true);
-                  setTimeout(() => setShowConfetti(false), 2000);
-                }
-              }
-              return incomingAlerts; // Always update the display state with the latest from DB
-            });
+            const newAlertsForConfetti = incomingAlerts.filter(
+              (incomingAlert: BingoAlert) => !currentAlertsInRef.some(existingAlert => existingAlert.id === incomingAlert.id)
+            );
+
+            if (newAlertsForConfetti.length > 0) {
+              setShowConfetti(true);
+              setTimeout(() => setShowConfetti(false), 2000);
+            }
+            setPartyBingoAlerts(incomingAlerts); // Always update the display state with the latest from DB
           }
         }
       )
@@ -251,7 +253,6 @@ export const useGameRoomRealtime = (
 
     return () => {
       supabase.removeChannel(channel);
-      initialAlertsLoadedRef.current = false; // Reset on unmount
     };
   }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyAlerts]);
 

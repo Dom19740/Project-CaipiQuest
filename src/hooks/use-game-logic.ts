@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
@@ -11,10 +11,16 @@ interface BingoAlert {
   playerId?: string; // Added playerId
 }
 
-let alertIdCounter = 0;
-const generateAlertId = () => {
-  alertIdCounter += 1;
-  return `alert-${alertIdCounter}-${Date.now()}`;
+// Moved alertIdCounter into a useRef for better encapsulation
+// and to ensure it's unique per hook instance, not globally.
+// Date.now() is the primary source of uniqueness, this just adds a secondary increment.
+const useAlertIdGenerator = () => {
+  const alertIdCounterRef = useRef(0);
+  const generateAlertId = useCallback(() => {
+    alertIdCounterRef.current += 1;
+    return `alert-${alertIdCounterRef.current}-${Date.now()}`;
+  }, []);
+  return generateAlertId;
 };
 
 export const useGameLogic = (
@@ -30,6 +36,7 @@ export const useGameLogic = (
   setResetKey: React.Dispatch<React.SetStateAction<number>>
 ) => {
   const { user } = useSession();
+  const generateAlertId = useAlertIdGenerator(); // Use the new hook for ID generation
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
     if (!myGameStateId || !user || !partyId) return; // Changed from roomId
@@ -101,7 +108,7 @@ export const useGameLogic = (
     } else {
       showSuccess(message);
     }
-  }, [partyId, user, myPlayerName]); // Changed from roomId
+  }, [partyId, user, myPlayerName, generateAlertId]); // Changed from roomId
 
   const handleResetGame = useCallback(async () => {
     if (!myGameStateId || !user || !playerSelectedFruits) return;
