@@ -72,7 +72,7 @@ const FruitSelection: React.FC = () => {
             Choose Your Fruits
           </CardTitle>
           <CardDescription className="text-xl text-gray-700 mb-6">
-            Select exactly {fixedGridSize} fruits for your {fixedGridSize}x{fixedGridSize} bingo grid. Lime is already chosen for the center!
+            Select 5 fruits for your bingo grid. Lime is already chosen for the center!
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -87,10 +87,9 @@ const FruitSelection: React.FC = () => {
                 onClick={() => handleFruitToggle(fruit.name, !selectedFruits.includes(fruit.name))}
               >
                 <FruitIcon fruit={fruit.name} size="sm" />
-                <span className="mt-1 text-sm font-medium text-gray-800">
+                <span className="mt-1 text-sm font-medium text-gray-800 text-center">
                   {fruit.portuguese}
                 </span>
-                {fruit.name === 'lime' && <span className="text-xs text-lime-800 font-bold">CENTER</span>}
               </div>
             ))}
           </div>
