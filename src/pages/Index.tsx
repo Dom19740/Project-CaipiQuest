@@ -10,7 +10,11 @@ const Index = () => {
           Welcome to CaipiQuest Bingo!
         </h1>
         <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
-          Every time you drink a fresh Caipi using a combination of the ingredients on your bingo card, mark the square. First person to get a column, diaganol or the entire card wins. Play for fun, points, bragging rights, or more Caipis!
+          Pick your favorite fruits to play
+          <br /><br />
+          Each time you drink a fresh Caipi using a combo of your fruits - mark your card.
+          <br /><br />
+          First person to get a column, diagonal or the entire card wins. Play for fun, points, bragging rights, or more Caipis!
         </p>
         <img
           src="/grid_example.jpg"
