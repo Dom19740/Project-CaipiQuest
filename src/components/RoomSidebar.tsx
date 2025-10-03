@@ -19,7 +19,7 @@ const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => 
   const playerCount = playerScores.length;
 
   return (
-    <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
+    <Card className="w-full flex-1 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">
         <CardTitle className="text-lime-800 text-2xl flex items-center justify-between mb-2">
           <span className="flex items-center">

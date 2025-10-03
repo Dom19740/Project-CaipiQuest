@@ -18,7 +18,7 @@ const GameRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedFruits: initialSelectedFruitsFromState } = (location.state || {}) as { selectedFruits?: string[] }; // Removed gridSize from state
+  const { selectedFruits: initialSelectedFruitsFromState } = (location.state || {}) as { selectedFruits?: string[] };
   const { isLoading: isLoadingSession, user } = useSession();
 
   const [resetKey, setResetKey] = useState(0);
@@ -36,7 +36,7 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
-  } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined); // Pass undefined for initialGridSizeFromState
+  } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
     roomBingoAlerts,
@@ -88,24 +88,31 @@ const GameRoom: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       {showConfetti && <Confetti {...confettiConfig} />}
-      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-10 drop-shadow-lg">
+      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-12 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <BingoGrid
-          onBingo={handleBingo}
-          resetKey={resetKey}
-          initialGridState={myGridData}
-          onCellToggle={handleCellToggle}
-          selectedFruits={playerSelectedFruits}
-          gridSize={gridSize}
-        />
-        <div className="flex flex-col gap-4">
-          {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
-          
-          <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} />
+      <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl"> {/* Added max-w-6xl for overall layout */}
+        {/* Bingo Grid */}
+        <div className="flex-1 flex justify-center"> {/* Wrapper to center grid */}
+          <BingoGrid
+            onBingo={handleBingo}
+            resetKey={resetKey}
+            initialGridState={myGridData}
+            onCellToggle={handleCellToggle}
+            selectedFruits={playerSelectedFruits}
+            gridSize={gridSize}
+          />
+        </div>
 
-          <div className="flex flex-row gap-2 justify-center w-full lg:w-80">
+        {/* Right Panel: Cards and Buttons */}
+        <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md"> {/* Right panel container */}
+          <div className="flex flex-col sm:flex-row gap-4"> {/* Container for RoomSidebar and RoomAlertsCard */}
+            {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
+            <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-row gap-2 justify-center w-full"> {/* Buttons container */}
             <GameResetDialog onConfirm={handleResetGame} />
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
               Refresh

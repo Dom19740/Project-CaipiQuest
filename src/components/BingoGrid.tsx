@@ -76,18 +76,18 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
   return (
     <div
-      className="grid gap-1 p-4 bg-white rounded-xl shadow-2xl border-4 border-lime-400"
+      className="grid gap-1 p-4 bg-white rounded-xl shadow-2xl border-4 border-lime-400 max-w-full"
       style={{
         gridTemplateColumns: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
       }}
     >
       {/* Top-left empty corner */}
-      <div className="w-16 h-16 flex items-center justify-center"></div>
+      <div className="aspect-square flex items-center justify-center"></div>
 
       {/* Top row labels */}
       {displayFruits.map((fruit, index) => (
-        <div key={`col-label-${index}`} className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border border-lime-400">
+        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border-2 border-lime-400">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
       ))}
@@ -96,7 +96,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       {Array(gridSize).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
-          <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border border-lime-400">
+          <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border-2 border-lime-400">
             <FruitIcon fruit={displayFruits[rowIndex]} size="lg" />
           </div>
 
@@ -109,7 +109,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             return (
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
-                className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border border-gray-200
+                className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-2 border-gray-300
                   ${isCenterCell ? 'bg-lime-300 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300 hover:scale-105' : 'bg-white hover:bg-lime-50 hover:scale-105'}
                 `}
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}

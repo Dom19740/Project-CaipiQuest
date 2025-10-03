@@ -31,11 +31,11 @@ const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
 
 const RoomAlertsCard: React.FC<RoomAlertsCardProps> = ({ alerts, currentUserId }) => {
   return (
-    <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
+    <Card className="w-full flex-1 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">
         <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4 max-h-[150px] overflow-y-auto"> {/* Fixed height and scrollable */}
         {alerts.length === 0 ? (
           <p className="text-gray-600 italic">No bingo alerts yet...</p>
         ) : (
