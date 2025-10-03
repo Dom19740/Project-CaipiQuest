@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { showError } from '@/utils/toast';
 import FruitIcon from '@/components/FruitIcon';
 import { MadeWithDyad } from '@/components/made-with-dyad';
+import CopyrightNotice from '@/components/CopyrightNotice'; // Added import
 
 // Full list of fruits with English names and emojis
 const allFruitsData = [
@@ -108,6 +109,7 @@ const FruitSelection: React.FC = () => {
         </CardContent>
       </Card>
       <MadeWithDyad />
+      <CopyrightNotice /> {/* Added CopyrightNotice */}
     </div>
   );
 };

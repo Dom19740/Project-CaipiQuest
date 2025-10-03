@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import CopyrightNotice from '@/components/CopyrightNotice'; // Added import
 
 interface BingoAlert {
   id: string;
@@ -168,6 +169,7 @@ const CaipiQuest: React.FC = () => {
         </div>
       </div>
       <MadeWithDyad />
+      <CopyrightNotice /> {/* Added CopyrightNotice */}
     </div>
   );
 };

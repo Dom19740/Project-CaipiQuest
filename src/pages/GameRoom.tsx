@@ -6,7 +6,8 @@ import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-import LeavePartyDialog from '@/components/LeavePartyDialog'; // Removed PartyAlertsCard import
+import LeavePartyDialog from '@/components/LeavePartyDialog';
+import CopyrightNotice from '@/components/CopyrightNotice'; // Added import
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -144,6 +145,7 @@ const GameRoom: React.FC = () => {
       />
 
       <MadeWithDyad />
+      <CopyrightNotice /> {/* Added CopyrightNotice */}
     </div>
   );
 };
