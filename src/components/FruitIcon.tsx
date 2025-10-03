@@ -18,6 +18,10 @@ const fruitData: { [key: string]: { emoji: string } } = {
   tangerine: { emoji: '🍊' },
   kiwi: { emoji: '🥝' },
   cashew: { emoji: '🌰' },
+  dragon_fruit: { emoji: '🐉' },
+  banana: { emoji: '🍌' },
+  plum: { emoji: '🟣' },
+  grapes: { emoji: '🍇' },
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
