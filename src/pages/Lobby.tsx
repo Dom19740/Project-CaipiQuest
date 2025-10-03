@@ -7,15 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from '@/components/made-with-dyad';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 
 const Lobby: React.FC = () => {
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [gridSize, setGridSize] = useState<number>(5); // New state for grid size
   const navigate = useNavigate();
   const { user, isLoading } = useSession();
 
@@ -66,11 +63,12 @@ const Lobby: React.FC = () => {
 
     setIsCreating(true);
     const newRoomCode = generateRoomCode();
+    const fixedGridSize = 5; // Hardcode grid size to 5
     try {
-      // Create the room with the selected grid size
+      // Create the room with the fixed grid size
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
-        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName, grid_size: gridSize })
+        .insert({ code: newRoomCode, created_by: user.id, created_by_name: playerName, grid_size: fixedGridSize })
         .select()
         .single();
 
@@ -78,7 +76,7 @@ const Lobby: React.FC = () => {
       console.log("Lobby - Room created:", roomData);
 
       showSuccess(`Room "${newRoomCode}" created!`);
-      navigate(`/select-fruits`, { state: { roomId: roomData.id, gridSize: gridSize } }); // Pass gridSize
+      navigate(`/select-fruits`, { state: { roomId: roomData.id, gridSize: fixedGridSize } }); // Pass fixed gridSize
     } catch (error: any) {
       console.error('Lobby - Error creating room:', error.message);
       showError(`Failed to create room: ${error.message}`);
@@ -151,26 +149,10 @@ const Lobby: React.FC = () => {
           <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg">
             <CardHeader>
               <CardTitle className="text-lime-800">Create New Room</CardTitle>
-              <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
+              <CardDescription className="text-lime-700">Start a fresh 5x5 game for your friends.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="grid-size" className="text-lg font-medium text-lime-800 mb-2 block">
-                  Select Grid Size (Fruits to choose)
-                </Label>
-                <Select value={String(gridSize)} onValueChange={(value) => setGridSize(Number(value))} disabled={isCreating || isJoining || !isSessionReady}>
-                  <SelectTrigger id="grid-size" className="w-full border-lime-400 focus:border-lime-600 focus:ring-lime-600">
-                    <SelectValue placeholder="Select grid size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[5, 6, 7, 8, 9].map(size => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}x{size} Grid ({size} Fruits)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <p className="text-lg font-medium text-lime-800">Grid Size: 5x5 (Fixed)</p>
               <Button
                 onClick={handleCreateRoom}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
@@ -193,7 +175,7 @@ const Lobby: React.FC = () => {
                 value={roomCodeInput}
                 onChange={(e) => setRoomCodeInput(e.target.value)}
                 className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
-                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
+                disabled={isCreating || isJoining || roomCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
               />
               <Button
                 onClick={handleJoinRoom}

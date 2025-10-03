@@ -8,7 +8,7 @@ interface BingoAlert {
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
   playerName?: string;
-  playerId?: string; // Added playerId
+  playerId?: string;
 }
 
 interface PlayerScore {
@@ -54,7 +54,7 @@ export const useGameRoomRealtime = (
   myGridData: boolean[][],
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>,
   setPlayerSelectedFruits: React.Dispatch<React.SetStateAction<string[]>>,
-  setGridSize: React.Dispatch<React.SetStateAction<number>>,
+  setGridSize: React.Dispatch<React.SetStateAction<number>>, // Still passed, but its usage for dynamic grid size changes is removed
   initializeOrUpdateGameState: (currentRoomId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void>
 ): GameRoomRealtimeData => {
   const { user } = useSession();
@@ -199,12 +199,7 @@ export const useGameRoomRealtime = (
               return incomingAlerts;
             });
           }
-          
-          if (updatedRoom.grid_size && updatedRoom.grid_size !== gridSize) {
-            setGridSize(updatedRoom.grid_size);
-            showSuccess(`Room grid size changed to ${updatedRoom.grid_size}x${updatedRoom.grid_size}. Your grid might reset.`);
-            await initializeOrUpdateGameState(roomId, user, myGridData.flat().filter(Boolean).length === gridSize ? playerScores.find(p => p.isMe)?.selectedFruits || [] : [], updatedRoom.grid_size); // Simplified fruit selection for reset
-          }
+          // Removed logic for handling updatedRoom.grid_size as it's now fixed at 5x5
         }
       )
       .subscribe();

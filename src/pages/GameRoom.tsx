@@ -7,7 +7,7 @@ import RoomSidebar from '@/components/RoomSidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import GameResetDialog from '@/components/GameResetDialog';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-import RoomAlertsCard from '@/components/RoomAlertsCard'; // Re-added Alerts Card
+import RoomAlertsCard from '@/components/RoomAlertsCard';
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -18,7 +18,7 @@ const GameRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedFruits: initialSelectedFruitsFromState, gridSize: initialGridSizeFromState } = (location.state || {}) as { selectedFruits?: string[]; gridSize?: number };
+  const { selectedFruits: initialSelectedFruitsFromState } = (location.state || {}) as { selectedFruits?: string[] }; // Removed gridSize from state
   const { isLoading: isLoadingSession, user } = useSession();
 
   const [resetKey, setResetKey] = useState(0);
@@ -36,10 +36,10 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
-  } = useGameRoomData(roomId, initialSelectedFruitsFromState, initialGridSizeFromState);
+  } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined); // Pass undefined for initialGridSizeFromState
 
   const {
-    roomBingoAlerts, // Re-added
+    roomBingoAlerts,
     playerScores,
     showConfetti,
     confettiConfig,
@@ -61,7 +61,7 @@ const GameRoom: React.FC = () => {
 
   const {
     handleCellToggle,
-    handleBingo, // Re-added
+    handleBingo,
     handleResetGame,
     handleGlobalRefresh,
   } = useGameLogic(
@@ -93,7 +93,7 @@ const GameRoom: React.FC = () => {
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         <BingoGrid
-          onBingo={handleBingo} // Re-added
+          onBingo={handleBingo}
           resetKey={resetKey}
           initialGridState={myGridData}
           onCellToggle={handleCellToggle}
@@ -103,7 +103,7 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4">
           {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
           
-          <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} /> {/* Passed currentUserId */}
+          <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} />
 
           <div className="flex flex-row gap-2 justify-center w-full lg:w-80">
             <GameResetDialog onConfirm={handleResetGame} />

@@ -23,7 +23,7 @@ interface BingoAlert {
   message: string;
 }
 
-const NUM_PLAYABLE_CELLS = 9; // Define for consistency
+const FIXED_GRID_SIZE = 5; // Define for consistency, now 5x5
 
 const CaipiQuest: React.FC = () => {
   const [bingoAlerts, setBingoAlerts] = useState<BingoAlert[]>([]);
@@ -39,17 +39,25 @@ const CaipiQuest: React.FC = () => {
 
   // Internal state for the bingo grid in single-player mode
   const [checkedCells, setCheckedCells] = useState<boolean[][]>(
-    Array(NUM_PLAYABLE_CELLS).fill(null).map(() => Array(NUM_PLAYABLE_CELLS).fill(false))
+    Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false))
   );
+
+  // Default fruits for a 5x5 grid, with 'lime' in the center
+  const defaultSinglePlayerFruits = [
+    'passionfruit', 'lemon', 'strawberry', 'mango', 'lime',
+    'pineapple', 'red_fruits', 'guava', 'ginger', 'tangerine'
+  ].slice(0, FIXED_GRID_SIZE); // Ensure exactly 5 fruits
 
   const handleCellToggle = useCallback((row: number, col: number) => {
     setCheckedCells(prevGrid => {
       const newGrid = prevGrid.map(r => [...r]);
       const newState = !newGrid[row][col];
       newGrid[row][col] = newState;
-      if (row !== col) { // Mirror click for symmetry
-        newGrid[col][row] = newState;
-      }
+      // For a 5x5 grid, mirroring might not be desired or might need specific logic.
+      // Assuming a standard bingo grid where only the clicked cell toggles,
+      // and the center is handled by the BingoGrid component itself.
+      // If mirroring is intended for 5x5, it needs to be explicitly defined.
+      // For now, removing the `if (row !== col)` mirroring as it's not standard for bingo.
       return newGrid;
     });
   }, []);
@@ -88,7 +96,7 @@ const CaipiQuest: React.FC = () => {
   const handleResetGame = () => {
     setResetKey(prev => prev + 1); // Increment key to force BingoGrid reset
     setBingoAlerts([]); // Clear alerts in CaipiQuest
-    setCheckedCells(Array(NUM_PLAYABLE_CELLS).fill(null).map(() => Array(NUM_PLAYABLE_CELLS).fill(false))); // Reset grid state
+    setCheckedCells(Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false))); // Reset grid state
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
@@ -116,8 +124,8 @@ const CaipiQuest: React.FC = () => {
           resetKey={resetKey}
           initialGridState={checkedCells} // Pass controlled state
           onCellToggle={handleCellToggle} // Pass toggle handler
-          selectedFruits={['lime', 'passionfruit', 'lemon', 'strawberry', 'mango', 'pineapple', 'red_fruits', 'guava', 'ginger']} // Example fruits for single player
-          gridSize={NUM_PLAYABLE_CELLS}
+          selectedFruits={defaultSinglePlayerFruits} // Use fixed 5 fruits
+          gridSize={FIXED_GRID_SIZE}
         />
         <div className="flex flex-col gap-4">
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
