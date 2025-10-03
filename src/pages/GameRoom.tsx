@@ -88,10 +88,10 @@ const GameRoom: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       {showConfetti && <Confetti {...confettiConfig} />}
-      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-12 drop-shadow-lg">
+      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
-      <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl"> {/* Added max-w-6xl for overall layout */}
+      <div className="flex flex-col lg:flex-row gap-8 items-center w-full max-w-6xl"> {/* Changed items-start to items-center */}
         {/* Bingo Grid */}
         <div className="flex-1 flex justify-center"> {/* Wrapper to center grid */}
           <BingoGrid
@@ -106,7 +106,7 @@ const GameRoom: React.FC = () => {
 
         {/* Right Panel: Cards and Buttons */}
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md"> {/* Right panel container */}
-          <div className="flex flex-col sm:flex-row gap-4"> {/* Container for RoomSidebar and RoomAlertsCard */}
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center"> {/* Container for RoomSidebar and RoomAlertsCard, added justify-center */}
             {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
             <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} />
           </div>

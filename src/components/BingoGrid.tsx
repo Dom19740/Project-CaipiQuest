@@ -76,7 +76,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
   return (
     <div
-      className="grid gap-1 p-4 bg-white rounded-xl shadow-2xl border-4 border-lime-400 max-w-full"
+      className="grid gap-1 p-4 bg-white rounded-xl shadow-2xl border-4 border-lime-400 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
       style={{
         gridTemplateColumns: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
