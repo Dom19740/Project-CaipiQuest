@@ -12,6 +12,11 @@ const Index = () => {
         <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
           Every time you drink a fresh Caipi using a combination of the ingredients on your bingo card, mark the square. First person to get a column, diaganol or the entire card wins. Play for fun, points, bragging rights, or more Caipis!
         </p>
+        <img
+          src="/grid_example.jpg"
+          alt="CaipiQuest Bingo Grid Example"
+          className="mx-auto my-8 max-w-full h-auto rounded-lg shadow-lg border-2 border-lime-300"
+        />
         <Link to="/lobby">
           <Button className="px-8 py-4 text-lg bg-lime-500 hover:bg-lime-600 text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
             Play CaipiQuest
