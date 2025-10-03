@@ -170,7 +170,7 @@ const Lobby: React.FC = () => {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 justify-center">
+        <div className="flex flex-col lg:flex-row gap-6 justify-center items-center"> {/* Added items-center here */}
           <Card className="w-full max-w-sm bg-emerald-50 border-emerald-300 shadow-lg">
             <CardHeader>
               <CardTitle className="text-lg text-emerald-800">Join Existing Party</CardTitle>
