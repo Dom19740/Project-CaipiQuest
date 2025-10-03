@@ -57,10 +57,10 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       }
     };
 
-    // Check Rows
-    for (let i = 0; i < gridSize; i++) {
-      checkLine(checkedCells[i], 'rowCol', `completed a line!`, `row-${i}`);
-    }
+    // Removed "Check Rows" logic as per user request.
+    // for (let i = 0; i < gridSize; i++) {
+    //   checkLine(checkedCells[i], 'rowCol', `completed a line!`, `row-${i}`);
+    // }
 
     // Check Columns
     for (let j = 0; j < gridSize; j++) {
@@ -81,7 +81,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       onBingo('fullGrid', `completed the entire grid!`, `full-grid`);
       completedBingosRef.current.add('full-grid');
     }
-  }, [checkedCells, gridSize, onBingo]); // completedBingosRef is not a dependency here, as we access .current
+  }, [checkedCells, gridSize, onBingo]);
 
   useEffect(() => {
     // This effect now only runs when initialGridState or initialAlertsLoaded changes.
@@ -89,7 +89,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     if (initialAlertsLoaded) {
       checkBingo();
     }
-  }, [initialGridState, initialAlertsLoaded, checkBingo]); // checkBingo is stable, so this won't cause re-runs due to completedBingosRef updates
+  }, [initialGridState, initialAlertsLoaded, checkBingo]);
 
   // Ensure selectedFruits has `gridSize` items, with 'lime' at the center
   const displayFruits = [...selectedFruits];
