@@ -80,9 +80,6 @@ export const useGameLogic = (
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string, canonicalId: string) => { // Added canonicalId
     if (!partyId || !user || !myPlayerName) return; // Changed from roomId
 
-    const message = `BINGO! ${myPlayerName} ${baseMessage}`;
-    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id, canonicalId }; // Store canonicalId
-
     const { data: currentParty, error: fetchPartyError } = await supabase // Changed from currentRoom, fetchRoomError
       .from('rooms')
       .select('bingo_alerts')
@@ -96,6 +93,17 @@ export const useGameLogic = (
     }
 
     const existingAlerts = currentParty?.bingo_alerts || []; // Changed from currentRoom
+    // Check if an alert with the same canonicalId and player ID already exists in the DB
+    const alreadyAlerted = existingAlerts.some(alert => alert.canonicalId === canonicalId && alert.playerId === user.id);
+
+    if (alreadyAlerted) {
+      console.log(`Bingo for ${canonicalId} by ${myPlayerName} already recorded in DB. Skipping.`);
+      return; // Do not add duplicate alert to DB
+    }
+
+    const message = `BINGO! ${myPlayerName} ${baseMessage}`;
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id, canonicalId }; // Store canonicalId
+
     const updatedAlerts = [newAlert, ...existingAlerts];
 
     const { error: updatePartyAlertsError } = await supabase // Changed from updateRoomAlertsError
