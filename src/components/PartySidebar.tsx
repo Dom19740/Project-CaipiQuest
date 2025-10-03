@@ -19,8 +19,8 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores }) 
   const playerCount = playerScores.length;
 
   return (
-    <Card className="w-full flex-1 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
-      <CardHeader className="bg-lime-200 border-b border-lime-400">
+    <Card className="w-full flex-1 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2 rounded-xl">
+      <CardHeader className="bg-lime-200 border-b border-lime-400 rounded-t-xl">
         <CardTitle className="text-lg text-lime-800 flex items-center justify-between mb-2">
           <span className="flex items-center">
             Party: {partyCode}
