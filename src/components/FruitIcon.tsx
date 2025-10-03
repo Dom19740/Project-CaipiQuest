@@ -1,45 +1,23 @@
 import React from 'react';
+import FruitSVG from './FruitSVG'; // NEW: Import FruitSVG
 
 interface FruitIconProps {
   fruit: string; // This will be the English name
   size?: 'sm' | 'md' | 'lg';
 }
 
-const fruitData: { [key: string]: { emoji: string } } = {
-  lime: { emoji: '🟢' },
-  passionfruit: { emoji: '💜' },
-  lemon: { emoji: '🍋' },
-  strawberry: { emoji: '🍓' },
-  mango: { emoji: '🥭' },
-  pineapple: { emoji: '🍍' },
-  red_fruits: { emoji: '🍒' },
-  guava: { emoji: '🍑' },
-  ginger: { emoji: '🌳' },
-  tangerine: { emoji: '🍊' },
-  kiwi: { emoji: '🥝' },
-  cashew: { emoji: '🌰' },
-  dragon_fruit: { emoji: '🐉' },
-  banana: { emoji: '🍌' },
-  plum: { emoji: '🟣' },
-  watermelon: { emoji: '🍉' },
-};
-
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
-  const data = fruitData[fruit.toLowerCase()];
-  const emoji = data?.emoji || '❓';
-
   const sizeClasses = {
-    sm: 'text-base',
-    md: 'text-xl',
-    lg: 'text-xl', // Changed 'lg' from 'text-2xl' to 'text-xl' for consistency
+    sm: 'w-4 h-4', // Smaller SVG size
+    md: 'w-6 h-6', // Medium SVG size
+    lg: 'w-8 h-8', // Larger SVG size
   };
 
-  // Removed special handling for lime to ensure all 'lg' icons are 'text-xl'
   const effectiveSizeClass = sizeClasses[size];
 
   return (
-    <span className={`inline-flex items-center ${effectiveSizeClass}`} role="img" aria-label={fruit}>
-      {emoji}
+    <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`}>
+      <FruitSVG fruit={fruit} className="w-full h-full" />
     </span>
   );
 };

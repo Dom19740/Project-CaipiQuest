@@ -3,28 +3,27 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { showError } from '@/utils/toast';
-import FruitIcon from '@/components/FruitIcon';
+import FruitSVG from '@/components/FruitSVG'; // NEW: Import FruitSVG directly
 import { MadeWithDyad } from '@/components/made-with-dyad';
-// Removed import CopyrightNotice from '@/components/CopyrightNotice';
 
-// Full list of fruits with English names and emojis
+// Full list of fruits with English names and emojis (emojis no longer used for display)
 const allFruitsData = [
-  { name: 'lime', emoji: '🟢' },
-  { name: 'passionfruit', emoji: '💜' },
-  { name: 'lemon', emoji: '🍋' },
-  { name: 'strawberry', emoji: '🍓' },
-  { name: 'mango', emoji: '🥭' },
-  { name: 'pineapple', emoji: '🍍' },
-  { name: 'red_fruits', emoji: '🍒' },
-  { name: 'guava', emoji: '🍑' },
-  { name: 'ginger', emoji: '🌳' },
-  { name: 'tangerine', emoji: '🍊' },
-  { name: 'kiwi', emoji: '🥝' },
-  { name: 'cashew', emoji: '🌰' },
-  { name: 'dragon_fruit', emoji: '🐉' }, // Added Dragon Fruit
-  { name: 'banana', emoji: '🍌' },       // Added Banana
-  { name: 'plum', emoji: '🟣' },         // Added Plum
-  { name: 'watermelon', emoji: '🍉' },   // Added Watermelon
+  { name: 'lime' },
+  { name: 'passionfruit' },
+  { name: 'lemon' },
+  { name: 'strawberry' },
+  { name: 'mango' },
+  { name: 'pineapple' },
+  { name: 'red_fruits' },
+  { name: 'guava' },
+  { name: 'ginger' },
+  { name: 'tangerine' },
+  { name: 'kiwi' },
+  { name: 'cashew' },
+  { name: 'dragon_fruit' },
+  { name: 'banana' },
+  { name: 'plum' },
+  { name: 'watermelon' },
 ];
 
 const FruitSelection: React.FC = () => {
@@ -91,9 +90,9 @@ const FruitSelection: React.FC = () => {
                 `}
                 onClick={() => handleFruitToggle(fruit.name, !selectedFruits.includes(fruit.name))}
               >
-                <FruitIcon fruit={fruit.name} size="sm" />
+                <FruitSVG fruit={fruit.name} className="w-8 h-8" /> {/* NEW: Use FruitSVG */}
                 <span className="mt-1 text-sm font-medium text-gray-800 text-center">
-                  {fruit.name.replace(/_/g, ' ')} {/* Display English name, replace underscores */}
+                  {fruit.name.replace(/_/g, ' ')}
                 </span>
               </div>
             ))}
