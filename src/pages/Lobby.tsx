@@ -167,7 +167,7 @@ const Lobby: React.FC = () => {
                 disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady} // Changed from roomCodeInput
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
-                {isJoining ? 'Joining...' : 'Join Party'} {/* Changed from Room */}
+                {isJoining ? 'Joining...' : 'Join'} {/* Changed from Room */}
               </Button>
             </CardContent>
           </Card>
@@ -183,7 +183,7 @@ const Lobby: React.FC = () => {
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
                 className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
-                {isCreating ? 'Creating...' : 'Create Party'} {/* Changed from Room */}
+                {isCreating ? 'Creating...' : 'Create'} {/* Changed from Room */}
               </Button>
             </CardContent>
           </Card>
