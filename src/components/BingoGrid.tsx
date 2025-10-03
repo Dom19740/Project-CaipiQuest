@@ -33,13 +33,13 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Check Rows
     for (let i = 0; i < gridSize; i++) {
-      checkLine(checkedCells[i], 'rowCol', `completed a row!`, `row-${i}`);
+      checkLine(checkedCells[i], 'rowCol', `completed a line!`, `row-${i}`);
     }
 
     // Check Columns
     for (let j = 0; j < gridSize; j++) {
       const column = Array(gridSize).fill(false).map((_, i) => checkedCells[i][j]);
-      checkLine(column, 'rowCol', `completed a column!`, `col-${j}`);
+      checkLine(column, 'rowCol', `completed a line!`, `col-${j}`);
     }
 
     // Check Diagonals
