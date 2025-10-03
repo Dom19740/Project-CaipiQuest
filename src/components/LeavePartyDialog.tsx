@@ -24,7 +24,7 @@ const LeavePartyDialog: React.FC<LeavePartyDialogProps> = ({ onConfirm }) => {
           Leave
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-400 p-6">
+      <AlertDialogContent className="mx-4 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-400 p-6">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 drop-shadow-lg mb-2">
             Are you sure you want to leave?
