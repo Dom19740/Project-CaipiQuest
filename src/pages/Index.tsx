@@ -1,4 +1,4 @@
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import { MadeWithDyad } = "@/components/made-with-dyad";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -10,7 +10,7 @@ const Index = () => {
           Welcome to CaipiQuest!
         </h1>
         <p className="text-xl text-gray-700 mb-8 max-w-prose mx-auto">
-          Embark on a fruity caipirinha bingo adventure. Click the button below to start your quest!
+          Every time you drink a fresh Caipi using a combination of the ingredients on your bingo card, mark the square. First person to get a column, diaganol or the entire card wins. Play for fun, points, bragging rights, or more Caipis!
         </p>
         <Link to="/lobby">
           <Button className="px-8 py-4 text-lg bg-lime-500 hover:bg-lime-600 text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
