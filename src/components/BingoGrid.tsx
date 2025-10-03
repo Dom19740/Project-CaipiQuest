@@ -109,8 +109,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             return (
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
-                className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm transition-colors duration-200 border border-gray-200
-                  ${isCenterCell ? 'bg-lime-300 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300' : 'bg-white hover:bg-orange-50'}
+                className={`w-16 h-16 flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border border-gray-200
+                  ${isCenterCell ? 'bg-lime-300 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 hover:bg-lime-300 hover:scale-105' : 'bg-white hover:bg-orange-50 hover:scale-105'}
                 `}
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
               >
