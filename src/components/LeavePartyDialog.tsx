@@ -24,16 +24,18 @@ const LeavePartyDialog: React.FC<LeavePartyDialogProps> = ({ onConfirm }) => {
           Leave
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-400 p-6">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-lg">Are you sure you want to leave?</AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 drop-shadow-lg mb-2">
+            Are you sure you want to leave?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-700 text-base">
             This action will take you back to the lobby. Your game state in this party will be saved.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <AlertDialogFooter className="mt-4">
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Leave Party</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700 text-white">Leave Party</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
