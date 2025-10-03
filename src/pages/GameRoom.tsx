@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import Confetti from 'react-confetti';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
-// Removed import CopyrightNotice from '@/components/CopyrightNotice';
+import FullGridCelebration from '@/components/FullGridCelebration'; // NEW: Import the new celebration component
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -41,15 +40,13 @@ const GameRoom: React.FC = () => {
   const {
     partyBingoAlerts,
     playerScores,
-    showConfetti,
-    confettiConfig,
     newPlayerJoinedName,
     showNewPlayerAlert,
     setShowNewPlayerAlert,
-    setShowConfetti,
     fetchAndSetAllGameStates,
-    setConfettiConfig,
     initialAlertsLoaded,
+    showFullGridCelebration, // NEW: Get celebration state
+    setShowFullGridCelebration, // NEW: Get celebration setter
   } = useGameRoomRealtime(
     roomId,
     gridSize,
@@ -78,7 +75,6 @@ const GameRoom: React.FC = () => {
     setResetKey
   );
 
-  // Effect to trigger a refresh of player list when entering the room
   useEffect(() => {
     if (!isLoadingInitialData && roomId && user) {
       console.log("GameRoom - Initial data loaded, performing a refresh to update player list.");
@@ -97,7 +93,7 @@ const GameRoom: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
-      {showConfetti && <Confetti {...confettiConfig} />}
+      {showFullGridCelebration && <FullGridCelebration onClose={() => setShowFullGridCelebration(false)} />} {/* NEW: Render celebration */}
       
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}
@@ -123,8 +119,8 @@ const GameRoom: React.FC = () => {
             <PartySidebar
               partyCode={partyCode}
               playerScores={playerScores}
-              alerts={partyBingoAlerts} // Pass alerts to the combined sidebar
-              currentUserId={user.id} // Pass current user ID for alert styling
+              alerts={partyBingoAlerts}
+              currentUserId={user.id}
             />
           )}
 

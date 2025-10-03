@@ -3,7 +3,6 @@ import BingoGrid from '@/components/BingoGrid';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { showSuccess } from '@/utils/toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import Confetti from 'react-confetti';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -16,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// Removed import CopyrightNotice from '@/components/CopyrightNotice';
+import FullGridCelebration from '@/components/FullGridCelebration'; // NEW: Import the new celebration component
 
 interface BingoAlert {
   id: string;
@@ -24,80 +23,46 @@ interface BingoAlert {
   message: string;
 }
 
-const FIXED_GRID_SIZE = 5; // Define for consistency, now 5x5
+const FIXED_GRID_SIZE = 5;
 
 const CaipiQuest: React.FC = () => {
   const [bingoAlerts, setBingoAlerts] = useState<BingoAlert[]>([]);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [confettiConfig, setConfettiConfig] = useState({
-    numberOfPieces: 200,
-    recycle: false,
-    gravity: 0.1,
-    initialVelocityX: { min: -5, max: 5 },
-    initialVelocityY: { min: -10, max: -5 },
-  });
-  const [resetKey, setResetKey] = useState(0); // State to trigger BingoGrid reset
+  const [resetKey, setResetKey] = useState(0);
+  const [showFullGridCelebration, setShowFullGridCelebration] = useState(false); // NEW: State for full grid celebration
 
-  // Internal state for the bingo grid in single-player mode
   const [checkedCells, setCheckedCells] = useState<boolean[][]>(
     Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false))
   );
 
-  // Default fruits for a 5x5 grid, with 'lime' in the center
   const defaultSinglePlayerFruits = [
     'passionfruit', 'lemon', 'strawberry', 'mango', 'lime',
     'pineapple', 'red_fruits', 'guava', 'ginger', 'tangerine'
-  ].slice(0, FIXED_GRID_SIZE); // Ensure exactly 5 fruits
+  ].slice(0, FIXED_GRID_SIZE);
 
   const handleCellToggle = useCallback((row: number, col: number) => {
     setCheckedCells(prevGrid => {
       const newGrid = prevGrid.map(r => [...r]);
       const newState = !newGrid[row][col];
       newGrid[row][col] = newState;
-      // For a 5x5 grid, mirroring might not be desired or might need specific logic.
-      // Assuming a standard bingo grid where only the clicked cell toggles,
-      // and the center is handled by the BingoGrid component itself.
-      // If mirroring is intended for 5x5, it needs to be explicitly defined.
-      // For now, removing the `if (row !== col)` mirroring as it's not standard for bingo.
       return newGrid;
     });
   }, []);
 
   const handleBingo = (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
-    const message = `BINGO! You ${baseMessage}`; // Prepend "You" for single-player
+    const message = `BINGO! You ${baseMessage}`;
     showSuccess(message);
-    setBingoAlerts(prev => [{ id: Date.now().toString(), type, message }, ...prev]); // Prepend new alerts
+    setBingoAlerts(prev => [{ id: Date.now().toString(), type, message }, ...prev]);
 
-    // Trigger confetti
-    setShowConfetti(true);
     if (type === 'fullGrid') {
-      setConfettiConfig({
-        numberOfPieces: 1000, // More pieces for explosion
-        recycle: false,
-        gravity: 0.5, // Increased gravity for faster fall
-        initialVelocityX: { min: -15, max: 15 },
-        initialVelocityY: { min: -25, max: -15 }, // Higher initial burst
-      });
-    } else {
-      setConfettiConfig({
-        numberOfPieces: 200,
-        recycle: false,
-        gravity: 0.1,
-        initialVelocityX: { min: -5, max: 5 },
-        initialVelocityY: { min: -10, max: -5 },
-      });
+      setShowFullGridCelebration(true); // Trigger the new celebration
     }
-
-    // Hide confetti after a short duration
-    setTimeout(() => {
-      setShowConfetti(false);
-    }, type === 'fullGrid' ? 5000 : 2000); // Longer duration for full grid
   };
 
   const handleResetGame = () => {
-    setResetKey(prev => prev + 1); // Increment key to force BingoGrid reset
-    setBingoAlerts([]); // Clear alerts in CaipiQuest
-    setCheckedCells(Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false))); // Reset grid state
+    setResetKey(prev => prev + 1);
+    setBingoAlerts([]);
+    setCheckedCells(Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false)));
+    setShowFullGridCelebration(false); // Ensure celebration is hidden on reset
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
@@ -115,7 +80,7 @@ const CaipiQuest: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
-      {showConfetti && <Confetti {...confettiConfig} />}
+      {showFullGridCelebration && <FullGridCelebration onClose={() => setShowFullGridCelebration(false)} />} {/* NEW: Render celebration */}
       <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-8 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
@@ -123,12 +88,12 @@ const CaipiQuest: React.FC = () => {
         <BingoGrid
           onBingo={handleBingo}
           resetKey={resetKey}
-          initialGridState={checkedCells} // Pass controlled state
-          onCellToggle={handleCellToggle} // Pass toggle handler
-          selectedFruits={defaultSinglePlayerFruits} // Use fixed 5 fruits
+          initialGridState={checkedCells}
+          onCellToggle={handleCellToggle}
+          selectedFruits={defaultSinglePlayerFruits}
           gridSize={FIXED_GRID_SIZE}
-          partyBingoAlerts={[]} // CaipiQuest doesn't use real-time alerts
-          initialAlertsLoaded={true} // Always true for single-player
+          partyBingoAlerts={[]}
+          initialAlertsLoaded={true}
         />
         <div className="flex flex-col gap-4">
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">

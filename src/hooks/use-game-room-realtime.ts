@@ -22,51 +22,30 @@ interface PlayerScore {
 interface GameRoomRealtimeData {
   partyBingoAlerts: BingoAlert[];
   playerScores: PlayerScore[];
-  showConfetti: boolean;
-  confettiConfig: {
-    numberOfPieces: number;
-    recycle: boolean;
-    gravity: number;
-    initialVelocityX: { min: number; max: number; };
-    initialVelocityY: { min: number; max: number; };
-  };
   newPlayerJoinedName: string;
   showNewPlayerAlert: boolean;
   setShowNewPlayerAlert: React.Dispatch<React.SetStateAction<boolean>>;
-  setShowConfetti: React.Dispatch<React.SetStateAction<boolean>>;
   fetchAndSetAllGameStates: (currentGridSize: number) => Promise<void>;
-  setConfettiConfig: React.Dispatch<React.SetStateAction<{
-    numberOfPieces: number;
-    recycle: number;
-    gravity: number;
-    initialVelocityX: { min: number; max: number; };
-    initialVelocityY: { min: number; max: number; };
-  }>>;
-  initialAlertsLoaded: boolean; // NEW: Flag to indicate initial alerts are loaded
+  initialAlertsLoaded: boolean;
+  showFullGridCelebration: boolean; // NEW: State for full grid celebration
+  setShowFullGridCelebration: React.Dispatch<React.SetStateAction<boolean>>; // NEW: Setter for full grid celebration
 }
 
 // New function to count unique caipis
 const countCheckedCaipis = (grid: boolean[][], selectedFruits: string[], gridSize: number): number => {
   if (!grid || grid.length === 0 || !selectedFruits || selectedFruits.length !== gridSize) {
-    // If selectedFruits is missing or has incorrect length, we can't determine combinations accurately.
-    // Return 0 as a safe default.
     return 0;
   }
 
   const uniqueCaipis = new Set<string>();
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
 
-  // Create a mutable copy of selectedFruits to act as displayFruits
   const currentDisplayFruits = [...selectedFruits];
 
-  // Ensure 'lime' is at the center position for consistent combination generation
   const limeIndex = currentDisplayFruits.indexOf('lime');
   if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
-    // Swap lime to the center position if it's not already there
     [currentDisplayFruits[CENTER_CELL_INDEX], currentDisplayFruits[limeIndex]] = [currentDisplayFruits[limeIndex], currentDisplayFruits[CENTER_CELL_INDEX]];
   } else if (limeIndex === -1) {
-    // This case should ideally not happen if FruitSelection enforces 'lime'
-    // If lime is missing, we can't proceed with accurate combinations, so return 0.
     console.warn("Lime not found in selected fruits for caipi counting, returning 0.");
     return 0;
   }
@@ -78,7 +57,6 @@ const countCheckedCaipis = (grid: boolean[][], selectedFruits: string[], gridSiz
       if (grid[rowIndex][colIndex] && !isCenterCell) {
         const fruit1 = currentDisplayFruits[rowIndex];
         const fruit2 = currentDisplayFruits[colIndex];
-        // Create a canonical string for the combination (sorted to treat A-B and B-A as same)
         const combination = [fruit1, fruit2].sort().join('-');
         uniqueCaipis.add(combination);
       }
@@ -101,22 +79,13 @@ export const useGameRoomRealtime = (
 
   const [partyBingoAlerts, setPartyBingoAlerts] = useState<BingoAlert[]>([]);
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [confettiConfig, setConfettiConfig] = useState({
-    numberOfPieces: 200,
-    recycle: false,
-    gravity: 0.1,
-    initialVelocityX: { min: -5, max: 5 },
-    initialVelocityY: { min: -10, max: -5 },
-  });
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
-  const [initialAlertsLoaded, setInitialAlertsLoaded] = useState(false); // NEW: State to track initial alerts load
+  const [initialAlertsLoaded, setInitialAlertsLoaded] = useState(false);
+  const [showFullGridCelebration, setShowFullGridCelebration] = useState(false); // NEW: State for full grid celebration
 
-  // Ref to hold the current state of partyBingoAlerts for comparison in real-time listener
   const partyBingoAlertsRef = useRef<BingoAlert[]>([]);
 
-  // Effect to keep the ref in sync with the state
   useEffect(() => {
     partyBingoAlertsRef.current = partyBingoAlerts;
   }, [partyBingoAlerts]);
@@ -171,15 +140,14 @@ export const useGameRoomRealtime = (
       return;
     }
     setPartyBingoAlerts(party?.bingo_alerts || []);
-    // Also update the ref immediately after setting state for initial load
     partyBingoAlertsRef.current = party?.bingo_alerts || [];
-    setInitialAlertsLoaded(true); // NEW: Set flag to true after initial alerts are loaded
+    setInitialAlertsLoaded(true);
   }, [partyId]);
 
   useEffect(() => {
     if (!partyId || !user) return;
 
-    fetchInitialPartyAlerts(); // Fetch initial alerts and populate state and ref
+    fetchInitialPartyAlerts();
 
     const channel = supabase
       .channel(`party:${partyId}`)
@@ -239,29 +207,18 @@ export const useGameRoomRealtime = (
 
           if (updatedParty.bingo_alerts) {
             const incomingAlerts = updatedParty.bingo_alerts || [];
-            const currentAlertsInRef = partyBingoAlertsRef.current; // Use the ref for comparison
+            const currentAlertsInRef = partyBingoAlertsRef.current;
 
-            const newAlertsForConfetti = incomingAlerts.filter(
-              (incomingAlert: BingoAlert) => !currentAlertsInRef.some(existingAlert => existingAlert.id === incomingAlert.id)
+            const newFullGridAlert = incomingAlerts.find(
+              (incomingAlert: BingoAlert) =>
+                incomingAlert.type === 'fullGrid' &&
+                !currentAlertsInRef.some(existingAlert => existingAlert.id === incomingAlert.id)
             );
 
-            // Check for new fullGrid alerts to trigger special confetti
-            const newFullGridAlert = newAlertsForConfetti.find(alert => alert.type === 'fullGrid');
             if (newFullGridAlert) {
-              setShowConfetti(true);
-              setConfettiConfig({
-                numberOfPieces: 1000, // More pieces for explosion
-                recycle: false,
-                gravity: 0.5, // Increased gravity for faster fall
-                initialVelocityX: { min: -15, max: 15 },
-                initialVelocityY: { min: -25, max: -15 }, // Higher initial burst
-              });
-              setTimeout(() => setShowConfetti(false), 5000); // Longer duration for full grid
-            } else {
-              // For other new alerts, ensure confetti is off if it was on from a previous fullGrid
-              setShowConfetti(false);
+              setShowFullGridCelebration(true); // Trigger the new celebration
             }
-            setPartyBingoAlerts(incomingAlerts); // Always update the display state with the latest from DB
+            setPartyBingoAlerts(incomingAlerts);
           }
         }
       )
@@ -275,14 +232,12 @@ export const useGameRoomRealtime = (
   return {
     partyBingoAlerts,
     playerScores,
-    showConfetti,
-    confettiConfig,
     newPlayerJoinedName,
     showNewPlayerAlert,
     setShowNewPlayerAlert,
-    setShowConfetti,
     fetchAndSetAllGameStates,
-    setConfettiConfig,
-    initialAlertsLoaded, // NEW: Return the flag
+    initialAlertsLoaded,
+    showFullGridCelebration,
+    setShowFullGridCelebration,
   };
 };
