@@ -1,7 +1,7 @@
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import CopyrightNotice from '@/components/CopyrightNotice'; // Added import
+// Removed import CopyrightNotice from '@/components/CopyrightNotice';
 
 const Index = () => {
   return (
@@ -29,7 +29,6 @@ const Index = () => {
         </Link>
       </div>
       <MadeWithDyad />
-      <CopyrightNotice /> {/* Added CopyrightNotice */}
     </div>
   );
 };

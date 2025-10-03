@@ -7,7 +7,7 @@ import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
-import CopyrightNotice from '@/components/CopyrightNotice'; // Added import
+// Removed import CopyrightNotice from '@/components/CopyrightNotice';
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -145,7 +145,6 @@ const GameRoom: React.FC = () => {
       />
 
       <MadeWithDyad />
-      <CopyrightNotice /> {/* Added CopyrightNotice */}
     </div>
   );
 };

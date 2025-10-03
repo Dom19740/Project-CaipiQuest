@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import CopyrightNotice from '@/components/CopyrightNotice'; // Added import
+// Removed import CopyrightNotice from '@/components/CopyrightNotice';
 
 interface BingoAlert {
   id: string;
@@ -127,6 +127,8 @@ const CaipiQuest: React.FC = () => {
           onCellToggle={handleCellToggle} // Pass toggle handler
           selectedFruits={defaultSinglePlayerFruits} // Use fixed 5 fruits
           gridSize={FIXED_GRID_SIZE}
+          partyBingoAlerts={[]} // CaipiQuest doesn't use real-time alerts
+          initialAlertsLoaded={true} // Always true for single-player
         />
         <div className="flex flex-col gap-4">
           <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
@@ -169,7 +171,6 @@ const CaipiQuest: React.FC = () => {
         </div>
       </div>
       <MadeWithDyad />
-      <CopyrightNotice /> {/* Added CopyrightNotice */}
     </div>
   );
 };
