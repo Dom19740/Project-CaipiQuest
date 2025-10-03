@@ -4,7 +4,7 @@ import Confetti from 'react-confetti';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
-import { MadeWithDyad } = '@/components/made-with-dyad';
+import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import PartyAlertsCard from '@/components/PartyAlertsCard';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
