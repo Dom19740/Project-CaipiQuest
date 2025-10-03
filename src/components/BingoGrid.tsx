@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
 interface BingoAlert {
@@ -27,31 +27,33 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   const CSS_GRID_DIMENSION = gridSize + 1;
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
 
-  // Derive completed bingos from partyBingoAlerts and resetKey using useMemo
-  const completedBingos = useMemo(() => {
-    // If initial alerts haven't loaded yet, or if resetKey indicates a new game, start fresh.
-    // The resetKey dependency ensures this memo re-evaluates when a game reset occurs.
-    if (!initialAlertsLoaded) {
-      return new Set<string>();
-    }
+  // Use a ref to store the set of completed bingos
+  const completedBingosRef = useRef<Set<string>>(new Set());
 
-    const newSet = new Set<string>();
-    partyBingoAlerts.forEach(alert => {
-      if (alert.canonicalId) {
-        newSet.add(alert.canonicalId);
-      }
-    });
-    return newSet;
-  }, [partyBingoAlerts, initialAlertsLoaded, resetKey]); // Dependencies for useMemo
+  // Effect to update the ref when partyBingoAlerts or resetKey changes
+  useEffect(() => {
+    // Reset the ref completely on game reset (resetKey changes)
+    if (resetKey !== 0) { 
+      completedBingosRef.current = new Set();
+    }
+    // Populate the ref with alerts from the database once initial alerts are loaded
+    if (initialAlertsLoaded) {
+      partyBingoAlerts.forEach(alert => {
+        if (alert.canonicalId) {
+          completedBingosRef.current.add(alert.canonicalId);
+        }
+      });
+    }
+  }, [partyBingoAlerts, initialAlertsLoaded, resetKey]);
 
   const checkBingo = useCallback(() => {
     if (!checkedCells || checkedCells.length === 0) return;
 
     const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, canonicalId: string) => {
-      if (line.every(cell => cell) && !completedBingos.has(canonicalId)) {
+      if (line.every(cell => cell) && !completedBingosRef.current.has(canonicalId)) {
         onBingo(type, message, canonicalId);
-        // No need to add to a local ref here, as `completedBingos` is derived from `partyBingoAlerts` (DB state)
-        // and `onBingo` will trigger a DB update, which will then update `partyBingoAlerts` via real-time.
+        // Add to ref immediately to prevent re-triggering before DB sync
+        completedBingosRef.current.add(canonicalId);
       }
     };
 
@@ -75,17 +77,19 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Check Full Grid
     const allCellsChecked = checkedCells.flat().every(cell => cell);
-    if (allCellsChecked && !completedBingos.has('full-grid')) {
+    if (allCellsChecked && !completedBingosRef.current.has('full-grid')) {
       onBingo('fullGrid', `completed the entire grid!`, `full-grid`);
+      completedBingosRef.current.add('full-grid');
     }
-  }, [checkedCells, gridSize, onBingo, completedBingos]); // Add completedBingos to dependencies
+  }, [checkedCells, gridSize, onBingo]); // completedBingosRef is not a dependency here, as we access .current
 
   useEffect(() => {
-    // Only check bingo if initial alerts are loaded
+    // This effect now only runs when initialGridState or initialAlertsLoaded changes.
+    // checkBingo itself is stable due to its useCallback dependencies.
     if (initialAlertsLoaded) {
       checkBingo();
     }
-  }, [initialGridState, checkBingo, initialAlertsLoaded]);
+  }, [initialGridState, initialAlertsLoaded, checkBingo]); // checkBingo is stable, so this won't cause re-runs due to completedBingosRef updates
 
   // Ensure selectedFruits has `gridSize` items, with 'lime' at the center
   const displayFruits = [...selectedFruits];
@@ -97,7 +101,6 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     console.warn("Lime not found in selected fruits, adding it to center.");
     displayFruits[CENTER_CELL_INDEX] = 'lime';
   }
-
 
   return (
     <div
