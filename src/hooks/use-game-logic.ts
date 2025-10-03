@@ -9,6 +9,7 @@ interface BingoAlert {
   message: string;
   playerName?: string;
   playerId?: string; // Added playerId
+  canonicalId?: string; // NEW: Canonical ID for the bingo condition (e.g., 'row-0', 'diag-1', 'full-grid')
 }
 
 // Moved alertIdCounter into a useRef for better encapsulation
@@ -76,11 +77,11 @@ export const useGameLogic = (
     }
   }, [myGridData, myGameStateId, user, partyId, partyCreatorId, gridSize, fetchAndSetAllGameStates, setMyGridData]); // Changed from roomId, roomCreatorId
 
-  const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
+  const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string, canonicalId: string) => { // Added canonicalId
     if (!partyId || !user || !myPlayerName) return; // Changed from roomId
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
-    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id };
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id, canonicalId }; // Store canonicalId
 
     const { data: currentParty, error: fetchPartyError } = await supabase // Changed from currentRoom, fetchRoomError
       .from('rooms')

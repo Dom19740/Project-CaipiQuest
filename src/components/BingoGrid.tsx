@@ -1,16 +1,26 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
 
+interface BingoAlert { // Need to define this interface here or import it
+  id: string;
+  type: 'rowCol' | 'diagonal' | 'fullGrid';
+  message: string;
+  playerName?: string;
+  playerId?: string;
+  canonicalId?: string; // Added canonicalId
+}
+
 interface BingoGridProps {
-  onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string) => void;
+  onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string, canonicalId: string) => void; // Added canonicalId
   resetKey: number; // New prop to trigger reset
   initialGridState: boolean[][]; // Controlled state
   onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
   selectedFruits: string[]; // New prop for selected fruits
   gridSize: number; // New prop for dynamic grid size
+  partyBingoAlerts: BingoAlert[]; // NEW PROP: Existing alerts from DB
 }
 
-const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize }) => {
+const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize, partyBingoAlerts }) => {
   const checkedCells = initialGridState;
   const completedBingosRef = useRef<Set<string>>(new Set());
 
@@ -18,16 +28,23 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2); // For any NxN grid, this is N/2
 
   useEffect(() => {
+    // Reset on resetKey change
     completedBingosRef.current = new Set();
-  }, [resetKey]);
+    // Initialize with existing alerts from DB on mount or when alerts change
+    partyBingoAlerts.forEach(alert => {
+      if (alert.canonicalId) {
+        completedBingosRef.current.add(alert.canonicalId);
+      }
+    });
+  }, [resetKey, partyBingoAlerts]); // Add partyBingoAlerts to dependencies
 
   const checkBingo = useCallback(() => {
     if (!checkedCells || checkedCells.length === 0) return;
 
-    const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, id: string) => {
-      if (line.every(cell => cell) && !completedBingosRef.current.has(id)) {
-        onBingo(type, message);
-        completedBingosRef.current.add(id);
+    const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, canonicalId: string) => {
+      if (line.every(cell => cell) && !completedBingosRef.current.has(canonicalId)) {
+        onBingo(type, message, canonicalId); // Pass canonicalId to onBingo
+        completedBingosRef.current.add(canonicalId);
       }
     };
 
@@ -52,7 +69,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     // Check Full Grid
     const allCellsChecked = checkedCells.flat().every(cell => cell);
     if (allCellsChecked && !completedBingosRef.current.has('full-grid')) {
-      onBingo('fullGrid', `completed the entire grid!`);
+      onBingo('fullGrid', `completed the entire grid!`, `full-grid`); // Pass canonicalId
       completedBingosRef.current.add('full-grid');
     }
   }, [checkedCells, gridSize, onBingo]);

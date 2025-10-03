@@ -111,6 +111,7 @@ const GameRoom: React.FC = () => {
             onCellToggle={handleCellToggle}
             selectedFruits={playerSelectedFruits}
             gridSize={gridSize}
+            partyBingoAlerts={partyBingoAlerts} // Pass the alerts here
           />
         </div>
 
