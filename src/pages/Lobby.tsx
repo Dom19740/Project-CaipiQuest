@@ -146,23 +146,6 @@ const Lobby: React.FC = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
-          <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-lime-800">Create New Room</CardTitle>
-              <CardDescription className="text-lime-700">Start a fresh 5x5 game for your friends.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-lg font-medium text-lime-800">Grid Size: 5x5 (Fixed)</p>
-              <Button
-                onClick={handleCreateRoom}
-                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
-                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
-              >
-                {isCreating ? 'Creating...' : 'Create Room'}
-              </Button>
-            </CardContent>
-          </Card>
-
           <Card className="w-full max-w-sm bg-emerald-50 border-emerald-300 shadow-lg">
             <CardHeader>
               <CardTitle className="text-emerald-800">Join Existing Room</CardTitle>
@@ -183,6 +166,24 @@ const Lobby: React.FC = () => {
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
                 {isJoining ? 'Joining...' : 'Join Room'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-lime-800">Create New Room</CardTitle>
+              {/* Removed "Start a fresh 5x5 game for your friends." */}
+              <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Removed "Grid Size: 5x5 (Fixed)" */}
+              <Button
+                onClick={handleCreateRoom}
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
+                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
+              >
+                {isCreating ? 'Creating...' : 'Create Room'}
               </Button>
             </CardContent>
           </Card>
