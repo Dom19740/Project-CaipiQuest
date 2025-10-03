@@ -3,11 +3,11 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
-import PartySidebar from '@/components/PartySidebar'; // Changed from RoomSidebar
+import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
-import GameResetDialog from '@/components/GameResetDialog';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-import PartyAlertsCard from '@/components/PartyAlertsCard'; // Changed from RoomAlertsCard
+import PartyAlertsCard from '@/components/PartyAlertsCard';
+import LeavePartyDialog from '@/components/LeavePartyDialog'; // New import
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -25,8 +25,8 @@ const GameRoom: React.FC = () => {
 
   const {
     gridSize,
-    partyCode, // Changed from roomCode
-    partyCreatorId, // Changed from roomCreatorId
+    partyCode,
+    partyCreatorId,
     myGameStateId,
     myGridData,
     myPlayerName,
@@ -39,7 +39,7 @@ const GameRoom: React.FC = () => {
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
-    partyBingoAlerts, // Changed from roomBingoAlerts
+    partyBingoAlerts,
     playerScores,
     showConfetti,
     confettiConfig,
@@ -50,7 +50,7 @@ const GameRoom: React.FC = () => {
     fetchAndSetAllGameStates,
     setConfettiConfig,
   } = useGameRoomRealtime(
-    roomId, // Still passing roomId to hook
+    roomId,
     gridSize,
     myGridData,
     setMyGridData,
@@ -65,12 +65,12 @@ const GameRoom: React.FC = () => {
     handleResetGame,
     handleGlobalRefresh,
   } = useGameLogic(
-    roomId, // Still passing roomId to hook
+    roomId,
     myGameStateId,
     myGridData,
     setMyGridData,
     myPlayerName,
-    partyCreatorId, // Changed from roomCreatorId
+    partyCreatorId,
     playerSelectedFruits,
     gridSize,
     fetchAndSetAllGameStates,
@@ -80,7 +80,7 @@ const GameRoom: React.FC = () => {
   if (isLoadingSession || isLoadingInitialData || !user || !roomId || playerSelectedFruits.length !== gridSize) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400">
-        <p className="text-xl text-gray-700">Loading game party...</p> {/* Changed from game room */}
+        <p className="text-xl text-gray-700">Loading game party...</p>
       </div>
     );
   }
@@ -88,7 +88,7 @@ const GameRoom: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       {showConfetti && <Confetti {...confettiConfig} />}
-      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg">
+      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg text-center"> {/* Changed text-5xl to text-4xl and added text-center */}
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl">
@@ -107,19 +107,17 @@ const GameRoom: React.FC = () => {
         {/* Right Panel: Cards and Buttons */}
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
           <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-            {partyCode && <PartySidebar partyCode={partyCode} playerScores={playerScores} />} {/* Changed from RoomSidebar, roomCode */}
-            <PartyAlertsCard alerts={partyBingoAlerts} currentUserId={user.id} /> {/* Changed from RoomAlertsCard, roomBingoAlerts */}
+            {partyCode && <PartySidebar partyCode={partyCode} playerScores={playerScores} />}
+            <PartyAlertsCard alerts={partyBingoAlerts} currentUserId={user.id} />
           </div>
 
           {/* Buttons */}
           <div className="flex flex-row gap-2 justify-center w-full">
-            <GameResetDialog onConfirm={handleResetGame} />
+            {/* Removed GameResetDialog */}
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
               Refresh
             </Button>
-            <Button onClick={() => navigate('/lobby')} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
-              Leave
-            </Button>
+            <LeavePartyDialog onConfirm={() => navigate('/lobby')} /> {/* Replaced Leave button with LeavePartyDialog */}
           </div>
         </div>
       </div>
