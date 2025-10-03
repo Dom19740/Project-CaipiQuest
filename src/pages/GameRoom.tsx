@@ -97,7 +97,7 @@ const GameRoom: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       {showConfetti && <Confetti {...confettiConfig} />}
-      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg text-center">
+      <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-8 drop-shadow-lg text-center">
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl">
@@ -116,8 +116,8 @@ const GameRoom: React.FC = () => {
         {/* Right Panel: Cards and Buttons */}
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
           <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
-            {partyCode && <PartySidebar partyCode={partyCode} playerScores={playerScores} />}
             <PartyAlertsCard alerts={partyBingoAlerts} currentUserId={user.id} />
+            {partyCode && <PartySidebar partyCode={partyCode} playerScores={playerScores} />}
           </div>
 
           {/* Buttons */}
