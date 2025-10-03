@@ -8,6 +8,7 @@ interface BingoAlert {
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
   playerName?: string;
+  playerId?: string; // Added playerId
 }
 
 let alertIdCounter = 0;
@@ -72,7 +73,7 @@ export const useGameLogic = (
     if (!roomId || !user || !myPlayerName) return;
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
-    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName };
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id }; // Added playerId
 
     const { data: currentRoom, error: fetchRoomError } = await supabase
       .from('rooms')

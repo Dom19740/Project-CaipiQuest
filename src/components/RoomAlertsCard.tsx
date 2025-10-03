@@ -6,18 +6,22 @@ interface BingoAlert {
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
   playerName?: string;
+  playerId?: string; // Added playerId
 }
 
 interface RoomAlertsCardProps {
   alerts: BingoAlert[];
+  currentUserId: string | null; // New prop for current user ID
 }
 
-const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
-  switch (type) {
+const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
+  const isMyAlert = alert.playerId === currentUserId;
+
+  switch (alert.type) {
     case 'rowCol':
-      return 'text-green-700 bg-green-100 border-green-300';
+      return isMyAlert ? 'text-red-700 bg-red-100 border-red-300' : 'text-green-700 bg-green-100 border-green-300';
     case 'diagonal':
-      return 'text-blue-700 bg-blue-100 border-blue-300';
+      return isMyAlert ? 'text-red-700 bg-red-100 border-red-300' : 'text-blue-700 bg-blue-100 border-blue-300';
     case 'fullGrid':
       return 'text-white bg-gradient-to-r from-purple-600 to-pink-700 border-purple-800 text-3xl font-extrabold p-4 animate-pulse';
     default:
@@ -25,7 +29,7 @@ const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
   }
 };
 
-const RoomAlertsCard: React.FC<RoomAlertsCardProps> = ({ alerts }) => {
+const RoomAlertsCard: React.FC<RoomAlertsCardProps> = ({ alerts, currentUserId }) => {
   return (
     <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">
@@ -37,7 +41,7 @@ const RoomAlertsCard: React.FC<RoomAlertsCardProps> = ({ alerts }) => {
         ) : (
           <ul className="space-y-2">
             {alerts.map((alert) => (
-              <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
+              <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert, currentUserId)}`}>
                 {alert.message}
               </li>
             ))}

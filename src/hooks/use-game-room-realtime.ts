@@ -8,6 +8,7 @@ interface BingoAlert {
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
   playerName?: string;
+  playerId?: string; // Added playerId
 }
 
 interface PlayerScore {

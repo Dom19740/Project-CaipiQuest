@@ -103,7 +103,7 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4">
           {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
           
-          <RoomAlertsCard alerts={roomBingoAlerts} /> {/* Re-added Alerts Card */}
+          <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} /> {/* Passed currentUserId */}
 
           <div className="flex flex-row gap-2 justify-center w-full lg:w-80">
             <GameResetDialog onConfirm={handleResetGame} />
