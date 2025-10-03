@@ -68,7 +68,7 @@ const FruitSelection: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4">
       <Card className="w-full max-w-2xl bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-4 border-lime-400">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-4 drop-shadow-lg">
+          <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-4 drop-shadow-lg">
             Choose Your Fruits
           </CardTitle>
           <CardDescription className="text-xl text-gray-700 mb-6">
