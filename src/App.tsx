@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"; // Added useLocation
+import React, { useEffect } from "react"; // Added useEffect
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Lobby from "./pages/Lobby";
@@ -11,6 +12,17 @@ import GameRoom from "./pages/GameRoom";
 import { useSession } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
+
+// New component to handle scrolling to top on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const App = () => {
   const { isLoading } = useSession();
@@ -29,6 +41,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop /> {/* Added ScrollToTop component */}
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/lobby" element={<Lobby />} />

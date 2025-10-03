@@ -21,7 +21,7 @@ const fruitData: { [key: string]: { emoji: string } } = {
   dragon_fruit: { emoji: '🐉' },
   banana: { emoji: '🍌' },
   plum: { emoji: '🟣' },
-  watermelon: { emoji: '🍉' }, // Added watermelon
+  watermelon: { emoji: '🍉' },
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
@@ -31,13 +31,11 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
     sm: 'text-base',
     md: 'text-xl',
-    lg: 'text-2xl',
+    lg: 'text-xl', // Changed 'lg' from 'text-2xl' to 'text-xl' for consistency
   };
 
-  // Special handling for lime emoji when size is 'lg'
-  const effectiveSizeClass = (fruit.toLowerCase() === 'lime' && size === 'lg')
-    ? 'text-xl' // Use a slightly smaller size for lime in large contexts
-    : sizeClasses[size];
+  // Removed special handling for lime to ensure all 'lg' icons are 'text-xl'
+  const effectiveSizeClass = sizeClasses[size];
 
   return (
     <span className={`inline-flex items-center ${effectiveSizeClass}`} role="img" aria-label={fruit}>
