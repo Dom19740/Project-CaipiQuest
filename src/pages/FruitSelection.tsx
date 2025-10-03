@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
 import { showError } from '@/utils/toast';
 import FruitIcon from '@/components/FruitIcon';
 import { MadeWithDyad } from '@/components/made-with-dyad';
@@ -16,12 +14,12 @@ const allFruitsData = [
   { name: 'strawberry', portuguese: 'Morango', emoji: '🍓' },
   { name: 'mango', portuguese: 'Manga', emoji: '🥭' },
   { name: 'pineapple', portuguese: 'Abacaxi', emoji: '🍍' },
-  { name: 'red_fruits', portuguese: 'Frutas Vermelhas', emoji: '🍒' }, // Changed from dragonfruit
-  { name: 'guava', portuguese: 'Goiaba', emoji: '🍑' }, // Changed from plum
+  { name: 'red_fruits', portuguese: 'Frutas Vermelhas', emoji: '🍒' },
+  { name: 'guava', portuguese: 'Goiaba', emoji: '🍑' },
   { name: 'ginger', portuguese: 'Gengibre', emoji: '🌳' },
-  { name: 'tangerine', portuguese: 'Tangerina', emoji: '🍊' }, // Changed from banana
+  { name: 'tangerine', portuguese: 'Tangerina', emoji: '🍊' },
   { name: 'kiwi', portuguese: 'Kiwi', emoji: '🥝' },
-  { name: 'cashew', portuguese: 'Caju', emoji: '🌰' }, // Added Caju
+  { name: 'cashew', portuguese: 'Caju', emoji: '🌰' },
 ];
 
 const FruitSelection: React.FC = () => {
@@ -29,7 +27,7 @@ const FruitSelection: React.FC = () => {
   const location = useLocation();
   const { roomId, gridSize: initialGridSize } = location.state || {};
 
-  const [gridSize, setGridSize] = useState<number>(initialGridSize || 5); // Default to 5 if not provided
+  const [gridSize, setGridSize] = useState<number>(initialGridSize || 5);
   const [selectedFruits, setSelectedFruits] = useState<string[]>(['lime']); // Lime is pre-selected
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +61,7 @@ const FruitSelection: React.FC = () => {
       setError(`Please select exactly ${gridSize} fruits. You have selected ${selectedFruits.length}.`);
       return;
     }
-    navigate(`/game/${roomId}`, { state: { selectedFruits, gridSize } }); // Pass gridSize to GameRoom
+    navigate(`/game/${roomId}`, { state: { selectedFruits, gridSize } });
   };
 
   const isProceedDisabled = selectedFruits.length !== gridSize;
@@ -82,18 +80,19 @@ const FruitSelection: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
             {allFruitsData.map((fruit) => (
-              <div key={fruit.name} className="flex items-center space-x-2 p-3 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                <Checkbox
-                  id={fruit.name}
-                  checked={selectedFruits.includes(fruit.name)}
-                  onCheckedChange={(checked) => handleFruitToggle(fruit.name, checked as boolean)}
-                  disabled={fruit.name === 'lime'}
-                  className={fruit.name === 'lime' ? 'cursor-not-allowed' : ''}
-                />
-                <Label htmlFor={fruit.name} className="flex items-center cursor-pointer text-lg font-medium text-gray-800">
-                  <FruitIcon fruit={fruit.name} size="md" />
-                  <span className="ml-2">{fruit.portuguese}</span>
-                </Label>
+              <div
+                key={fruit.name}
+                className={`flex flex-col items-center justify-center p-3 border rounded-lg transition-all duration-200 ease-in-out
+                  ${selectedFruits.includes(fruit.name) ? 'bg-lime-200 border-lime-500 shadow-md' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}
+                  ${fruit.name === 'lime' ? 'cursor-not-allowed bg-lime-300 border-lime-600' : 'cursor-pointer hover:scale-105'}
+                `}
+                onClick={() => handleFruitToggle(fruit.name, !selectedFruits.includes(fruit.name))}
+              >
+                <FruitIcon fruit={fruit.name} size="sm" />
+                <span className="mt-1 text-sm font-medium text-gray-800">
+                  {fruit.portuguese}
+                </span>
+                {fruit.name === 'lime' && <span className="text-xs text-lime-800 font-bold">CENTER</span>}
               </div>
             ))}
           </div>
