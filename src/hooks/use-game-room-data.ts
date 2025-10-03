@@ -28,7 +28,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
   const [partyCode, setPartyCode] = useState<string>('');
   const [partyCreatorId, setPartyCreatorId] = useState<string | null>(null);
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
-  const [myGridData, setMyGridData] = useState<boolean[][]>(Array(gridSize).fill(Array(gridSize).fill(false)));
+  const [myGridData, setMyGridData] = useState<boolean[][]>(Array(gridSize).fill(null).map(() => Array(gridSize).fill(false))); // Fixed initialization
   const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [playerSelectedFruits, setPlayerSelectedFruits] = useState<string[]>([]);
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
@@ -87,7 +87,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
         updated_at: new Date().toISOString(),
       };
 
-      const existingGrid = existingGameState.grid_data || Array(currentGridSize).fill(Array(currentGridSize).fill(false));
+      const existingGrid = existingGameState.grid_data || Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false)); // Fixed initialization
       const existingFruits = existingGameState.selected_fruits || [];
 
       if (JSON.stringify(existingFruits) !== JSON.stringify(currentSelectedFruits) || existingGrid.length !== currentGridSize) {

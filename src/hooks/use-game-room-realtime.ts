@@ -36,7 +36,7 @@ interface GameRoomRealtimeData {
   fetchAndSetAllGameStates: (currentGridSize: number) => Promise<void>;
   setConfettiConfig: React.Dispatch<React.SetStateAction<{
     numberOfPieces: number;
-    recycle: boolean;
+    recycle: number;
     gravity: number;
     initialVelocityX: { min: number; max: number; };
     initialVelocityY: { min: number; max: number; };
@@ -134,9 +134,9 @@ export const useGameRoomRealtime = (
     const myGameState = allGameStates.find(gs => gs.player_id === user.id);
     if (myGameState) {
       const centerCellIndex = Math.floor(currentGridSize / 2);
-      const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(Array(currentGridSize).fill(false));
+      const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false)); // Fixed initialization
       if (fetchedGrid.length !== currentGridSize || (fetchedGrid.length > 0 && fetchedGrid[0].length !== currentGridSize)) {
-        const newGrid = Array(currentGridSize).fill(Array(currentGridSize).fill(false));
+        const newGrid = Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false)); // Fixed initialization
         newGrid[centerCellIndex][centerCellIndex] = true;
         setMyGridData(newGrid);
       } else {
@@ -200,7 +200,7 @@ export const useGameRoomRealtime = (
 
             if (updatedGameState.player_id === user.id) {
               const centerCellIndex = Math.floor(gridSize / 2);
-              const updatedGrid = updatedGameState.grid_data || Array(gridSize).fill(Array(gridSize).fill(false));
+              const updatedGrid = updatedGameState.grid_data || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false)); // Fixed initialization
               updatedGrid[centerCellIndex][centerCellIndex] = true;
               setMyGridData(updatedGrid);
               setPlayerSelectedFruits(updatedGameState.selected_fruits || []);
