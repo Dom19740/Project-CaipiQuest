@@ -250,11 +250,11 @@ export const useGameRoomRealtime = (
             if (newFullGridAlert) {
               setShowConfetti(true);
               setConfettiConfig({
-                numberOfPieces: 800, // More pieces for explosion
+                numberOfPieces: 1000, // More pieces for explosion
                 recycle: false,
-                gravity: 0.3,
+                gravity: 0.5, // Increased gravity for faster fall
                 initialVelocityX: { min: -15, max: 15 },
-                initialVelocityY: { min: -20, max: -10 },
+                initialVelocityY: { min: -25, max: -15 }, // Higher initial burst
               });
               setTimeout(() => setShowConfetti(false), 5000); // Longer duration for full grid
             } else {
