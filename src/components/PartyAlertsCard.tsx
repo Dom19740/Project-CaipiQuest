@@ -20,11 +20,15 @@ const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
 
   switch (alert.type) {
     case 'rowCol':
-      return isMyAlert ? 'text-red-700 bg-red-100 border-red-300' : 'text-green-700 bg-green-100 border-green-300';
+      return isMyAlert
+        ? 'text-red-700 bg-red-100 border-red-300' // Current user: Red
+        : 'text-green-700 bg-green-100 border-green-300'; // Others: Green
     case 'diagonal':
-      return isMyAlert ? 'text-red-700 bg-red-100 border-red-300' : 'text-blue-700 bg-blue-100 border-blue-300';
+      return isMyAlert
+        ? 'text-blue-700 bg-blue-100 border-blue-300' // Current user: Blue
+        : 'text-yellow-700 bg-yellow-100 border-yellow-300'; // Others: Yellow
     case 'fullGrid':
-      return 'text-white bg-gradient-to-r from-purple-600 to-pink-700 border-purple-800 text-3xl font-extrabold p-4 animate-pulse';
+      return 'text-white bg-gradient-to-r from-purple-600 to-pink-700 border-purple-800 text-3xl font-extrabold p-4 animate-pulse'; // Fancy for everyone
     default:
       return 'text-gray-700 bg-gray-100 border-gray-300';
   }

@@ -9,6 +9,7 @@ interface BingoAlert {
   message: string;
   playerName?: string;
   playerId?: string;
+  canonicalId?: string;
 }
 
 interface PlayerScore {
@@ -241,9 +242,21 @@ export const useGameRoomRealtime = (
               (incomingAlert: BingoAlert) => !currentAlertsInRef.some(existingAlert => existingAlert.id === incomingAlert.id)
             );
 
-            if (newAlertsForConfetti.length > 0) {
+            // Check for new fullGrid alerts to trigger special confetti
+            const newFullGridAlert = newAlertsForConfetti.find(alert => alert.type === 'fullGrid');
+            if (newFullGridAlert) {
               setShowConfetti(true);
-              setTimeout(() => setShowConfetti(false), 2000);
+              setConfettiConfig({
+                numberOfPieces: 800, // More pieces for explosion
+                recycle: false,
+                gravity: 0.3,
+                initialVelocityX: { min: -15, max: 15 },
+                initialVelocityY: { min: -20, max: -10 },
+              });
+              setTimeout(() => setShowConfetti(false), 5000); // Longer duration for full grid
+            } else {
+              // For other new alerts, ensure confetti is off if it was on from a previous fullGrid
+              setShowConfetti(false);
             }
             setPartyBingoAlerts(incomingAlerts); // Always update the display state with the latest from DB
           }
