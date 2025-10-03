@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess } from '@/utils/toast';
@@ -14,7 +14,7 @@ interface BingoAlert {
 interface PlayerScore {
   id: string;
   name: string;
-  caipisCount: number; // Changed from squaresClicked
+  caipisCount: number;
   isMe: boolean;
 }
 
@@ -110,6 +110,9 @@ export const useGameRoomRealtime = (
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
+  // Ref to track if initial alerts have been loaded to prevent re-triggering confetti on refresh
+  const initialAlertsLoadedRef = useRef(false);
+
   const fetchAndSetAllGameStates = useCallback(async (currentGridSize: number) => {
     if (!partyId || !user) return;
 
@@ -126,7 +129,7 @@ export const useGameRoomRealtime = (
     const scores: PlayerScore[] = allGameStates.map(gs => ({
       id: gs.player_id,
       name: gs.player_name,
-      caipisCount: countCheckedCaipis(gs.grid_data || [], gs.selected_fruits || [], currentGridSize), // Use new caipi counting
+      caipisCount: countCheckedCaipis(gs.grid_data || [], gs.selected_fruits || [], currentGridSize),
       isMe: gs.player_id === user.id,
     }));
     setPlayerScores(scores);
@@ -134,9 +137,9 @@ export const useGameRoomRealtime = (
     const myGameState = allGameStates.find(gs => gs.player_id === user.id);
     if (myGameState) {
       const centerCellIndex = Math.floor(currentGridSize / 2);
-      const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false)); // Fixed initialization
+      const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false));
       if (fetchedGrid.length !== currentGridSize || (fetchedGrid.length > 0 && fetchedGrid[0].length !== currentGridSize)) {
-        const newGrid = Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false)); // Fixed initialization
+        const newGrid = Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false));
         newGrid[centerCellIndex][centerCellIndex] = true;
         setMyGridData(newGrid);
       } else {
@@ -160,12 +163,13 @@ export const useGameRoomRealtime = (
       return;
     }
     setPartyBingoAlerts(party?.bingo_alerts || []);
+    initialAlertsLoadedRef.current = true; // Mark initial alerts as loaded
   }, [partyId]);
 
   useEffect(() => {
     if (!partyId || !user) return;
 
-    fetchInitialPartyAlerts();
+    fetchInitialPartyAlerts(); // Fetch initial alerts and mark them as loaded
 
     const channel = supabase
       .channel(`party:${partyId}`)
@@ -190,17 +194,17 @@ export const useGameRoomRealtime = (
           } else if (payload.eventType === 'UPDATE') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][]; selected_fruits: string[] };
             setPlayerScores(prevScores => {
-              const newCaipisCount = countCheckedCaipis(updatedGameState.grid_data || [], updatedGameState.selected_fruits || [], gridSize); // Use new caipi counting
+              const newCaipisCount = countCheckedCaipis(updatedGameState.grid_data || [], updatedGameState.selected_fruits || [], gridSize);
               return prevScores.map(score =>
                 score.id === updatedGameState.player_id
-                  ? { ...score, caipisCount: newCaipisCount, name: updatedGameState.player_name } // Update caipisCount
+                  ? { ...score, caipisCount: newCaipisCount, name: updatedGameState.player_name }
                   : score
               );
             });
 
             if (updatedGameState.player_id === user.id) {
               const centerCellIndex = Math.floor(gridSize / 2);
-              const updatedGrid = updatedGameState.grid_data || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false)); // Fixed initialization
+              const updatedGrid = updatedGameState.grid_data || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
               updatedGrid[centerCellIndex][centerCellIndex] = true;
               setMyGridData(updatedGrid);
               setPlayerSelectedFruits(updatedGameState.selected_fruits || []);
@@ -226,15 +230,19 @@ export const useGameRoomRealtime = (
           if (updatedParty.bingo_alerts) {
             setPartyBingoAlerts(prevPartyBingoAlerts => {
               const incomingAlerts = updatedParty.bingo_alerts || [];
-              const newAlertsForConfetti = incomingAlerts.filter(
-                (incomingAlert: BingoAlert) => !prevPartyBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
-              );
+              
+              // Only trigger confetti for genuinely new alerts AFTER initial load
+              if (initialAlertsLoadedRef.current) {
+                const newAlertsForConfetti = incomingAlerts.filter(
+                  (incomingAlert: BingoAlert) => !prevPartyBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
+                );
 
-              if (newAlertsForConfetti.length > 0) {
-                setShowConfetti(true);
-                setTimeout(() => setShowConfetti(false), 2000);
+                if (newAlertsForConfetti.length > 0) {
+                  setShowConfetti(true);
+                  setTimeout(() => setShowConfetti(false), 2000);
+                }
               }
-              return incomingAlerts;
+              return incomingAlerts; // Always update the display state with the latest from DB
             });
           }
         }
@@ -243,6 +251,7 @@ export const useGameRoomRealtime = (
 
     return () => {
       supabase.removeChannel(channel);
+      initialAlertsLoadedRef.current = false; // Reset on unmount
     };
   }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyAlerts]);
 
