@@ -10,7 +10,7 @@ import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const Lobby: React.FC = () => {
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
-  const [partyCodeInput, setPartyCodeInput] = useState(''); // Changed from roomCodeInput
+  const [partyCodeInput, setPartyCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const navigate = useNavigate();
@@ -47,76 +47,100 @@ const Lobby: React.FC = () => {
     }
   }, [user]);
 
-  const generatePartyCode = () => { // Changed from generateRoomCode
+  const generatePartyCode = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const handleCreateParty = async () => { // Changed from handleCreateRoom
+  const handleCreateParty = async () => {
     if (!user || !user.id) {
       showError('A session could not be established. Please refresh and try again.');
       return;
     }
     if (!playerName.trim()) {
-      showError('Please enter your name to create a party.'); // Changed from room
+      showError('Please enter your name to create a party.');
       return;
     }
 
     setIsCreating(true);
-    const newPartyCode = generatePartyCode(); // Changed from newRoomCode
-    const fixedGridSize = 5; // Hardcode grid size to 5
+    const newPartyCode = generatePartyCode();
+    const fixedGridSize = 5;
     try {
       // Create the room (party) with the fixed grid size
-      const { data: partyData, error: partyError } = await supabase // Changed from roomData, roomError
+      const { data: partyData, error: partyError } = await supabase
         .from('rooms')
         .insert({ code: newPartyCode, created_by: user.id, created_by_name: playerName, grid_size: fixedGridSize })
         .select()
         .single();
 
-      if (partyError) throw partyError; // Changed from roomError
-      console.log("Lobby - Party created:", partyData); // Changed from Room created
+      if (partyError) throw partyError;
+      console.log("Lobby - Party created:", partyData);
 
-      showSuccess(`Party "${newPartyCode}" created!`); // Changed from Room created
-      navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: fixedGridSize } }); // Still uses roomId for URL param
+      showSuccess(`Party "${newPartyCode}" created!`);
+      navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: fixedGridSize } });
     } catch (error: any) {
-      console.error('Lobby - Error creating party:', error.message); // Changed from room
-      showError(`Failed to create party: ${error.message}`); // Changed from room
+      console.error('Lobby - Error creating party:', error.message);
+      showError(`Failed to create party: ${error.message}`);
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleJoinParty = async () => { // Changed from handleJoinRoom
+  const handleJoinParty = async () => {
     if (!user || !user.id) {
       showError('A session could not be established. Please refresh and try again.');
       return;
     }
     if (!playerName.trim()) {
-      showError('Please enter your name to join a party.'); // Changed from room
+      showError('Please enter your name to join a party.');
       return;
     }
 
     setIsJoining(true);
     try {
       // Find the room (party) by code and fetch its grid_size
-      const { data: partyData, error: partyError } = await supabase // Changed from roomData, roomError
+      const { data: partyData, error: partyError } = await supabase
         .from('rooms')
         .select('id, grid_size')
-        .eq('code', partyCodeInput.toUpperCase()) // Changed from roomCodeInput
+        .eq('code', partyCodeInput.toUpperCase())
         .single();
 
-      if (partyError) { // Changed from roomError
+      if (partyError) {
         if (partyError.code === 'PGRST116') { // No rows found
-          throw new Error('Party not found. Please check the code.'); // Changed from Room not found
+          throw new Error('Party not found. Please check the code.');
         }
-        throw partyError; // Changed from roomError
+        throw partyError;
       }
-      console.log("Lobby - Found party:", partyData); // Changed from Found room
+      console.log("Lobby - Found party:", partyData);
 
-      showSuccess(`Found party "${partyCodeInput.toUpperCase()}"!`); // Changed from Found room
-      navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: partyData.grid_size } }); // Still uses roomId for URL param
+      // NEW LOGIC: Check if player already has a game state for this room
+      const { data: existingGameState, error: gameStateError } = await supabase
+        .from('game_states')
+        .select('selected_fruits')
+        .eq('room_id', partyData.id)
+        .eq('player_id', user.id)
+        .single();
+
+      if (gameStateError && gameStateError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+        throw gameStateError;
+      }
+
+      const hasExistingFruits = existingGameState?.selected_fruits && existingGameState.selected_fruits.length === partyData.grid_size;
+
+      showSuccess(`Found party "${partyCodeInput.toUpperCase()}"!`);
+
+      if (hasExistingFruits) {
+        // If player has existing game state with fruits, go directly to game room
+        console.log("Lobby - Player has existing game state, navigating directly to game room.");
+        navigate(`/game/${partyData.id}`, { state: { selectedFruits: existingGameState.selected_fruits, gridSize: partyData.grid_size } });
+      } else {
+        // Otherwise, go to fruit selection
+        console.log("Lobby - Player does not have existing game state, navigating to fruit selection.");
+        navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: partyData.grid_size } });
+      }
+
     } catch (error: any) {
-      console.error('Lobby - Error joining party:', error.message); // Changed from room
-      showError(`Failed to join party: ${error.message}`); // Changed from room
+      console.error('Lobby - Error joining party:', error.message);
+      showError(`Failed to join party: ${error.message}`);
     } finally {
       setIsJoining(false);
     }
@@ -149,41 +173,41 @@ const Lobby: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6 justify-center">
           <Card className="w-full max-w-sm bg-emerald-50 border-emerald-300 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-lg text-emerald-800">Join Existing Party</CardTitle> {/* Changed from Room */}
-              <CardDescription className="text-emerald-700">Enter a party code to join a game.</CardDescription> {/* Changed from room */}
+              <CardTitle className="text-lg text-emerald-800">Join Existing Party</CardTitle>
+              <CardDescription className="text-emerald-700">Enter a party code to join a game.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Input
                 type="text"
-                placeholder="Enter Party Code" // Changed from Room Code
-                value={partyCodeInput} // Changed from roomCodeInput
-                onChange={(e) => setPartyCodeInput(e.target.value)} // Changed from setRoomCodeInput
+                placeholder="Enter Party Code"
+                value={partyCodeInput}
+                onChange={(e) => setPartyCodeInput(e.target.value)}
                 className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600"
-                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady} // Removed `partyCodeInput.trim() === ''`
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
                 aria-label="Party Code"
               />
               <Button
-                onClick={handleJoinParty} // Changed from handleJoinRoom
-                disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady} // Changed from roomCodeInput
+                onClick={handleJoinParty}
+                disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
-                {isJoining ? 'Joining...' : 'Join'} {/* Changed from Room */}
+                {isJoining ? 'Joining...' : 'Join'}
               </Button>
             </CardContent>
           </Card>
 
           <Card className="w-full max-w-md bg-lime-50 border-lime-300 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-lg text-lime-800">Create New Party</CardTitle> {/* Changed from Room */}
+              <CardTitle className="text-lg text-lime-800">Create New Party</CardTitle>
               <CardDescription className="text-lime-700">Start a fresh game for your friends.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
-                onClick={handleCreateParty} // Changed from handleCreateRoom
+                onClick={handleCreateParty}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
                 className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300"
               >
-                {isCreating ? 'Creating...' : 'Create'} {/* Changed from Room */}
+                {isCreating ? 'Creating...' : 'Create'}
               </Button>
             </CardContent>
           </Card>
