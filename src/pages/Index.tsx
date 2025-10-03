@@ -17,7 +17,7 @@ const Index = () => {
           First person to get a column, diagonal or the entire card wins. Play for fun, points, bragging rights, or more Caipis!
         </p>
         <img
-          src="/grid_example.jpg"
+          src="/welcome_grid.jpg"
           alt="CaipiQuest Bingo Grid Example"
           className="mx-auto my-8 max-w-full h-auto rounded-lg shadow-lg border-2 border-lime-300"
         />
