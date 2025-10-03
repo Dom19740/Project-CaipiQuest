@@ -23,7 +23,7 @@ const allFruitsData = [
   { name: 'dragon_fruit', emoji: '🐉' }, // Added Dragon Fruit
   { name: 'banana', emoji: '🍌' },       // Added Banana
   { name: 'plum', emoji: '🟣' },         // Added Plum
-  { name: 'grapes', emoji: '🍇' },       // Added Grapes
+  { name: 'watermelon', emoji: '🍉' },   // Added Watermelon
 ];
 
 const FruitSelection: React.FC = () => {

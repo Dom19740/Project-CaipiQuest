@@ -21,7 +21,7 @@ const fruitData: { [key: string]: { emoji: string } } = {
   dragon_fruit: { emoji: '🐉' },
   banana: { emoji: '🍌' },
   plum: { emoji: '🟣' },
-  grapes: { emoji: '🍇' },
+  watermelon: { emoji: '🍉' }, // Added watermelon
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
