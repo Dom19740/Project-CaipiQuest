@@ -87,7 +87,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
       {/* Top row labels */}
       {displayFruits.map((fruit, index) => (
-        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border-2 border-lime-400">
+        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-lime-800 font-semibold rounded-md shadow-md border-2 border-lime-400">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
       ))}
@@ -96,7 +96,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       {Array(gridSize).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
-          <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-lime-200 to-yellow-200 text-lime-800 font-semibold rounded-md shadow-md border-2 border-lime-400">
+          <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 text-lime-800 font-semibold rounded-md shadow-md border-2 border-lime-400">
             <FruitIcon fruit={displayFruits[rowIndex]} size="lg" />
           </div>
 
