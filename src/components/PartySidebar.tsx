@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 interface PlayerScore {
   id: string;
   name: string;
-  squaresClicked: number;
+  caipisCount: number; // Changed from squaresClicked
   isMe: boolean;
 }
 
@@ -45,7 +45,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores }) 
                 )}
               >
                 <span className="text-gray-800">{player.name} {player.isMe && "(You)"}</span>
-                <span className="text-gray-600">{player.squaresClicked} squares</span>
+                <span className="text-gray-600">{player.caipisCount} caipis</span> {/* Changed text and prop */}
               </li>
             ))}
           </ul>

@@ -14,12 +14,12 @@ interface BingoAlert {
 interface PlayerScore {
   id: string;
   name: string;
-  squaresClicked: number;
+  caipisCount: number; // Changed from squaresClicked
   isMe: boolean;
 }
 
 interface GameRoomRealtimeData {
-  partyBingoAlerts: BingoAlert[]; // Changed from roomBingoAlerts
+  partyBingoAlerts: BingoAlert[];
   playerScores: PlayerScore[];
   showConfetti: boolean;
   confettiConfig: {
@@ -43,23 +43,61 @@ interface GameRoomRealtimeData {
   }>>;
 }
 
-const countCheckedSquares = (grid: boolean[][]): number => {
-  if (!grid || grid.length === 0) return 0;
-  return grid.flat().filter(Boolean).length;
+// New function to count unique caipis
+const countCheckedCaipis = (grid: boolean[][], selectedFruits: string[], gridSize: number): number => {
+  if (!grid || grid.length === 0 || !selectedFruits || selectedFruits.length !== gridSize) {
+    // If selectedFruits is missing or has incorrect length, we can't determine combinations accurately.
+    // Return 0 as a safe default.
+    return 0;
+  }
+
+  const uniqueCaipis = new Set<string>();
+  const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
+
+  // Create a mutable copy of selectedFruits to act as displayFruits
+  const currentDisplayFruits = [...selectedFruits];
+
+  // Ensure 'lime' is at the center position for consistent combination generation
+  const limeIndex = currentDisplayFruits.indexOf('lime');
+  if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
+    // Swap lime to the center position if it's not already there
+    [currentDisplayFruits[CENTER_CELL_INDEX], currentDisplayFruits[limeIndex]] = [currentDisplayFruits[limeIndex], currentDisplayFruits[CENTER_CELL_INDEX]];
+  } else if (limeIndex === -1) {
+    // This case should ideally not happen if FruitSelection enforces 'lime'
+    // If lime is missing, we can't proceed with accurate combinations, so return 0.
+    console.warn("Lime not found in selected fruits for caipi counting, returning 0.");
+    return 0;
+  }
+
+  for (let rowIndex = 0; rowIndex < gridSize; rowIndex++) {
+    for (let colIndex = 0; colIndex < gridSize; colIndex++) {
+      const isCenterCell = rowIndex === CENTER_CELL_INDEX && colIndex === CENTER_CELL_INDEX;
+
+      if (grid[rowIndex][colIndex] && !isCenterCell) {
+        const fruit1 = currentDisplayFruits[rowIndex];
+        const fruit2 = currentDisplayFruits[colIndex];
+        // Create a canonical string for the combination (sorted to treat A-B and B-A as same)
+        const combination = [fruit1, fruit2].sort().join('-');
+        uniqueCaipis.add(combination);
+      }
+    }
+  }
+  return uniqueCaipis.size;
 };
 
+
 export const useGameRoomRealtime = (
-  partyId: string | undefined, // Changed from roomId
+  partyId: string | undefined,
   gridSize: number,
   myGridData: boolean[][],
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>,
   setPlayerSelectedFruits: React.Dispatch<React.SetStateAction<string[]>>,
   setGridSize: React.Dispatch<React.SetStateAction<number>>,
-  initializeOrUpdateGameState: (currentPartyId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void> // Changed from currentRoomId
+  initializeOrUpdateGameState: (currentPartyId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void>
 ): GameRoomRealtimeData => {
   const { user } = useSession();
 
-  const [partyBingoAlerts, setPartyBingoAlerts] = useState<BingoAlert[]>([]); // Changed from roomBingoAlerts
+  const [partyBingoAlerts, setPartyBingoAlerts] = useState<BingoAlert[]>([]);
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({
@@ -73,12 +111,12 @@ export const useGameRoomRealtime = (
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
   const fetchAndSetAllGameStates = useCallback(async (currentGridSize: number) => {
-    if (!partyId || !user) return; // Changed from roomId
+    if (!partyId || !user) return;
 
     const { data: allGameStates, error: allGameStatesError } = await supabase
       .from('game_states')
       .select('*')
-      .eq('room_id', partyId); // Still refers to 'room_id' in DB
+      .eq('room_id', partyId);
 
     if (allGameStatesError) {
       console.error('useGameRoomRealtime - Error fetching all game states:', allGameStatesError);
@@ -88,7 +126,7 @@ export const useGameRoomRealtime = (
     const scores: PlayerScore[] = allGameStates.map(gs => ({
       id: gs.player_id,
       name: gs.player_name,
-      squaresClicked: countCheckedSquares(gs.grid_data || []),
+      caipisCount: countCheckedCaipis(gs.grid_data || [], gs.selected_fruits || [], currentGridSize), // Use new caipi counting
       isMe: gs.player_id === user.id,
     }));
     setPlayerScores(scores);
@@ -107,37 +145,37 @@ export const useGameRoomRealtime = (
       }
       setPlayerSelectedFruits(myGameState.selected_fruits || []);
     }
-  }, [partyId, user, setMyGridData, setPlayerSelectedFruits]); // Changed from roomId
+  }, [partyId, user, setMyGridData, setPlayerSelectedFruits]);
 
-  const fetchInitialPartyAlerts = useCallback(async () => { // Changed from fetchInitialRoomAlerts
-    if (!partyId) return; // Changed from roomId
-    const { data: party, error } = await supabase // Changed from room
+  const fetchInitialPartyAlerts = useCallback(async () => {
+    if (!partyId) return;
+    const { data: party, error } = await supabase
       .from('rooms')
       .select('bingo_alerts')
-      .eq('id', partyId) // Changed from roomId
+      .eq('id', partyId)
       .single();
 
     if (error) {
-      console.error('useGameRoomRealtime - Error fetching initial party alerts:', error); // Changed from room alerts
+      console.error('useGameRoomRealtime - Error fetching initial party alerts:', error);
       return;
     }
-    setPartyBingoAlerts(party?.bingo_alerts || []); // Changed from setRoomBingoAlerts, room
-  }, [partyId]); // Changed from roomId
+    setPartyBingoAlerts(party?.bingo_alerts || []);
+  }, [partyId]);
 
   useEffect(() => {
-    if (!partyId || !user) return; // Changed from roomId
+    if (!partyId || !user) return;
 
-    fetchInitialPartyAlerts(); // Call this on mount to get existing alerts // Changed from fetchInitialRoomAlerts
+    fetchInitialPartyAlerts();
 
     const channel = supabase
-      .channel(`party:${partyId}`) // Changed channel name
+      .channel(`party:${partyId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'game_states',
-          filter: `room_id=eq.${partyId}`, // Still refers to 'room_id' in DB
+          filter: `room_id=eq.${partyId}`,
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -152,10 +190,10 @@ export const useGameRoomRealtime = (
           } else if (payload.eventType === 'UPDATE') {
             const updatedGameState = payload.new as { id: string; player_id: string; player_name: string; grid_data: boolean[][]; selected_fruits: string[] };
             setPlayerScores(prevScores => {
-              const newSquaresClicked = countCheckedSquares(updatedGameState.grid_data || []);
+              const newCaipisCount = countCheckedCaipis(updatedGameState.grid_data || [], updatedGameState.selected_fruits || [], gridSize); // Use new caipi counting
               return prevScores.map(score =>
                 score.id === updatedGameState.player_id
-                  ? { ...score, squaresClicked: newSquaresClicked, name: updatedGameState.player_name }
+                  ? { ...score, caipisCount: newCaipisCount, name: updatedGameState.player_name } // Update caipisCount
                   : score
               );
             });
@@ -176,18 +214,18 @@ export const useGameRoomRealtime = (
           event: 'UPDATE',
           schema: 'public',
           table: 'rooms',
-          filter: `id=eq.${partyId}`, // Still refers to 'id' in DB
+          filter: `id=eq.${partyId}`,
         },
         async (payload) => {
-          const updatedParty = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number }; // Changed from updatedRoom
+          const updatedParty = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number };
 
-          if (updatedParty.last_refreshed_at) { // Changed from updatedRoom
+          if (updatedParty.last_refreshed_at) {
             await fetchAndSetAllGameStates(gridSize);
           }
 
-          if (updatedParty.bingo_alerts) { // Changed from updatedRoom
-            setPartyBingoAlerts(prevPartyBingoAlerts => { // Changed from setRoomBingoAlerts
-              const incomingAlerts = updatedParty.bingo_alerts || []; // Changed from updatedRoom
+          if (updatedParty.bingo_alerts) {
+            setPartyBingoAlerts(prevPartyBingoAlerts => {
+              const incomingAlerts = updatedParty.bingo_alerts || [];
               const newAlertsForConfetti = incomingAlerts.filter(
                 (incomingAlert: BingoAlert) => !prevPartyBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
               );
@@ -206,10 +244,10 @@ export const useGameRoomRealtime = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyAlerts]); // Changed from roomId, fetchInitialRoomAlerts
+  }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyAlerts]);
 
   return {
-    partyBingoAlerts, // Changed from roomBingoAlerts
+    partyBingoAlerts,
     playerScores,
     showConfetti,
     confettiConfig,
