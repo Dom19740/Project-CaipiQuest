@@ -92,7 +92,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
                 )}
               >
                 <span className="text-gray-800">{player.name} {player.isMe && "(You)"}</span>
-                <span className="text-gray-600">{player.caipisCount} caipis</span>
+                <span className="text-gray-600">{player.caipisCount} Caipis</span>
               </li>
             ))}
           </ul>
