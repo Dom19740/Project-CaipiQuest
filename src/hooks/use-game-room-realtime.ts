@@ -19,7 +19,7 @@ interface PlayerScore {
 }
 
 interface GameRoomRealtimeData {
-  roomBingoAlerts: BingoAlert[];
+  partyBingoAlerts: BingoAlert[]; // Changed from roomBingoAlerts
   playerScores: PlayerScore[];
   showConfetti: boolean;
   confettiConfig: {
@@ -49,17 +49,17 @@ const countCheckedSquares = (grid: boolean[][]): number => {
 };
 
 export const useGameRoomRealtime = (
-  roomId: string | undefined,
+  partyId: string | undefined, // Changed from roomId
   gridSize: number,
   myGridData: boolean[][],
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>,
   setPlayerSelectedFruits: React.Dispatch<React.SetStateAction<string[]>>,
-  setGridSize: React.Dispatch<React.SetStateAction<number>>, // Still passed, but its usage for dynamic grid size changes is removed
-  initializeOrUpdateGameState: (currentRoomId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void>
+  setGridSize: React.Dispatch<React.SetStateAction<number>>,
+  initializeOrUpdateGameState: (currentPartyId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void> // Changed from currentRoomId
 ): GameRoomRealtimeData => {
   const { user } = useSession();
 
-  const [roomBingoAlerts, setRoomBingoAlerts] = useState<BingoAlert[]>([]);
+  const [partyBingoAlerts, setPartyBingoAlerts] = useState<BingoAlert[]>([]); // Changed from roomBingoAlerts
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiConfig, setConfettiConfig] = useState({
@@ -73,12 +73,12 @@ export const useGameRoomRealtime = (
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
 
   const fetchAndSetAllGameStates = useCallback(async (currentGridSize: number) => {
-    if (!roomId || !user) return;
+    if (!partyId || !user) return; // Changed from roomId
 
     const { data: allGameStates, error: allGameStatesError } = await supabase
       .from('game_states')
       .select('*')
-      .eq('room_id', roomId);
+      .eq('room_id', partyId); // Still refers to 'room_id' in DB
 
     if (allGameStatesError) {
       console.error('useGameRoomRealtime - Error fetching all game states:', allGameStatesError);
@@ -107,37 +107,37 @@ export const useGameRoomRealtime = (
       }
       setPlayerSelectedFruits(myGameState.selected_fruits || []);
     }
-  }, [roomId, user, setMyGridData, setPlayerSelectedFruits]);
+  }, [partyId, user, setMyGridData, setPlayerSelectedFruits]); // Changed from roomId
 
-  const fetchInitialRoomAlerts = useCallback(async () => {
-    if (!roomId) return;
-    const { data: room, error } = await supabase
+  const fetchInitialPartyAlerts = useCallback(async () => { // Changed from fetchInitialRoomAlerts
+    if (!partyId) return; // Changed from roomId
+    const { data: party, error } = await supabase // Changed from room
       .from('rooms')
       .select('bingo_alerts')
-      .eq('id', roomId)
+      .eq('id', partyId) // Changed from roomId
       .single();
 
     if (error) {
-      console.error('useGameRoomRealtime - Error fetching initial room alerts:', error);
+      console.error('useGameRoomRealtime - Error fetching initial party alerts:', error); // Changed from room alerts
       return;
     }
-    setRoomBingoAlerts(room?.bingo_alerts || []);
-  }, [roomId]);
+    setPartyBingoAlerts(party?.bingo_alerts || []); // Changed from setRoomBingoAlerts, room
+  }, [partyId]); // Changed from roomId
 
   useEffect(() => {
-    if (!roomId || !user) return;
+    if (!partyId || !user) return; // Changed from roomId
 
-    fetchInitialRoomAlerts(); // Call this on mount to get existing alerts
+    fetchInitialPartyAlerts(); // Call this on mount to get existing alerts // Changed from fetchInitialRoomAlerts
 
     const channel = supabase
-      .channel(`room:${roomId}`)
+      .channel(`party:${partyId}`) // Changed channel name
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'game_states',
-          filter: `room_id=eq.${roomId}`,
+          filter: `room_id=eq.${partyId}`, // Still refers to 'room_id' in DB
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -176,20 +176,20 @@ export const useGameRoomRealtime = (
           event: 'UPDATE',
           schema: 'public',
           table: 'rooms',
-          filter: `id=eq.${roomId}`,
+          filter: `id=eq.${partyId}`, // Still refers to 'id' in DB
         },
         async (payload) => {
-          const updatedRoom = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number };
+          const updatedParty = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number }; // Changed from updatedRoom
 
-          if (updatedRoom.last_refreshed_at) {
+          if (updatedParty.last_refreshed_at) { // Changed from updatedRoom
             await fetchAndSetAllGameStates(gridSize);
           }
 
-          if (updatedRoom.bingo_alerts) {
-            setRoomBingoAlerts(prevRoomBingoAlerts => {
-              const incomingAlerts = updatedRoom.bingo_alerts || [];
+          if (updatedParty.bingo_alerts) { // Changed from updatedRoom
+            setPartyBingoAlerts(prevPartyBingoAlerts => { // Changed from setRoomBingoAlerts
+              const incomingAlerts = updatedParty.bingo_alerts || []; // Changed from updatedRoom
               const newAlertsForConfetti = incomingAlerts.filter(
-                (incomingAlert: BingoAlert) => !prevRoomBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
+                (incomingAlert: BingoAlert) => !prevPartyBingoAlerts.some(existingAlert => existingAlert.id === incomingAlert.id)
               );
 
               if (newAlertsForConfetti.length > 0) {
@@ -199,7 +199,6 @@ export const useGameRoomRealtime = (
               return incomingAlerts;
             });
           }
-          // Removed logic for handling updatedRoom.grid_size as it's now fixed at 5x5
         }
       )
       .subscribe();
@@ -207,10 +206,10 @@ export const useGameRoomRealtime = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialRoomAlerts]);
+  }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyAlerts]); // Changed from roomId, fetchInitialRoomAlerts
 
   return {
-    roomBingoAlerts,
+    partyBingoAlerts, // Changed from roomBingoAlerts
     playerScores,
     showConfetti,
     confettiConfig,

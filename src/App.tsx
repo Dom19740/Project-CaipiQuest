@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Lobby from "./pages/Lobby";
-import FruitSelection from "./pages/FruitSelection"; // New import
+import FruitSelection from "./pages/FruitSelection";
 import GameRoom from "./pages/GameRoom";
 import { useSession } from "./components/SessionContextProvider";
 
@@ -32,7 +32,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/lobby" element={<Lobby />} />
-            <Route path="/select-fruits" element={<FruitSelection />} /> {/* New route */}
+            <Route path="/select-fruits" element={<FruitSelection />} />
             <Route path="/game/:roomId" element={<GameRoom />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

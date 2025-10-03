@@ -6,12 +6,12 @@ interface BingoAlert {
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
   playerName?: string;
-  playerId?: string; // Added playerId
+  playerId?: string;
 }
 
-interface RoomAlertsCardProps {
+interface PartyAlertsCardProps {
   alerts: BingoAlert[];
-  currentUserId: string | null; // New prop for current user ID
+  currentUserId: string | null;
 }
 
 const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
@@ -29,13 +29,13 @@ const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
   }
 };
 
-const RoomAlertsCard: React.FC<RoomAlertsCardProps> = ({ alerts, currentUserId }) => {
+const PartyAlertsCard: React.FC<PartyAlertsCardProps> = ({ alerts, currentUserId }) => {
   return (
     <Card className="w-full flex-1 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
       <CardHeader className="bg-lime-200 border-b border-lime-400">
         <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 max-h-[150px] overflow-y-auto"> {/* Fixed height and scrollable */}
+      <CardContent className="p-4 max-h-[150px] overflow-y-auto">
         {alerts.length === 0 ? (
           <p className="text-gray-600 italic">No bingo alerts yet...</p>
         ) : (
@@ -52,4 +52,4 @@ const RoomAlertsCard: React.FC<RoomAlertsCardProps> = ({ alerts, currentUserId }
   );
 };
 
-export default RoomAlertsCard;
+export default PartyAlertsCard;

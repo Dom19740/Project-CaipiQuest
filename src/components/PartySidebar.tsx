@@ -10,12 +10,12 @@ interface PlayerScore {
   isMe: boolean;
 }
 
-interface RoomSidebarProps {
-  roomCode: string;
+interface PartySidebarProps {
+  partyCode: string;
   playerScores: PlayerScore[];
 }
 
-const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => {
+const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores }) => {
   const playerCount = playerScores.length;
 
   return (
@@ -23,7 +23,7 @@ const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => 
       <CardHeader className="bg-lime-200 border-b border-lime-400">
         <CardTitle className="text-lime-800 text-2xl flex items-center justify-between mb-2">
           <span className="flex items-center">
-            Room: {roomCode}
+            Party: {partyCode}
           </span>
           <span className="flex items-center text-lg">
             <Users className="mr-2 h-5 w-5" /> {playerCount}
@@ -33,7 +33,7 @@ const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => 
       </CardHeader>
       <CardContent className="p-4">
         {playerScores.length === 0 ? (
-          <p className="text-gray-600 italic">No players in this room yet.</p>
+          <p className="text-gray-600 italic">No players in this party yet.</p>
         ) : (
           <ul className="space-y-2">
             {playerScores.map((player) => (
@@ -55,4 +55,4 @@ const RoomSidebar: React.FC<RoomSidebarProps> = ({ roomCode, playerScores }) => 
   );
 };
 
-export default RoomSidebar;
+export default PartySidebar;

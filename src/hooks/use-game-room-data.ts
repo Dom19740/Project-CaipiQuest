@@ -6,14 +6,14 @@ import { showError } from '@/utils/toast';
 
 interface GameRoomData {
   gridSize: number;
-  roomCode: string;
-  roomCreatorId: string | null;
+  partyCode: string;
+  partyCreatorId: string | null;
   myGameStateId: string | null;
   myGridData: boolean[][];
   myPlayerName: string;
   playerSelectedFruits: string[];
   isLoadingInitialData: boolean;
-  initializeOrUpdateGameState: (currentRoomId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void>;
+  initializeOrUpdateGameState: (currentPartyId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => Promise<void>;
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>;
   setPlayerSelectedFruits: React.Dispatch<React.SetStateAction<string[]>>;
   setGridSize: React.Dispatch<React.SetStateAction<number>>;
@@ -25,17 +25,17 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
   const { user, isLoading: isLoadingSession } = useSession();
 
   const [gridSize, setGridSize] = useState<number>(initialGridSizeFromState || 5);
-  const [roomCode, setRoomCode] = useState<string>('');
-  const [roomCreatorId, setRoomCreatorId] = useState<string | null>(null);
+  const [partyCode, setPartyCode] = useState<string>('');
+  const [partyCreatorId, setPartyCreatorId] = useState<string | null>(null);
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(gridSize).fill(Array(gridSize).fill(false)));
   const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [playerSelectedFruits, setPlayerSelectedFruits] = useState<string[]>([]);
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
 
-  const initializeOrUpdateGameState = useCallback(async (currentRoomId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => {
-    if (!currentUser || !currentRoomId || !currentSelectedFruits || currentSelectedFruits.length !== currentGridSize) {
-      console.error("Missing data for initializeOrUpdateGameState:", { currentUser, currentRoomId, currentSelectedFruits, currentGridSize });
+  const initializeOrUpdateGameState = useCallback(async (currentPartyId: string, currentUser: any, currentSelectedFruits: string[], currentGridSize: number) => {
+    if (!currentUser || !currentPartyId || !currentSelectedFruits || currentSelectedFruits.length !== currentGridSize) {
+      console.error("Missing data for initializeOrUpdateGameState:", { currentUser, currentPartyId, currentSelectedFruits, currentGridSize });
       return;
     }
 
@@ -45,7 +45,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
     const { data: existingGameState, error: existingGameStateError } = await supabase
       .from('game_states')
       .select('id, player_name, grid_data, selected_fruits')
-      .eq('room_id', currentRoomId)
+      .eq('room_id', currentPartyId)
       .eq('player_id', currentUser.id)
       .single();
 
@@ -62,7 +62,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
       const { data: newGameState, error: createError } = await supabase
         .from('game_states')
         .insert({
-          room_id: currentRoomId,
+          room_id: currentPartyId,
           player_id: currentUser.id,
           player_name: playerNameFromStorage,
           grid_data: initialGrid,
@@ -119,7 +119,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
   useEffect(() => {
     if (isLoadingSession || !user || !roomId) {
       if (!isLoadingSession && !user) {
-        console.warn("useGameRoomData - No user session or room ID, redirecting to lobby.");
+        console.warn("useGameRoomData - No user session or party ID, redirecting to lobby.");
         navigate('/lobby');
       }
       return;
@@ -127,23 +127,23 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
 
     const fetchInitialData = async () => {
       setIsLoadingInitialData(true);
-      const { data: room, error: roomError } = await supabase
-        .from('rooms')
+      const { data: party, error: partyError } = await supabase
+        .from('rooms') // Still refers to 'rooms' table in DB
         .select('code, created_by, bingo_alerts, grid_size')
         .eq('id', roomId)
         .single();
 
-      if (roomError) {
-        showError('Failed to load room. It might not exist or you do not have access.');
-        console.error('useGameRoomData - Error fetching room:', roomError);
+      if (partyError) {
+        showError('Failed to load party. It might not exist or you do not have access.');
+        console.error('useGameRoomData - Error fetching party:', partyError);
         navigate('/lobby');
         setIsLoadingInitialData(false);
         return;
       }
-      setRoomCode(room.code);
-      setRoomCreatorId(room.created_by);
-      const currentRoomGridSize = room.grid_size || 5;
-      setGridSize(currentRoomGridSize);
+      setPartyCode(party.code);
+      setPartyCreatorId(party.created_by);
+      const currentPartyGridSize = party.grid_size || 5;
+      setGridSize(currentPartyGridSize);
 
       const { data: playerGameState, error: playerGameStateError } = await supabase
         .from('game_states')
@@ -160,18 +160,18 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
         return;
       }
 
-      const fruitsToUse = initialSelectedFruitsFromState && initialSelectedFruitsFromState.length === currentRoomGridSize
+      const fruitsToUse = initialSelectedFruitsFromState && initialSelectedFruitsFromState.length === currentPartyGridSize
         ? initialSelectedFruitsFromState
         : (playerGameState?.selected_fruits || []);
 
-      if (!fruitsToUse || fruitsToUse.length !== currentRoomGridSize) {
-        showError(`Please select exactly ${currentRoomGridSize} fruits before entering the game room.`);
-        navigate('/select-fruits', { state: { roomId, gridSize: currentRoomGridSize } });
+      if (!fruitsToUse || fruitsToUse.length !== currentPartyGridSize) {
+        showError(`Please select exactly ${currentPartyGridSize} fruits before entering the game party.`);
+        navigate('/select-fruits', { state: { roomId, gridSize: currentPartyGridSize } });
         setIsLoadingInitialData(false);
         return;
       }
 
-      await initializeOrUpdateGameState(roomId, user, fruitsToUse, currentRoomGridSize);
+      await initializeOrUpdateGameState(roomId, user, fruitsToUse, currentPartyGridSize);
       setIsLoadingInitialData(false);
     };
 
@@ -180,8 +180,8 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
 
   return {
     gridSize,
-    roomCode,
-    roomCreatorId,
+    partyCode,
+    partyCreatorId,
     myGameStateId,
     myGridData,
     myPlayerName,

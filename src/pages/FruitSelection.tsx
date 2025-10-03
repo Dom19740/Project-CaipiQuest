@@ -33,7 +33,7 @@ const FruitSelection: React.FC = () => {
 
   useEffect(() => {
     if (!roomId) {
-      showError("Room ID not found. Please create or join a room first.");
+      showError("Party ID not found. Please create or join a party first."); // Changed from Room ID, room
       navigate('/lobby');
     }
   }, [roomId, navigate]);

@@ -3,11 +3,11 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
-import RoomSidebar from '@/components/RoomSidebar';
+import PartySidebar from '@/components/PartySidebar'; // Changed from RoomSidebar
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import GameResetDialog from '@/components/GameResetDialog';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
-import RoomAlertsCard from '@/components/RoomAlertsCard';
+import PartyAlertsCard from '@/components/PartyAlertsCard'; // Changed from RoomAlertsCard
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -25,8 +25,8 @@ const GameRoom: React.FC = () => {
 
   const {
     gridSize,
-    roomCode,
-    roomCreatorId,
+    partyCode, // Changed from roomCode
+    partyCreatorId, // Changed from roomCreatorId
     myGameStateId,
     myGridData,
     myPlayerName,
@@ -39,7 +39,7 @@ const GameRoom: React.FC = () => {
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
-    roomBingoAlerts,
+    partyBingoAlerts, // Changed from roomBingoAlerts
     playerScores,
     showConfetti,
     confettiConfig,
@@ -50,7 +50,7 @@ const GameRoom: React.FC = () => {
     fetchAndSetAllGameStates,
     setConfettiConfig,
   } = useGameRoomRealtime(
-    roomId,
+    roomId, // Still passing roomId to hook
     gridSize,
     myGridData,
     setMyGridData,
@@ -65,12 +65,12 @@ const GameRoom: React.FC = () => {
     handleResetGame,
     handleGlobalRefresh,
   } = useGameLogic(
-    roomId,
+    roomId, // Still passing roomId to hook
     myGameStateId,
     myGridData,
     setMyGridData,
     myPlayerName,
-    roomCreatorId,
+    partyCreatorId, // Changed from roomCreatorId
     playerSelectedFruits,
     gridSize,
     fetchAndSetAllGameStates,
@@ -80,7 +80,7 @@ const GameRoom: React.FC = () => {
   if (isLoadingSession || isLoadingInitialData || !user || !roomId || playerSelectedFruits.length !== gridSize) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400">
-        <p className="text-xl text-gray-700">Loading game room...</p>
+        <p className="text-xl text-gray-700">Loading game party...</p> {/* Changed from game room */}
       </div>
     );
   }
@@ -91,9 +91,9 @@ const GameRoom: React.FC = () => {
       <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-16 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
-      <div className="flex flex-col lg:flex-row gap-8 items-center w-full max-w-6xl"> {/* Changed items-start to items-center */}
+      <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl">
         {/* Bingo Grid */}
-        <div className="flex-1 flex justify-center"> {/* Wrapper to center grid */}
+        <div className="flex-1 flex justify-center">
           <BingoGrid
             onBingo={handleBingo}
             resetKey={resetKey}
@@ -105,14 +105,14 @@ const GameRoom: React.FC = () => {
         </div>
 
         {/* Right Panel: Cards and Buttons */}
-        <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md"> {/* Right panel container */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center"> {/* Container for RoomSidebar and RoomAlertsCard, added justify-center */}
-            {roomCode && <RoomSidebar roomCode={roomCode} playerScores={playerScores} />}
-            <RoomAlertsCard alerts={roomBingoAlerts} currentUserId={user.id} />
+        <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
+          <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+            {partyCode && <PartySidebar partyCode={partyCode} playerScores={playerScores} />} {/* Changed from RoomSidebar, roomCode */}
+            <PartyAlertsCard alerts={partyBingoAlerts} currentUserId={user.id} /> {/* Changed from RoomAlertsCard, roomBingoAlerts */}
           </div>
 
           {/* Buttons */}
-          <div className="flex flex-row gap-2 justify-center w-full"> {/* Buttons container */}
+          <div className="flex flex-row gap-2 justify-center w-full">
             <GameResetDialog onConfirm={handleResetGame} />
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
               Refresh

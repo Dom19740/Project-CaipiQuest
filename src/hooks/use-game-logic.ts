@@ -18,12 +18,12 @@ const generateAlertId = () => {
 };
 
 export const useGameLogic = (
-  roomId: string | undefined,
+  partyId: string | undefined, // Changed from roomId
   myGameStateId: string | null,
   myGridData: boolean[][],
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>,
   myPlayerName: string,
-  roomCreatorId: string | null,
+  partyCreatorId: string | null, // Changed from roomCreatorId
   playerSelectedFruits: string[],
   gridSize: number,
   fetchAndSetAllGameStates: (currentGridSize: number) => Promise<void>,
@@ -32,7 +32,7 @@ export const useGameLogic = (
   const { user } = useSession();
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
-    if (!myGameStateId || !user || !roomId) return;
+    if (!myGameStateId || !user || !partyId) return; // Changed from roomId
     const centerCellIndex = Math.floor(gridSize / 2);
     if (row === centerCellIndex && col === centerCellIndex) return;
 
@@ -55,53 +55,53 @@ export const useGameLogic = (
     } else {
       await fetchAndSetAllGameStates(gridSize);
 
-      if (user.id === roomCreatorId) {
-        const { error: updateRoomError } = await supabase
+      if (user.id === partyCreatorId) { // Changed from roomCreatorId
+        const { error: updatePartyError } = await supabase // Changed from updateRoomError
           .from('rooms')
           .update({ last_refreshed_at: new Date().toISOString() })
-          .eq('id', roomId)
+          .eq('id', partyId) // Changed from roomId
           .eq('created_by', user.id);
 
-        if (updateRoomError) {
-          console.error('useGameLogic - Error triggering global refresh from cell toggle:', updateRoomError);
+        if (updatePartyError) { // Changed from updateRoomError
+          console.error('useGameLogic - Error triggering global refresh from cell toggle:', updatePartyError); // Changed from updateRoomError
         }
       }
     }
-  }, [myGridData, myGameStateId, user, roomId, roomCreatorId, gridSize, fetchAndSetAllGameStates, setMyGridData]);
+  }, [myGridData, myGameStateId, user, partyId, partyCreatorId, gridSize, fetchAndSetAllGameStates, setMyGridData]); // Changed from roomId, roomCreatorId
 
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string) => {
-    if (!roomId || !user || !myPlayerName) return;
+    if (!partyId || !user || !myPlayerName) return; // Changed from roomId
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
-    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id }; // Added playerId
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id };
 
-    const { data: currentRoom, error: fetchRoomError } = await supabase
+    const { data: currentParty, error: fetchPartyError } = await supabase // Changed from currentRoom, fetchRoomError
       .from('rooms')
       .select('bingo_alerts')
-      .eq('id', roomId)
+      .eq('id', partyId) // Changed from roomId
       .single();
 
-    if (fetchRoomError) {
-      showError('Failed to fetch room alerts.');
-      console.error('useGameLogic - Error fetching room alerts for bingo:', fetchRoomError);
+    if (fetchPartyError) { // Changed from fetchRoomError
+      showError('Failed to fetch party alerts.'); // Changed from room alerts
+      console.error('useGameLogic - Error fetching party alerts for bingo:', fetchPartyError); // Changed from room alerts, fetchRoomError
       return;
     }
 
-    const existingAlerts = currentRoom?.bingo_alerts || [];
+    const existingAlerts = currentParty?.bingo_alerts || []; // Changed from currentRoom
     const updatedAlerts = [newAlert, ...existingAlerts];
 
-    const { error: updateRoomAlertsError } = await supabase
+    const { error: updatePartyAlertsError } = await supabase // Changed from updateRoomAlertsError
       .from('rooms')
       .update({ bingo_alerts: updatedAlerts })
-      .eq('id', roomId);
+      .eq('id', partyId); // Changed from roomId
 
-    if (updateRoomAlertsError) {
+    if (updatePartyAlertsError) { // Changed from updateRoomAlertsError
       showError('Failed to record bingo alert globally.');
-      console.error('useGameLogic - Error recording global bingo:', updateRoomAlertsError);
+      console.error('useGameLogic - Error recording global bingo:', updatePartyAlertsError); // Changed from updateRoomAlertsError
     } else {
       showSuccess(message);
     }
-  }, [roomId, user, myPlayerName]);
+  }, [partyId, user, myPlayerName]); // Changed from roomId
 
   const handleResetGame = useCallback(async () => {
     if (!myGameStateId || !user || !playerSelectedFruits) return;
@@ -130,7 +130,7 @@ export const useGameLogic = (
   }, [myGameStateId, user, playerSelectedFruits, gridSize, setResetKey, setMyGridData]);
 
   const handleGlobalRefresh = useCallback(async () => {
-    if (!roomId || !user) return;
+    if (!partyId || !user) return; // Changed from roomId
 
     await fetchAndSetAllGameStates(gridSize);
     showSuccess('Your data has been refreshed!');
@@ -138,14 +138,14 @@ export const useGameLogic = (
     const { error } = await supabase
       .from('rooms')
       .update({ last_refreshed_at: new Date().toISOString() })
-      .eq('id', roomId)
+      .eq('id', partyId) // Changed from roomId
       .eq('created_by', user.id);
 
     if (error) {
-      showError('Failed to trigger global refresh for others. Only the room creator can do this.');
+      showError('Failed to trigger global refresh for others. Only the party creator can do this.'); // Changed from room creator
       console.error('useGameLogic - Error triggering global refresh:', error);
     }
-  }, [roomId, user, gridSize, fetchAndSetAllGameStates]);
+  }, [partyId, user, gridSize, fetchAndSetAllGameStates]); // Changed from roomId
 
   return {
     handleCellToggle,
