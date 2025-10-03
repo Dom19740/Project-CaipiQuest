@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import FruitIcon from './FruitIcon';
 
-interface BingoAlert { // Need to define this interface here or import it
+interface BingoAlert {
   id: string;
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
@@ -11,46 +11,47 @@ interface BingoAlert { // Need to define this interface here or import it
 }
 
 interface BingoGridProps {
-  onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string, canonicalId: string) => void; // Added canonicalId
-  resetKey: number; // New prop to trigger reset
-  initialGridState: boolean[][]; // Controlled state
-  onCellToggle: (row: number, col: number) => void; // Callback for cell clicks
-  selectedFruits: string[]; // New prop for selected fruits
-  gridSize: number; // New prop for dynamic grid size
-  partyBingoAlerts: BingoAlert[]; // NEW PROP: Existing alerts from DB
-  initialAlertsLoaded: boolean; // NEW PROP: Flag to indicate initial alerts are loaded
+  onBingo: (type: 'rowCol' | 'diagonal' | 'fullGrid', message: string, canonicalId: string) => void;
+  resetKey: number;
+  initialGridState: boolean[][];
+  onCellToggle: (row: number, col: number) => void;
+  selectedFruits: string[];
+  gridSize: number;
+  partyBingoAlerts: BingoAlert[];
+  initialAlertsLoaded: boolean;
 }
 
 const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridState, onCellToggle, selectedFruits, gridSize, partyBingoAlerts, initialAlertsLoaded }) => {
   const checkedCells = initialGridState;
-  const completedBingosRef = useRef<Set<string>>(new Set());
 
-  const CSS_GRID_DIMENSION = gridSize + 1; // Total rows/columns for CSS grid (including labels)
-  const CENTER_CELL_INDEX = Math.floor(gridSize / 2); // For any NxN grid, this is N/2
+  const CSS_GRID_DIMENSION = gridSize + 1;
+  const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
 
-  // Effect to reset completedBingosRef only when resetKey changes
-  useEffect(() => {
-    completedBingosRef.current = new Set();
-  }, [resetKey]);
-
-  // Effect to populate completedBingosRef from partyBingoAlerts when they change
-  useEffect(() => {
-    if (initialAlertsLoaded) {
-      partyBingoAlerts.forEach(alert => {
-        if (alert.canonicalId) {
-          completedBingosRef.current.add(alert.canonicalId);
-        }
-      });
+  // Derive completed bingos from partyBingoAlerts and resetKey using useMemo
+  const completedBingos = useMemo(() => {
+    // If initial alerts haven't loaded yet, or if resetKey indicates a new game, start fresh.
+    // The resetKey dependency ensures this memo re-evaluates when a game reset occurs.
+    if (!initialAlertsLoaded) {
+      return new Set<string>();
     }
-  }, [partyBingoAlerts, initialAlertsLoaded]); // Only update when alerts change, don't reset here
+
+    const newSet = new Set<string>();
+    partyBingoAlerts.forEach(alert => {
+      if (alert.canonicalId) {
+        newSet.add(alert.canonicalId);
+      }
+    });
+    return newSet;
+  }, [partyBingoAlerts, initialAlertsLoaded, resetKey]); // Dependencies for useMemo
 
   const checkBingo = useCallback(() => {
     if (!checkedCells || checkedCells.length === 0) return;
 
     const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, canonicalId: string) => {
-      if (line.every(cell => cell) && !completedBingosRef.current.has(canonicalId)) {
-        onBingo(type, message, canonicalId); // Pass canonicalId to onBingo
-        completedBingosRef.current.add(canonicalId); // This adds to local ref *before* DB update
+      if (line.every(cell => cell) && !completedBingos.has(canonicalId)) {
+        onBingo(type, message, canonicalId);
+        // No need to add to a local ref here, as `completedBingos` is derived from `partyBingoAlerts` (DB state)
+        // and `onBingo` will trigger a DB update, which will then update `partyBingoAlerts` via real-time.
       }
     };
 
@@ -74,18 +75,17 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Check Full Grid
     const allCellsChecked = checkedCells.flat().every(cell => cell);
-    if (allCellsChecked && !completedBingosRef.current.has('full-grid')) {
-      onBingo('fullGrid', `completed the entire grid!`, `full-grid`); // Pass canonicalId
-      completedBingosRef.current.add('full-grid');
+    if (allCellsChecked && !completedBingos.has('full-grid')) {
+      onBingo('fullGrid', `completed the entire grid!`, `full-grid`);
     }
-  }, [checkedCells, gridSize, onBingo]);
+  }, [checkedCells, gridSize, onBingo, completedBingos]); // Add completedBingos to dependencies
 
   useEffect(() => {
     // Only check bingo if initial alerts are loaded
     if (initialAlertsLoaded) {
       checkBingo();
     }
-  }, [initialGridState, checkBingo, initialAlertsLoaded]); // Add initialAlertsLoaded to dependencies
+  }, [initialGridState, checkBingo, initialAlertsLoaded]);
 
   // Ensure selectedFruits has `gridSize` items, with 'lime' at the center
   const displayFruits = [...selectedFruits];
@@ -94,7 +94,6 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     // Swap lime to the center position if it's not already there
     [displayFruits[CENTER_CELL_INDEX], displayFruits[limeIndex]] = [displayFruits[limeIndex], displayFruits[CENTER_CELL_INDEX]];
   } else if (limeIndex === -1) {
-    // This case should ideally not happen if FruitSelection enforces 'lime'
     console.warn("Lime not found in selected fruits, adding it to center.");
     displayFruits[CENTER_CELL_INDEX] = 'lime';
   }
