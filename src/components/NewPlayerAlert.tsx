@@ -18,7 +18,7 @@ interface NewPlayerAlertProps {
 const NewPlayerAlert: React.FC<NewPlayerAlertProps> = ({ playerName, isOpen, onClose }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="mx-4"> {/* Added mx-4 for horizontal margin */}
+      <AlertDialogContent className="w-[calc(100%-2rem)]"> {/* Changed mx-4 to w-[calc(100%-2rem)] */}
         <AlertDialogHeader>
           <AlertDialogTitle className="text-lg">Player Joined!</AlertDialogTitle>
           <AlertDialogDescription>
