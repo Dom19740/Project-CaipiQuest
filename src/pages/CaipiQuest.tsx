@@ -66,19 +66,19 @@ const CaipiQuest: React.FC = () => {
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
     switch (type) {
       case 'rowCol':
-        return 'text-green-700 bg-green-100 border-green-300';
+        return 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900 border-green-300 dark:border-green-700';
       case 'diagonal':
-        return 'text-blue-700 bg-blue-100 border-blue-300';
+        return 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 border-blue-300 dark:border-blue-700';
       case 'fullGrid':
         return 'text-white bg-gradient-to-r from-purple-600 to-pink-700 border-purple-800 text-3xl font-extrabold p-4 animate-pulse';
       default:
-        return 'text-gray-700 bg-gray-100 border-gray-300';
+        return 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700';
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
-      <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-8 drop-shadow-lg">
+      <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-8 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -92,18 +92,18 @@ const CaipiQuest: React.FC = () => {
           partyBingoAlerts={[]}
           initialAlertsLoaded={true}
         />
-        <div className="flex flex-col gap-4">
-          <Card className="w-full lg:w-80 bg-white/90 backdrop-blur-sm shadow-xl border-lime-400 border-2">
-            <CardHeader className="bg-lime-200 border-b border-lime-400">
-              <CardTitle className="text-lime-800 text-2xl">Alerts</CardTitle>
+        <div className="flex flex-col gap-4 w-full lg:w-80">
+          <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-lime-400 dark:border-lime-700 border-2 text-card-foreground">
+            <CardHeader className="bg-lime-200 dark:bg-lime-900 border-b border-lime-400 dark:border-lime-700">
+              <CardTitle className="text-xl sm:text-2xl text-lime-800 dark:text-lime-200">Alerts</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               {bingoAlerts.length === 0 ? (
-                <p className="text-gray-600 italic">No bingo alerts yet...</p>
+                <p className="text-gray-600 dark:text-gray-400 italic text-base sm:text-lg">No bingo alerts yet...</p>
               ) : (
                 <ul className="space-y-2">
                   {bingoAlerts.map((alert) => (
-                    <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm ${getAlertClasses(alert.type)}`}>
+                    <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert.type)}`}>
                       {alert.message}
                     </li>
                   ))}
@@ -113,20 +113,20 @@ const CaipiQuest: React.FC = () => {
           </Card>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full lg:w-80 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105">
+              <Button variant="destructive" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg h-12"> {/* Increased height and font size */}
                 Reset Game
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="bg-white dark:bg-gray-800 text-card-foreground">
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogTitle className="text-xl sm:text-2xl">Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription className="text-gray-700 dark:text-gray-300 text-base sm:text-lg">
                   This action will clear the current bingo grid and all alerts, starting a new game.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleResetGame}>Continue</AlertDialogAction>
+                <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel> {/* Increased height and font size */}
+                <AlertDialogAction onClick={handleResetGame} className="h-12 text-base sm:text-lg">Continue</AlertDialogAction> {/* Increased height and font size */}
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

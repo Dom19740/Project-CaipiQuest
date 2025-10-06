@@ -70,12 +70,12 @@ const FruitSelection: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4">
-      <Card className="w-full max-w-2xl bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-4 border-lime-400">
+      <Card className="w-full max-w-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border-4 border-lime-400 text-card-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-4 drop-shadow-lg">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-4 drop-shadow-lg">
             Choose Your Fruits
           </CardTitle>
-          <CardDescription className="text-xl text-gray-700 mb-6">
+          <CardDescription className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-6">
             Select 5 fruits for your bingo grid. Lime is already chosen for the center!
           </CardDescription>
         </CardHeader>
@@ -85,23 +85,23 @@ const FruitSelection: React.FC = () => {
               <div
                 key={fruit.name}
                 className={`flex flex-col items-center justify-center p-3 border rounded-lg transition-all duration-200 ease-in-out
-                  ${selectedFruits.includes(fruit.name) ? 'bg-lime-200 border-lime-500 shadow-md' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}
-                  ${fruit.name === 'lime' ? 'cursor-not-allowed bg-lime-300 border-lime-600' : 'cursor-pointer hover:scale-105'}
+                  ${selectedFruits.includes(fruit.name) ? 'bg-lime-200 dark:bg-lime-700 border-lime-500 dark:border-lime-400 shadow-md' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'}
+                  ${fruit.name === 'lime' ? 'cursor-not-allowed bg-lime-300 dark:bg-lime-800 border-lime-600 dark:border-lime-500' : 'cursor-pointer hover:scale-105'}
                 `}
                 onClick={() => handleFruitToggle(fruit.name, !selectedFruits.includes(fruit.name))}
               >
                 <FruitSVG fruit={fruit.name} className="w-8 h-8" /> {/* NEW: Use FruitSVG */}
-                <span className="mt-1 text-sm font-medium text-gray-800 text-center">
+                <span className="mt-1 text-sm font-medium text-gray-800 dark:text-gray-200 text-center">
                   {fruit.name.replace(/_/g, ' ')}
                 </span>
               </div>
             ))}
           </div>
-          {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+          {error && <p className="text-red-600 dark:text-red-400 text-center mb-4">{error}</p>}
           <Button
             onClick={handleProceed}
             disabled={isProceedDisabled}
-            className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg"
+            className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14" // Increased height and font size
           >
             Start Game ({selectedFruits.length}/{fixedGridSize})
           </Button>

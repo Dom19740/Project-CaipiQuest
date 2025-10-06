@@ -83,7 +83,7 @@ const GameRoom: React.FC = () => {
   if (isLoadingSession || isLoadingInitialData || !user || !roomId || playerSelectedFruits.length !== gridSize) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400">
-        <p className="text-xl text-gray-700">Loading game party...</p>
+        <p className="text-xl text-gray-700 dark:text-gray-300">Loading game party...</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ const GameRoom: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}
         <div className="flex-1 flex flex-col items-center justify-center gap-8">
-          <h1 className="text-3xl font-extrabold drop-shadow-lg text-center text-foreground w-full">
+          <h1 className="text-3xl sm:text-4xl font-extrabold drop-shadow-lg text-center text-foreground w-full">
             🍹 <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800">CaipiQuest Bingo!</span> 🍹
           </h1>
           <BingoGrid
@@ -122,7 +122,7 @@ const GameRoom: React.FC = () => {
 
           {/* Buttons */}
           <div className="flex flex-row gap-2 justify-center w-full">
-            <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-md shadow-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105">
+            <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12"> {/* Increased height and font size */}
               Refresh
             </Button>
             <LeavePartyDialog onConfirm={() => navigate('/lobby')} />
