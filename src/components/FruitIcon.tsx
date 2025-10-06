@@ -6,7 +6,7 @@ interface FruitIconProps {
 }
 
 const fruitEmojiMap: { [key: string]: string } = {
-  lime: '', // Changed to green apple for a green fruit representation
+  lime: '🍋‍🟩', // Changed to green apple for a green fruit representation
   passionfruit: '🥭', // Changed to mango for a tropical fruit representation
   lemon: '🍋',
   strawberry: '🍓',
