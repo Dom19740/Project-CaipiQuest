@@ -64,7 +64,6 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
       <CardContent className="p-4 space-y-6">
         {/* Alerts Section */}
         <div className="bg-yellow-200/70 dark:bg-yellow-900/70 border border-yellow-500 dark:border-yellow-800 rounded-lg p-3 shadow-inner max-h-[180px] overflow-y-auto">
-          <h3 className="text-lg sm:text-xl font-semibold text-yellow-900 dark:text-yellow-100 mb-3">Bingo Alerts</h3>
           {alerts.length === 0 ? (
             <p className="text-gray-800 dark:text-gray-300 italic text-sm sm:text-base">No bingo alerts yet...</p>
           ) : (
@@ -80,7 +79,6 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
 
         {/* Player List Section */}
         <div className="bg-blue-200/70 dark:bg-blue-900/70 border border-blue-500 dark:border-blue-800 rounded-lg p-3 shadow-inner">
-          <h3 className="text-lg sm:text-xl font-semibold text-blue-900 dark:text-blue-100 mb-3">Players</h3>
           {playerScores.length === 0 ? (
             <p className="text-gray-800 dark:text-gray-300 italic text-sm sm:text-base">No players in this party yet.</p>
           ) : (
