@@ -27,16 +27,12 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   const CSS_GRID_DIMENSION = gridSize + 1;
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
 
-  // Use a ref to store the set of completed bingos
   const completedBingosRef = useRef<Set<string>>(new Set());
 
-  // Effect to update the ref when partyBingoAlerts or resetKey changes
   useEffect(() => {
-    // Reset the ref completely on game reset (resetKey changes)
     if (resetKey !== 0) { 
       completedBingosRef.current = new Set();
     }
-    // Populate the ref with alerts from the database once initial alerts are loaded
     if (initialAlertsLoaded) {
       partyBingoAlerts.forEach(alert => {
         if (alert.canonicalId) {
@@ -52,30 +48,21 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, canonicalId: string) => {
       if (line.every(cell => cell) && !completedBingosRef.current.has(canonicalId)) {
         onBingo(type, message, canonicalId);
-        // Add to ref immediately to prevent re-triggering before DB sync
         completedBingosRef.current.add(canonicalId);
       }
     };
 
-    // Removed "Check Rows" logic as per user request.
-    // for (let i = 0; i < gridSize; i++) {
-    //   checkLine(checkedCells[i], 'rowCol', `completed a line!`, `row-${i}`);
-    // }
-
-    // Check Columns
     for (let j = 0; j < gridSize; j++) {
       const column = Array(gridSize).fill(false).map((_, i) => checkedCells[i][j]);
       checkLine(column, 'rowCol', `completed a line!`, `col-${j}`);
     }
 
-    // Check Diagonals
     const diagonal1 = Array(gridSize).fill(false).map((_, i) => checkedCells[i][i]);
     checkLine(diagonal1, 'diagonal', `completed a diagonal!`, `diag-1`);
 
     const diagonal2 = Array(gridSize).fill(false).map((_, i) => checkedCells[i][gridSize - 1 - i]);
     checkLine(diagonal2, 'diagonal', `completed a diagonal!`, `diag-2`);
 
-    // Check Full Grid
     const allCellsChecked = checkedCells.flat().every(cell => cell);
     if (allCellsChecked && !completedBingosRef.current.has('full-grid')) {
       onBingo('fullGrid', `completed the entire grid!`, `full-grid`);
@@ -84,18 +71,14 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   }, [checkedCells, gridSize, onBingo]);
 
   useEffect(() => {
-    // This effect now only runs when initialGridState or initialAlertsLoaded changes.
-    // checkBingo itself is stable due to its useCallback dependencies.
     if (initialAlertsLoaded) {
       checkBingo();
     }
   }, [initialGridState, initialAlertsLoaded, checkBingo]);
 
-  // Ensure selectedFruits has `gridSize` items, with 'lime' at the center
   const displayFruits = [...selectedFruits];
   const limeIndex = displayFruits.indexOf('lime');
   if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
-    // Swap lime to the center position if it's not already there
     [displayFruits[CENTER_CELL_INDEX], displayFruits[limeIndex]] = [displayFruits[limeIndex], displayFruits[CENTER_CELL_INDEX]];
   } else if (limeIndex === -1) {
     console.warn("Lime not found in selected fruits, adding it to center.");
@@ -104,7 +87,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
   return (
     <div
-      className="grid gap-1 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-4 border-lime-400 dark:border-lime-700 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
+      className="grid gap-1 p-4 bg-white/95 dark:bg-gray-800/95 rounded-xl shadow-2xl border-4 border-lime-400 dark:border-lime-700 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
       style={{
         gridTemplateColumns: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,

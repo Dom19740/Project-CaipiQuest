@@ -31,7 +31,7 @@ const CaipiQuest: React.FC = () => {
 
   const initializeGrid = useCallback(() => {
     const newGrid = Array(FIXED_GRID_SIZE).fill(null).map(() => Array(FIXED_GRID_SIZE).fill(false));
-    newGrid[CENTER_CELL_INDEX][CENTER_CELL_INDEX] = true; // Mark center cell as true
+    newGrid[CENTER_CELL_INDEX][CENTER_CELL_INDEX] = true;
     return newGrid;
   }, []);
 
@@ -60,7 +60,7 @@ const CaipiQuest: React.FC = () => {
   const handleResetGame = () => {
     setResetKey(prev => prev + 1);
     setBingoAlerts([]);
-    setCheckedCells(initializeGrid()); // Reset with center cell true
+    setCheckedCells(initializeGrid());
   };
 
   const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
@@ -77,11 +77,11 @@ const CaipiQuest: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-8 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl">
         <BingoGrid
           onBingo={handleBingo}
           resetKey={resetKey}
@@ -93,11 +93,11 @@ const CaipiQuest: React.FC = () => {
           initialAlertsLoaded={true}
         />
         <div className="flex flex-col gap-4 w-full lg:w-80">
-          <Card className="w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-xl border-lime-400 dark:border-lime-700 border-2 text-card-foreground">
-            <CardHeader className="bg-lime-200 dark:bg-lime-900 border-b border-lime-400 dark:border-lime-700">
+          <Card className="w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-xl border-lime-400 dark:border-lime-700 border-2 text-card-foreground p-4 rounded-xl">
+            <CardHeader className="bg-lime-200/80 dark:bg-lime-900/80 border-b border-lime-400 dark:border-lime-700 rounded-t-xl p-4">
               <CardTitle className="text-xl sm:text-2xl text-lime-800 dark:text-lime-200">Alerts</CardTitle>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-4 bg-yellow-50/70 dark:bg-yellow-950/70 border border-yellow-200 dark:border-yellow-800 rounded-lg shadow-inner max-h-[200px] overflow-y-auto">
               {bingoAlerts.length === 0 ? (
                 <p className="text-gray-600 dark:text-gray-400 italic text-base sm:text-lg">No bingo alerts yet...</p>
               ) : (
@@ -113,11 +113,11 @@ const CaipiQuest: React.FC = () => {
           </Card>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg h-12"> {/* Increased height and font size */}
+              <Button variant="destructive" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg h-12">
                 Reset Game
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white dark:bg-gray-800 text-card-foreground">
+            <AlertDialogContent className="bg-white dark:bg-gray-800 text-card-foreground p-6 rounded-xl">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-xl sm:text-2xl">Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription className="text-gray-700 dark:text-gray-300 text-base sm:text-lg">
@@ -125,8 +125,8 @@ const CaipiQuest: React.FC = () => {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel> {/* Increased height and font size */}
-                <AlertDialogAction onClick={handleResetGame} className="h-12 text-base sm:text-lg">Continue</AlertDialogAction> {/* Increased height and font size */}
+                <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleResetGame} className="h-12 text-base sm:text-lg">Continue</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

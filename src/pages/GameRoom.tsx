@@ -89,7 +89,7 @@ const GameRoom: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 relative overflow-hidden">
       
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}
@@ -122,7 +122,7 @@ const GameRoom: React.FC = () => {
 
           {/* Buttons */}
           <div className="flex flex-row gap-2 justify-center w-full">
-            <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12"> {/* Increased height and font size */}
+            <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
               Refresh
             </Button>
             <LeavePartyDialog onConfirm={() => navigate('/lobby')} />

@@ -24,7 +24,6 @@ const Lobby: React.FC = () => {
     }
   }, [playerName]);
 
-  // Ensure an anonymous session exists if no user is present
   useEffect(() => {
     const ensureSession = async () => {
       if (!isLoading && !user) {
@@ -65,7 +64,6 @@ const Lobby: React.FC = () => {
     const newPartyCode = generatePartyCode();
     const fixedGridSize = 5;
     try {
-      // Create the room (party) with the fixed grid size
       const { data: partyData, error: partyError } = await supabase
         .from('rooms')
         .insert({ code: newPartyCode, created_by: user.id, created_by_name: playerName, grid_size: fixedGridSize })
@@ -97,7 +95,6 @@ const Lobby: React.FC = () => {
 
     setIsJoining(true);
     try {
-      // Find the room (party) by code and fetch its grid_size
       const { data: partyData, error: partyError } = await supabase
         .from('rooms')
         .select('id, grid_size')
@@ -105,14 +102,13 @@ const Lobby: React.FC = () => {
         .single();
 
       if (partyError) {
-        if (partyError.code === 'PGRST116') { // No rows found
+        if (partyError.code === 'PGRST116') {
           throw new Error('Party not found. Please check the code.');
         }
         throw partyError;
       }
       console.log("Lobby - Found party:", partyData);
 
-      // NEW LOGIC: Check if player already has a game state for this room
       const { data: existingGameState, error: gameStateError } = await supabase
         .from('game_states')
         .select('selected_fruits')
@@ -120,7 +116,7 @@ const Lobby: React.FC = () => {
         .eq('player_id', user.id)
         .single();
 
-      if (gameStateError && gameStateError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+      if (gameStateError && gameStateError.code !== 'PGRST116') {
         throw gameStateError;
       }
 
@@ -129,11 +125,9 @@ const Lobby: React.FC = () => {
       showSuccess(`Found party "${partyCodeInput.toUpperCase()}"!`);
 
       if (hasExistingFruits) {
-        // If player has existing game state with fruits, go directly to game room
         console.log("Lobby - Player has existing game state, navigating directly to game room.");
         navigate(`/game/${partyData.id}`, { state: { selectedFruits: existingGameState.selected_fruits, gridSize: partyData.grid_size } });
       } else {
-        // Otherwise, go to fruit selection
         console.log("Lobby - Player does not have existing game state, navigating to fruit selection.");
         navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: partyData.grid_size } });
       }
@@ -146,15 +140,15 @@ const Lobby: React.FC = () => {
     }
   };
 
-  const isSessionReady = !isLoading && user; // True when session is loaded and a user (even anonymous) is present
+  const isSessionReady = !isLoading && user;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4">
-      <div className="text-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border-4 border-lime-400 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4 sm:p-6 md:p-8">
+      <div className="text-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-400 dark:border-lime-700 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8 max-w-3xl w-full">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-6 drop-shadow-lg">
           CaipiQuest Lobby
         </h1>
-        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-prose mx-auto">
+        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-prose mx-auto leading-relaxed">
           Enter your name, then create a new game party or join an existing one with a code!
         </p>
 
@@ -164,48 +158,48 @@ const Lobby: React.FC = () => {
             placeholder="Enter Your Name"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="text-center border-lime-400 focus:border-lime-600 focus:ring-lime-600 text-lg py-2 h-12" // Increased height
+            className="text-center border-lime-400 focus:border-lime-600 focus:ring-lime-600 text-lg py-2 h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             disabled={isCreating || isJoining || !isSessionReady}
             aria-label="Your Player Name"
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 justify-center items-center lg:items-stretch"> {/* Added lg:items-stretch */}
-          <Card className="w-full max-w-md bg-emerald-50 dark:bg-emerald-900 border-emerald-300 dark:border-emerald-700 shadow-lg text-card-foreground"> {/* Changed max-w-sm to max-w-md */}
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl text-emerald-800 dark:text-emerald-200">Join Existing Party</CardTitle>
-              <CardDescription className="text-emerald-700 dark:text-emerald-300 text-sm sm:text-base">Enter a party code to join a game.</CardDescription>
+        <div className="flex flex-col lg:flex-row gap-6 justify-center items-center lg:items-stretch">
+          <Card className="w-full max-w-md bg-emerald-50/80 dark:bg-emerald-900/80 border-emerald-300 dark:border-emerald-700 shadow-lg text-card-foreground p-6 rounded-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl sm:text-2xl text-emerald-800 dark:text-emerald-200">Join Existing Party</CardTitle>
+              <CardDescription className="text-emerald-700 dark:text-emerald-300 text-base sm:text-lg">Enter a party code to join a game.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <Input
                 type="text"
                 placeholder="Enter Party Code"
                 value={partyCodeInput}
                 onChange={(e) => setPartyCodeInput(e.target.value)}
-                className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600 h-12" // Increased height
-                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
+                className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600 h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                disabled={isCreating || isJoining || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
                 aria-label="Party Code"
               />
               <Button
                 onClick={handleJoinParty}
                 disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12" // Increased height and font size
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isJoining ? 'Joining...' : 'Join'}
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="w-full max-w-md bg-lime-50 dark:bg-lime-900 border-lime-300 dark:border-lime-700 shadow-lg text-card-foreground">
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl text-lime-800 dark:text-lime-200">Create New Party</CardTitle>
-              <CardDescription className="text-lime-700 dark:text-lime-300 text-sm sm:text-base">Start a fresh game for your friends.</CardDescription>
+          <Card className="w-full max-w-md bg-lime-50/80 dark:bg-lime-900/80 border-lime-300 dark:border-lime-700 shadow-lg text-card-foreground p-6 rounded-xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl sm:text-2xl text-lime-800 dark:text-lime-200">Create New Party</CardTitle>
+              <CardDescription className="text-lime-700 dark:text-lime-300 text-base sm:text-lg">Start a fresh game for your friends.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <Button
                 onClick={handleCreateParty}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
-                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12" // Increased height and font size
+                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isCreating ? 'Creating...' : 'Create'}
               </Button>
