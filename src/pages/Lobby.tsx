@@ -143,12 +143,12 @@ const Lobby: React.FC = () => {
   const isSessionReady = !isLoading && user;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 via-yellow-200 via-orange-300 to-pink-400 p-4 sm:p-6 md:p-8">
-      <div className="text-center bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-400 dark:border-lime-700 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8 max-w-3xl w-full">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-600 to-emerald-800 mb-6 drop-shadow-lg">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-400 via-yellow-300 via-orange-400 to-pink-500 p-4 sm:p-6 md:p-8">
+      <div className="text-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-500 dark:border-lime-600 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8 max-w-3xl w-full">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-700 to-emerald-900 mb-6 drop-shadow-lg">
           CaipiQuest Lobby
         </h1>
-        <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-prose mx-auto leading-relaxed">
+        <p className="text-base sm:text-lg text-gray-800 dark:text-gray-200 mb-8 max-w-prose mx-auto leading-relaxed">
           Enter your name, then create a new game party or join an existing one with a code!
         </p>
 
@@ -158,17 +158,17 @@ const Lobby: React.FC = () => {
             placeholder="Enter Your Name"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="text-center border-lime-400 focus:border-lime-600 focus:ring-lime-600 text-lg py-2 h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+            className="text-center border-lime-500 focus:border-lime-700 focus:ring-lime-700 text-lg py-2 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400"
             disabled={isCreating || isJoining || !isSessionReady}
             aria-label="Your Player Name"
           />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center items-center lg:items-stretch">
-          <Card className="w-full max-w-md bg-emerald-50/80 dark:bg-emerald-900/80 border-emerald-300 dark:border-emerald-700 shadow-lg text-card-foreground p-6 rounded-xl">
+          <Card className="w-full max-w-md bg-emerald-100/80 dark:bg-emerald-900/80 border-emerald-400 dark:border-emerald-700 shadow-lg text-card-foreground p-6 rounded-xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl sm:text-2xl text-emerald-800 dark:text-emerald-200">Join Existing Party</CardTitle>
-              <CardDescription className="text-emerald-700 dark:text-emerald-300 text-base sm:text-lg">Enter a party code to join a game.</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl text-emerald-900 dark:text-emerald-200">Join Existing Party</CardTitle>
+              <CardDescription className="text-emerald-800 dark:text-emerald-300 text-base sm:text-lg">Enter a party code to join a game.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <Input
@@ -176,30 +176,30 @@ const Lobby: React.FC = () => {
                 placeholder="Enter Party Code"
                 value={partyCodeInput}
                 onChange={(e) => setPartyCodeInput(e.target.value)}
-                className="text-center border-emerald-400 focus:border-emerald-600 focus:ring-emerald-600 h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                className="text-center border-emerald-500 focus:border-emerald-700 focus:ring-emerald-700 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400"
                 disabled={isCreating || isJoining || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
                 aria-label="Party Code"
               />
               <Button
                 onClick={handleJoinParty}
                 disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isJoining ? 'Joining...' : 'Join'}
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="w-full max-w-md bg-lime-50/80 dark:bg-lime-900/80 border-lime-300 dark:border-lime-700 shadow-lg text-card-foreground p-6 rounded-xl">
+          <Card className="w-full max-w-md bg-lime-100/80 dark:bg-lime-900/80 border-lime-400 dark:border-lime-700 shadow-lg text-card-foreground p-6 rounded-xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl sm:text-2xl text-lime-800 dark:text-lime-200">Create New Party</CardTitle>
-              <CardDescription className="text-lime-700 dark:text-lime-300 text-base sm:text-lg">Start a fresh game for your friends.</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl text-lime-900 dark:text-lime-200">Create New Party</CardTitle>
+              <CardDescription className="text-lime-800 dark:text-lime-300 text-base sm:text-lg">Start a fresh game for your friends.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <Button
                 onClick={handleCreateParty}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
-                className="w-full bg-lime-600 hover:bg-lime-700 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-lime-700 hover:bg-lime-800 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isCreating ? 'Creating...' : 'Create'}
               </Button>

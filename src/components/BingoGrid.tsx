@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import FruitIcon from './FruitIcon';
+import FruitIcon from './FruitIcon'; // Changed from FruitSVG
 
 interface BingoAlert {
   id: string;
@@ -87,7 +87,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
   return (
     <div
-      className="grid gap-1 p-4 bg-white/95 dark:bg-gray-800/95 rounded-xl shadow-2xl border-4 border-lime-400 dark:border-lime-700 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
+      className="grid gap-1 p-4 bg-white/90 dark:bg-gray-900/90 rounded-xl shadow-2xl border-4 border-lime-500 dark:border-lime-600 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl"
       style={{
         gridTemplateColumns: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
@@ -98,7 +98,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
       {/* Top row labels */}
       {displayFruits.map((fruit, index) => (
-        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 dark:from-orange-900 dark:to-pink-900 text-lime-800 dark:text-lime-200 font-semibold rounded-md shadow-md border-2 border-lime-400 dark:border-lime-700">
+        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-300 to-pink-300 dark:from-orange-800 dark:to-pink-800 text-lime-900 dark:text-lime-100 font-semibold rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
       ))}
@@ -107,7 +107,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       {Array(gridSize).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
-          <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-200 to-pink-200 dark:from-orange-900 dark:to-pink-900 text-lime-800 dark:text-lime-200 font-semibold rounded-md shadow-md border-2 border-lime-400 dark:border-lime-700">
+          <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-300 to-pink-300 dark:from-orange-800 dark:to-pink-800 text-lime-900 dark:text-lime-100 font-semibold rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600">
             <FruitIcon fruit={displayFruits[rowIndex]} size="lg" />
           </div>
 
@@ -120,8 +120,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             return (
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
-                className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-2 border-gray-300 dark:border-gray-700
-                  ${isCenterCell ? 'bg-lime-300 dark:bg-lime-800 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-200 dark:bg-lime-700 hover:bg-lime-300 dark:hover:bg-lime-600 hover:scale-105' : 'bg-white dark:bg-gray-700 hover:bg-lime-50 dark:hover:bg-gray-600 hover:scale-105'}
+                className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-2 border-gray-400 dark:border-gray-600
+                  ${isCenterCell ? 'bg-lime-400 dark:bg-lime-800 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-300 dark:bg-lime-700 hover:bg-lime-400 dark:hover:bg-lime-600 hover:scale-105' : 'bg-white dark:bg-gray-800 hover:bg-lime-100 dark:hover:bg-gray-700 hover:scale-105'}
                 `}
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
               >
@@ -129,7 +129,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
                   <FruitIcon fruit={fruit1} size="sm" />
                   <FruitIcon fruit={fruit2} size="sm" />
                 </div>
-                {isCenterCell && <span className="text-xs font-bold text-lime-800 dark:text-lime-200">FREE</span>}
+                {isCenterCell && <span className="text-xs font-bold text-lime-900 dark:text-lime-100">FREE</span>}
               </div>
             );
           })}

@@ -1,23 +1,42 @@
 import React from 'react';
-import FruitSVG from './FruitSVG'; // NEW: Import FruitSVG
 
 interface FruitIconProps {
   fruit: string; // This will be the English name
   size?: 'sm' | 'md' | 'lg';
 }
 
+const fruitEmojiMap: { [key: string]: string } = {
+  lime: '🍋',
+  passionfruit: '💜', // Using purple heart as a vibrant stand-in for passionfruit
+  lemon: '🍋',
+  strawberry: '🍓',
+  mango: '🥭',
+  pineapple: '🍍',
+  red_fruits: '🍒', // Cherries
+  guava: '🍈', // Using melon as a vibrant stand-in for guava
+  ginger: '🫚', // Ginger root emoji
+  tangerine: '🍊',
+  kiwi: '🥝',
+  cashew: '🌰', // Cashew nut emoji
+  dragon_fruit: '🐉', // Using dragon emoji as a vibrant stand-in for dragon fruit
+  banana: '🍌',
+  plum: '🫐', // Using blueberries as a vibrant stand-in for plum
+  watermelon: '🍉',
+};
+
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
-    sm: 'w-4 h-4', // Smaller SVG size
-    md: 'w-6 h-6', // Medium SVG size
-    lg: 'w-8 h-8', // Larger SVG size
+    sm: 'text-base', // Smaller emoji size
+    md: 'text-xl', // Medium emoji size
+    lg: 'text-3xl', // Larger emoji size
   };
 
   const effectiveSizeClass = sizeClasses[size];
+  const emoji = fruitEmojiMap[fruit.toLowerCase().replace(/\s/g, '_')] || '❓'; // Default to '?' emoji
 
   return (
     <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`}>
-      <FruitSVG fruit={fruit} className="w-full h-full" />
+      {emoji}
     </span>
   );
 };
