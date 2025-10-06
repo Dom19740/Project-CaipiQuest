@@ -8,7 +8,7 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
-const Lobby: React.FC = () => {
+const Lobby = () => { // Removed React.FC
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [partyCodeInput, setPartyCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -177,7 +177,7 @@ const Lobby: React.FC = () => {
                 value={partyCodeInput}
                 onChange={(e) => setPartyCodeInput(e.target.value)}
                 className="text-center border-emerald-600 focus:border-emerald-800 focus:ring-emerald-800 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-300"
-                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady} {/* Removed partyCodeInput.trim() === '' */}
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
                 aria-label="Party Code"
               />
               <Button
