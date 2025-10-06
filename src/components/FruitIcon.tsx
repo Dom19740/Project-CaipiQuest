@@ -6,21 +6,21 @@ interface FruitIconProps {
 }
 
 const fruitEmojiMap: { [key: string]: string } = {
-  lime: '🍋',
-  passionfruit: '💜', // Using purple heart as a vibrant stand-in for passionfruit
+  lime: '🍏', // Changed to green apple for a green fruit representation
+  passionfruit: '🥭', // Changed to mango for a tropical fruit representation
   lemon: '🍋',
   strawberry: '🍓',
   mango: '🥭',
   pineapple: '🍍',
   red_fruits: '🍒', // Cherries
   guava: '🍈', // Using melon as a vibrant stand-in for guava
-  ginger: '🫚', // Ginger root emoji
+  ginger: '🫚', // Changed to ginger root emoji
   tangerine: '🍊',
   kiwi: '🥝',
   cashew: '🌰', // Cashew nut emoji
   dragon_fruit: '🐉', // Using dragon emoji as a vibrant stand-in for dragon fruit
   banana: '🍌',
-  plum: '🫐', // Using blueberries as a vibrant stand-in for plum
+  plum: '🍇', // Changed to grapes for a purple fruit representation
   watermelon: '🍉',
 };
 

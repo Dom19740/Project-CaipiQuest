@@ -143,12 +143,12 @@ const Lobby: React.FC = () => {
   const isSessionReady = !isLoading && user;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-400 via-yellow-300 via-orange-400 to-pink-500 p-4 sm:p-6 md:p-8">
-      <div className="text-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-500 dark:border-lime-600 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8 max-w-3xl w-full">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-700 to-emerald-900 mb-6 drop-shadow-lg">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 p-4 sm:p-6 md:p-8">
+      <div className="text-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8 max-w-3xl w-full">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-6 drop-shadow-lg">
           CaipiQuest Lobby
         </h1>
-        <p className="text-base sm:text-lg text-gray-800 dark:text-gray-200 mb-8 max-w-prose mx-auto leading-relaxed">
+        <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
           Enter your name, then create a new game party or join an existing one with a code!
         </p>
 
@@ -158,17 +158,17 @@ const Lobby: React.FC = () => {
             placeholder="Enter Your Name"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="text-center border-lime-500 focus:border-lime-700 focus:ring-lime-700 text-lg py-2 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400"
+            className="text-center border-lime-600 focus:border-lime-800 focus:ring-lime-800 text-lg py-2 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-300"
             disabled={isCreating || isJoining || !isSessionReady}
             aria-label="Your Player Name"
           />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center items-center lg:items-stretch">
-          <Card className="w-full max-w-md bg-emerald-100/80 dark:bg-emerald-900/80 border-emerald-400 dark:border-emerald-700 shadow-lg text-card-foreground p-6 rounded-xl">
+          <Card className="w-full max-w-md bg-emerald-200/80 dark:bg-emerald-900/80 border-emerald-500 dark:border-emerald-800 shadow-lg text-card-foreground p-6 rounded-xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl sm:text-2xl text-emerald-900 dark:text-emerald-200">Join Existing Party</CardTitle>
-              <CardDescription className="text-emerald-800 dark:text-emerald-300 text-base sm:text-lg">Enter a party code to join a game.</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl text-emerald-900 dark:text-emerald-100">Join Existing Party</CardTitle>
+              <CardDescription className="text-emerald-800 dark:text-emerald-200 text-base sm:text-lg">Enter a party code to join a game.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <Input
@@ -176,7 +176,7 @@ const Lobby: React.FC = () => {
                 placeholder="Enter Party Code"
                 value={partyCodeInput}
                 onChange={(e) => setPartyCodeInput(e.target.value)}
-                className="text-center border-emerald-500 focus:border-emerald-700 focus:ring-emerald-700 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400"
+                className="text-center border-emerald-600 focus:border-emerald-800 focus:ring-emerald-800 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-300"
                 disabled={isCreating || isJoining || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
                 aria-label="Party Code"
               />
@@ -190,10 +190,10 @@ const Lobby: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="w-full max-w-md bg-lime-100/80 dark:bg-lime-900/80 border-lime-400 dark:border-lime-700 shadow-lg text-card-foreground p-6 rounded-xl">
+          <Card className="w-full max-w-md bg-lime-200/80 dark:bg-lime-900/80 border-lime-500 dark:border-lime-800 shadow-lg text-card-foreground p-6 rounded-xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl sm:text-2xl text-lime-900 dark:text-lime-200">Create New Party</CardTitle>
-              <CardDescription className="text-lime-800 dark:text-lime-300 text-base sm:text-lg">Start a fresh game for your friends.</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl text-lime-900 dark:text-lime-100">Create New Party</CardTitle>
+              <CardDescription className="text-lime-800 dark:text-lime-200 text-base sm:text-lg">Start a fresh game for your friends.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <Button

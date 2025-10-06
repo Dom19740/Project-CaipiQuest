@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { showError } from '@/utils/toast';
-import FruitIcon from '@/components/FruitIcon'; // Changed from FruitSVG
+import FruitIcon from '@/components/FruitIcon';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
 const allFruitsData = [
@@ -68,13 +68,13 @@ const FruitSelection: React.FC = () => {
   const isProceedDisabled = selectedFruits.length !== fixedGridSize;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-400 via-yellow-300 via-orange-400 to-pink-500 p-4 sm:p-6 md:p-8">
-      <Card className="w-full max-w-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-500 dark:border-lime-600 text-card-foreground">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 p-4 sm:p-6 md:p-8">
+      <Card className="w-full max-w-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 text-card-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-700 to-emerald-900 mb-4 drop-shadow-lg">
+          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-4 drop-shadow-lg">
             Choose Your Fruits
           </CardTitle>
-          <CardDescription className="text-base sm:text-lg text-gray-800 dark:text-gray-200 mb-6 leading-relaxed">
+          <CardDescription className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-6 leading-relaxed">
             Select 5 fruits for your bingo grid. Lime is already chosen for the center!
           </CardDescription>
         </CardHeader>
@@ -84,12 +84,12 @@ const FruitSelection: React.FC = () => {
               <div
                 key={fruit.name}
                 className={`flex flex-col items-center justify-center p-3 sm:p-4 border rounded-lg transition-all duration-200 ease-in-out
-                  ${selectedFruits.includes(fruit.name) ? 'bg-lime-300 dark:bg-lime-700 border-lime-600 dark:border-lime-500 shadow-md' : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'}
-                  ${fruit.name === 'lime' ? 'cursor-not-allowed bg-lime-400 dark:bg-lime-900 border-lime-700 dark:border-lime-600' : 'cursor-pointer hover:scale-105'}
+                  ${selectedFruits.includes(fruit.name) ? 'bg-lime-400 dark:bg-lime-700 border-lime-700 dark:border-lime-500 shadow-md' : 'bg-gray-100 dark:bg-gray-800 border-gray-400 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'}
+                  ${fruit.name === 'lime' ? 'cursor-not-allowed bg-lime-500 dark:bg-lime-900 border-lime-800 dark:border-lime-600' : 'cursor-pointer hover:scale-105'}
                 `}
                 onClick={() => handleFruitToggle(fruit.name, !selectedFruits.includes(fruit.name))}
               >
-                <FruitIcon fruit={fruit.name} size="lg" /> {/* Using FruitIcon */}
+                <FruitIcon fruit={fruit.name} size="lg" />
                 <span className="mt-2 text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 text-center">
                   {fruit.name.replace(/_/g, ' ')}
                 </span>
@@ -100,7 +100,7 @@ const FruitSelection: React.FC = () => {
           <Button
             onClick={handleProceed}
             disabled={isProceedDisabled}
-            className="w-full bg-lime-700 hover:bg-lime-800 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
+            className="w-full bg-lime-800 hover:bg-lime-900 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
           >
             Start Game ({selectedFruits.length}/{fixedGridSize})
           </Button>
