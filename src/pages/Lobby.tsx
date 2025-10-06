@@ -177,7 +177,7 @@ const Lobby: React.FC = () => {
                 value={partyCodeInput}
                 onChange={(e) => setPartyCodeInput(e.target.value)}
                 className="text-center border-emerald-600 focus:border-emerald-800 focus:ring-emerald-800 h-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-300"
-                disabled={isCreating || isJoining || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
+                disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady} {/* Removed partyCodeInput.trim() === '' */}
                 aria-label="Party Code"
               />
               <Button
