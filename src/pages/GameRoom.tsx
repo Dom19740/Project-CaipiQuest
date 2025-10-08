@@ -35,7 +35,7 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
-    setMyPlayerName, // Destructure setMyPlayerName
+    setMyPlayerName,
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
@@ -60,9 +60,9 @@ const GameRoom: React.FC = () => {
     handleCellToggle,
     handleBingo,
     handleResetGame,
-    handleGlobalRefresh,
-    showWinAnimation, // Get the win animation state
-    setShowWinAnimation, // Get the setter for win animation state
+    handleGlobalRefresh, // Still needed for the hook, but button removed
+    showWinAnimation,
+    setShowWinAnimation,
   } = useGameLogic(
     roomId,
     myGameStateId,
@@ -141,16 +141,15 @@ const GameRoom: React.FC = () => {
             onRefreshPlayers={() => fetchAndSetAllGameStates(gridSize)}
             onLeaveParty={handleLeaveParty}
             myPlayerName={myPlayerName}
-            setMyPlayerName={setMyPlayerName} // Pass the setter
+            setMyPlayerName={setMyPlayerName}
           />
 
-          {/* Buttons (LeavePartyDialog is already here) */}
-          <div className="flex flex-row gap-2 justify-center w-full">
+          {/* Removed Refresh Global button */}
+          {/* <div className="flex flex-row gap-2 justify-center w-full">
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-lime-700 hover:bg-lime-800 text-white py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
               Refresh Global
             </Button>
-            {/* LeavePartyDialog is now handled within PartySidebar */}
-          </div>
+          </div> */}
         </div>
       </div>
 

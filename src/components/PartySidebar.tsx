@@ -128,17 +128,9 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onRefreshPlayers}
-            className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-          >
-            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-          </Button>
+          {/* Refresh button moved to Bingo Alerts section */}
         </CardTitle>
 
-        {/* Moved Party Code and Share Buttons here */}
         <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600 mb-2">
           <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
             {partyCode}
@@ -162,22 +154,33 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
             </Button>
           </div>
         </div>
-
-        {myPlayerName && (
-          <p className="text-sm text-orange-800 dark:text-orange-200">
-            Playing as: <span className="font-medium">{myPlayerName}</span>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => setIsPlayerNameDialogOpen(true)}
-              className="ml-2 p-0 h-auto text-orange-700 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-100"
-            >
-              (Change)
-            </Button>
-          </p>
-        )}
+        {/* "Playing as" text removed */}
       </CardHeader>
       <CardContent className="p-4 space-y-6">
+        {/* Bingo Alerts moved here, with the refresh button */}
+        {alerts.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center justify-between">
+              <span>Bingo Alerts</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRefreshPlayers}
+                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+              </Button>
+            </h3>
+            <div className="max-h-32 overflow-y-auto pr-2">
+              {alerts.map((alert) => (
+                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert.type)} mb-1`}>
+                  {alert.message}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div>
             <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
@@ -205,24 +208,9 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           </Button>
         </div>
 
-        {/* Bingo Alerts */}
-        {alerts.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
-              Bingo Alerts
-            </h3>
-            <div className="max-h-32 overflow-y-auto pr-2">
-              {alerts.map((alert) => (
-                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert.type)} mb-1`}>
-                  {alert.message}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </CardContent>
 
-      {/* Player Name Dialog */}
+      {/* Player Name Dialog (kept for potential future use or if user wants to re-add player name change) */}
       <Dialog open={isPlayerNameDialogOpen} onOpenChange={setIsPlayerNameDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-6 rounded-lg shadow-lg">
           <DialogHeader>
