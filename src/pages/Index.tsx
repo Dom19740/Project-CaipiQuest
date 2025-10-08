@@ -1,5 +1,5 @@
 import React from "react";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import MadeWithDyad from "@/components/made-with-dyad"; // Changed to default import
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 

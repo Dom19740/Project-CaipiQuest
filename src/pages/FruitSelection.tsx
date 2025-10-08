@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { showError } from '@/utils/toast';
 import FruitIcon from '@/components/FruitIcon';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
 
 const allFruitsData = [
   { name: 'lime' },

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
 import BingoWinAnimation from '@/components/BingoWinAnimation'; // Import the new component

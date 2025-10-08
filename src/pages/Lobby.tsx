@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
 
 const Lobby = () => {
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');

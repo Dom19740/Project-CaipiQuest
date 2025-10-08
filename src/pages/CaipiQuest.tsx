@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import BingoGrid from '@/components/BingoGrid';
-import { MadeWithDyad } from '@/components/made-with-dyad';
+import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
 import { showSuccess } from '@/utils/toast';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
