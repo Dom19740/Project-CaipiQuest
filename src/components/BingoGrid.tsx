@@ -191,15 +191,14 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             const fruit2 = displayFruits[colIndex];
 
             const isChecked = checkedCells[rowIndex][colIndex];
-            const isHighlighted = highlightedCells.has(`${rowIndex}-${colIndex}`);
+            const isHighlighted = highlightedCells.has(`${rowIndex}-${colIndex}`); // Still used for internal logic, but not for color
 
             return (
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
                 className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-2 border-gray-500 dark:border-gray-600
                   ${isCenterCell ? 'bg-lime-500 dark:bg-lime-800 cursor-not-allowed' :
-                    isChecked && isHighlighted ? 'bg-yellow-400 dark:bg-yellow-700 hover:bg-yellow-500 dark:hover:bg-yellow-600 hover:scale-105' : // Highlighted and checked
-                    isChecked ? 'bg-lime-400 dark:bg-lime-700 hover:bg-lime-500 dark:hover:bg-lime-600 hover:scale-105' : // Just checked
+                    isChecked ? 'bg-yellow-300 dark:bg-yellow-600 hover:bg-yellow-400 dark:hover:bg-yellow-500 hover:scale-105' : // All checked cells are yellow
                     'bg-white dark:bg-gray-800 hover:bg-lime-200 dark:hover:bg-gray-700 hover:scale-105' // Not checked
                   }
                 `}
