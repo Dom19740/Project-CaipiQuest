@@ -274,7 +274,7 @@ const Lobby = () => {
               <Button
                 onClick={handleCreateParty}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
-                className="w-full bg-caipi hover:bg-caipi-hover text-white py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-lime-700 hover:bg-lime-800 text-white py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isCreating ? 'Creating...' : 'Create'}
               </Button>
