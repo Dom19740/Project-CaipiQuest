@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // Added Link
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { useSession } from '@/components/SessionContextProvider';
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 
-const Lobby = () => { // Removed React.FC
+const Lobby = () => {
   const [playerName, setPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
   const [partyCodeInput, setPartyCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -145,9 +145,11 @@ const Lobby = () => { // Removed React.FC
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 p-4 sm:p-6 md:p-8">
       <div className="text-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 transform hover:scale-102 transition-transform duration-300 ease-in-out mb-8 max-w-3xl w-full">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-6 drop-shadow-lg">
-          CaipiQuest Lobby
-        </h1>
+        <img
+          src="/title_caipiquest_lobby.png"
+          alt="CaipiQuest Lobby"
+          className="mx-auto max-w-full h-auto w-80 sm:w-96 md:w-[400px] lg:w-[450px] xl:w-[500px] drop-shadow-lg mb-6"
+        />
         <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
           Enter your name, then create a new game party or join an existing one with a code!
         </p>
@@ -206,6 +208,11 @@ const Lobby = () => { // Removed React.FC
             </CardContent>
           </Card>
         </div>
+        <Link to="/" className="mt-8 w-full max-w-md">
+          <Button variant="outline" className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12 border-gray-400 dark:border-gray-600">
+            Return to Welcome Screen
+          </Button>
+        </Link>
       </div>
       <MadeWithDyad />
     </div>
