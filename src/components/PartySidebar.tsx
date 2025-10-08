@@ -61,7 +61,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
       </CardHeader>
       <CardContent className="p-4 space-y-6">
         {/* Alerts Section */}
-        <div className="bg-yellow-200/70 dark:bg-yellow-900/70 border border-yellow-500 dark:border-yellow-800 rounded-lg p-3 shadow-inner max-h-[180px] overflow-y-auto">
+        <div className="bg-lime-200/70 dark:bg-lime-900/70 border border-lime-500 dark:border-lime-800 rounded-lg p-3 shadow-inner max-h-[180px] overflow-y-auto">
           {alerts.length === 0 ? (
             <p className="text-gray-800 dark:text-gray-300 italic text-sm sm:text-base">No bingo alerts yet...</p>
           ) : (
