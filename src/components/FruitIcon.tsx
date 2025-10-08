@@ -34,16 +34,16 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
 
   if (lowerCaseFruit === 'lime') {
     return (
-      <div className={`inline-flex items-center justify-center rounded-full bg-[#76fb00] ${effectiveSizeClass.circle}`} role="img" aria-label="lime">
-        {/* Green filled circle for lime */}
+      <div className={`inline-flex items-center justify-center rounded-full bg-[#76fb00] border border-black ${effectiveSizeClass.circle}`} role="img" aria-label="lime">
+        {/* Green filled circle for lime with black border */}
       </div>
     );
   }
 
   if (lowerCaseFruit === 'plum') {
     return (
-      <div className={`inline-flex items-center justify-center rounded-full bg-[#b10090] ${effectiveSizeClass.circle}`} role="img" aria-label="plum">
-        {/* Purple filled circle for plum */}
+      <div className={`inline-flex items-center justify-center rounded-full bg-[#b10090] border border-black ${effectiveSizeClass.circle}`} role="img" aria-label="plum">
+        {/* Purple filled circle for plum with black border */}
       </div>
     );
   }
