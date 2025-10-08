@@ -86,7 +86,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
                   key={player.id}
                   className={cn(
                     "flex justify-between items-center p-2 rounded-md border text-sm sm:text-base",
-                    player.isMe ? "bg-lime-300 dark:bg-lime-800 border-lime-600 dark:border-lime-700 text-gray-900 dark:text-gray-100" : "bg-gray-200 dark:bg-gray-800 border-gray-400 dark:border-gray-700 text-gray-900 dark:text-gray-200"
+                    player.isMe ? "bg-lime-300 dark:bg-lime-800 border-lime-600 dark:border-lime-700 text-gray-900 dark:text-gray-100" : "bg-blue-200 dark:bg-blue-800 border-blue-400 dark:border-blue-700 text-blue-900 dark:text-blue-200"
                   )}
                 >
                   <span className="text-inherit">{player.name} {player.isMe && "(You)"}</span>
