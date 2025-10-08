@@ -1,16 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Users, Copy, RefreshCcw, Crown, XCircle, Edit, Save, User } from 'lucide-react';
+import { showSuccess, showError } from '@/utils/toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,25 +16,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Copy, Share2, Users, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
 
-// Define interfaces to match use-game-room-realtime.ts
+interface PlayerScore {
+  player_id: string;
+  player_name: string;
+  score: number;
+  is_creator: boolean;
+  selected_fruits: string[];
+}
+
 interface BingoAlert {
   id: string;
   type: 'rowCol' | 'diagonal' | 'fullGrid';
   message: string;
-  playerName?: string;
-  playerId?: string;
-  canonicalId?: string;
-}
-
-interface PlayerScore {
-  id: string;
-  name: string;
-  caipisCount: number;
-  isMe: boolean;
+  player_name: string;
+  player_id: string;
 }
 
 interface PartySidebarProps {
@@ -51,7 +42,7 @@ interface PartySidebarProps {
   onRefreshPlayers: () => void;
   onLeaveParty: () => void;
   myPlayerName: string;
-  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>;
+  setMyPlayerName: (name: string) => void;
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
@@ -64,75 +55,65 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
   myPlayerName,
   setMyPlayerName,
 }) => {
-  const [isPlayerNameDialogOpen, setIsPlayerNameDialogOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
   const [tempPlayerName, setTempPlayerName] = useState(myPlayerName);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setTempPlayerName(myPlayerName);
   }, [myPlayerName]);
 
-  const handleUpdatePlayerName = async () => {
-    if (!currentUserId || !tempPlayerName.trim()) {
-      toast.error("Player name cannot be empty.");
+  useEffect(() => {
+    if (isEditingName && nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, [isEditingName]);
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(partyCode);
+    showSuccess('Party code copied!');
+  };
+
+  const handleSaveName = async () => {
+    if (!tempPlayerName.trim()) {
+      showError("Player name cannot be empty.");
+      return;
+    }
+    if (tempPlayerName === myPlayerName) {
+      setIsEditingName(false);
       return;
     }
 
     try {
       const { error } = await supabase
-        .from("game_states")
-        .update({ player_name: tempPlayerName.trim(), updated_at: new Date().toISOString() })
-        .eq("player_id", currentUserId);
+        .from('game_states')
+        .update({ player_name: tempPlayerName })
+        .eq('player_id', currentUserId)
+        .eq('room_id', supabase.channel('any')._channelId) // Use the current room ID from the channel
+        .select();
 
       if (error) throw error;
 
-      setMyPlayerName(tempPlayerName.trim());
-      toast.success("Player name updated!");
-      setIsPlayerNameDialogOpen(false);
-      onRefreshPlayers();
+      setMyPlayerName(tempPlayerName);
+      showSuccess('Name updated successfully!');
+      setIsEditingName(false);
+      onRefreshPlayers(); // Refresh player list to show updated name
     } catch (error: any) {
-      console.error("Error updating player name:", error.message);
-      toast.error(`Failed to update player name: ${error.message}`);
+      console.error('Error updating player name:', error.message);
+      showError(`Failed to update name: ${error.message}`);
     }
   };
 
-  const handleCopyPartyCode = () => {
-    if (partyCode) {
-      navigator.clipboard.writeText(partyCode);
-      toast.success("Party code copied to clipboard!");
-    }
-  };
-
-  const handleShareParty = async () => {
-    if (partyCode && navigator.share) {
-      try {
-        await navigator.share({
-          title: "Join my CaipiQuest Bingo Party!",
-          text: `Use code: ${partyCode}`,
-          url: window.location.href, // Share the current URL
-        });
-        toast.success("Party shared successfully!");
-      } catch (error) {
-        console.error("Failed to share party:", error);
-        toast.error("Failed to share party.");
-      }
-    } else {
-      // Fallback for browsers that don't support navigator.share
-      handleCopyPartyCode();
-      toast.info("Sharing not supported, party code copied instead!");
-    }
-  };
-
-  const getAlertClasses = (alert: BingoAlert, userId: string) => {
-    const isMyAlert = alert.playerId === userId;
-
-    if (alert.type === 'fullGrid') {
-      return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
-    }
-
-    if (isMyAlert) {
-      return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
-    } else {
-      return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
+  const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
+    switch (type) {
+      case 'rowCol':
+        return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
+      case 'diagonal':
+        return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
+      case 'fullGrid':
+        return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-lg p-2 animate-pulse';
+      default:
+        return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
     }
   };
 
@@ -143,133 +124,124 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
-          <div className="flex items-center space-x-2">
-            <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
-              {partyCode}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCopyPartyCode}
-              className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-            >
-              <Copy className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShareParty}
-              className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-          </div>
+          <Badge variant="secondary" className="bg-orange-500 dark:bg-orange-400 text-white dark:text-gray-900 text-base sm:text-lg px-3 py-1 rounded-full">
+            {partyCode}
+          </Badge>
         </CardTitle>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Share this code with friends to play together.</p>
       </CardHeader>
-      <CardContent className="p-4 space-y-6">
-        {alerts.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center justify-between">
-              <span>Bingo Alerts</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onRefreshPlayers}
-                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-              >
-                <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-              </Button>
-            </h3>
-            <div className="max-h-32 overflow-y-auto pr-2">
-              {alerts.map((alert) => (
-                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert, currentUserId)} mb-1`}>
-                  {alert.message}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
-              Players ({playerScores.length})
-            </h3>
-            <ul className="space-y-2 max-h-40 overflow-y-auto pr-2">
-              {playerScores.map((player) => (
-                <li
-                  key={player.id}
-                  className="flex items-center bg-orange-50 dark:bg-gray-700 p-2 rounded-md text-orange-800 dark:text-orange-200"
-                >
-                  <Users className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
-                  {player.name} {player.isMe ? "(You)" : ""}
-                  <span className="ml-auto text-sm font-bold">{player.caipisCount} Caipis</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-              >
-                Leave Party
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 p-6 text-card-foreground">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-2">
-                  Are you sure you want to leave?
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-900 dark:text-gray-100 text-base sm:text-lg">
-                  Save the room code to re-enter.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="mt-4">
-                <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onLeaveParty} className="bg-red-800 hover:bg-red-900 text-white h-12 text-base sm:text-lg">Leave Party</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-
-      </CardContent>
-
-      {/* Player Name Dialog (kept for potential future use or if user wants to re-add player name change) */}
-      <Dialog open={isPlayerNameDialogOpen} onOpenChange={setIsPlayerNameDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-6 rounded-lg shadow-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-orange-700 dark:text-orange-300">Set Your Player Name</DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
-              Please enter a name to be displayed in the party.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="playerName" className="text-right text-orange-800 dark:text-orange-200">
-                Name
-              </Label>
+      <CardContent className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center flex-grow">
+            <User className="mr-2 h-5 w-5 text-gray-700 dark:text-gray-300" />
+            {isEditingName ? (
               <Input
-                id="playerName"
+                ref={nameInputRef}
+                type="text"
                 value={tempPlayerName}
                 onChange={(e) => setTempPlayerName(e.target.value)}
-                className="col-span-3 p-2 rounded-md border border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-gray-700 text-orange-900 dark:text-orange-100 focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-500"
+                onBlur={handleSaveName}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSaveName();
+                  }
+                }}
+                className="flex-grow h-8 text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500"
               />
-            </div>
+            ) : (
+              <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">{myPlayerName}</span>
+            )}
           </div>
-          <DialogFooter>
-            <Button
-              type="submit"
-              onClick={handleUpdatePlayerName}
-              disabled={!tempPlayerName.trim()}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-            >
-              Save name
+          {isEditingName ? (
+            <Button variant="ghost" size="icon" onClick={handleSaveName} className="ml-2 h-8 w-8 text-green-600 hover:text-green-700">
+              <Save className="h-5 w-5" />
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          ) : (
+            <Button variant="ghost" size="icon" onClick={() => setIsEditingName(true)} className="ml-2 h-8 w-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <Edit className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+            <Users className="mr-2 h-5 w-5" /> Players
+          </h3>
+          <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md p-3 max-h-40 overflow-y-auto shadow-inner">
+            {playerScores.length === 0 ? (
+              <p className="text-gray-600 dark:text-gray-400 italic">No players yet...</p>
+            ) : (
+              <ul className="space-y-2">
+                {playerScores
+                  .sort((a, b) => b.score - a.score) // Sort by score descending
+                  .map((player) => (
+                    <li key={player.player_id} className="flex items-center justify-between text-gray-800 dark:text-gray-200 text-base">
+                      <span className="flex items-center">
+                        {player.is_creator && <Crown className="h-4 w-4 mr-1 text-yellow-500" />}
+                        {player.player_name} {player.player_id === currentUserId && "(You)"}
+                      </span>
+                      <Badge className="bg-orange-200 dark:bg-orange-600 text-orange-800 dark:text-orange-100 font-bold">
+                        {player.score}
+                      </Badge>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+            <XCircle className="mr-2 h-5 w-5" /> Alerts
+          </h3>
+          <div className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md p-3 max-h-40 overflow-y-auto shadow-inner">
+            {alerts.length === 0 ? (
+              <p className="text-gray-600 dark:text-gray-400 italic">No bingo alerts yet...</p>
+            ) : (
+              <ul className="space-y-2">
+                {alerts.map((alert) => (
+                  <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm ${getAlertClasses(alert.type)}`}>
+                    <span className="font-bold">{alert.player_name}:</span> {alert.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex flex-col gap-3 p-4 border-t border-orange-200 dark:border-orange-600 bg-orange-100/80 dark:bg-orange-700/80 rounded-b-xl">
+        <Button
+          onClick={handleCopyCode}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-md shadow-md transition-all duration-300 text-base h-10 flex items-center justify-center"
+        >
+          <Copy className="mr-2 h-5 w-5" /> Copy Party Code
+        </Button>
+        <Button
+          onClick={onRefreshPlayers}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md shadow-md transition-all duration-300 text-base h-10 flex items-center justify-center"
+        >
+          <RefreshCcw className="mr-2 h-5 w-5" /> Refresh Players
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="w-full bg-red-700 hover:bg-red-800 text-white py-2 px-4 rounded-md shadow-md transition-all duration-300 text-base h-10 flex items-center justify-center">
+              Leave Party
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-white dark:bg-gray-800 text-card-foreground p-6 rounded-xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-xl sm:text-2xl">Are you sure you want to leave?</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-900 dark:text-gray-300 text-base sm:text-lg">
+                You will exit this party. You can rejoin later if you have the code.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={onLeaveParty} className="h-12 text-base sm:text-lg">Leave</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </CardFooter>
     </Card>
   );
 };
