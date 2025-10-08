@@ -6,7 +6,6 @@ interface FruitIconProps {
 }
 
 const fruitEmojis: { [key: string]: string } = {
-  lime: '🍏', // Changed to green apple for a distinct green look
   passionfruit: '💜',
   lemon: '🍋',
   strawberry: '🍓',
@@ -20,22 +19,39 @@ const fruitEmojis: { [key: string]: string } = {
   cashew: '🌰',
   dragon_fruit: '🐉',
   banana: '🍌',
-  plum: '🫐',
   watermelon: '🍉',
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
-    sm: 'text-base', // Roughly 16px
-    md: 'text-xl',   // Roughly 24px
-    lg: 'text-2xl',  // Roughly 32px
+    sm: { emoji: 'text-base', circle: 'w-4 h-4' },
+    md: { emoji: 'text-xl', circle: 'w-6 h-6' },
+    lg: { emoji: 'text-2xl', circle: 'w-8 h-8' },
   };
 
   const effectiveSizeClass = sizeClasses[size];
-  const emoji = fruitEmojis[fruit.toLowerCase().replace(/\s/g, '_')] || '❓'; // Fallback emoji
+  const lowerCaseFruit = fruit.toLowerCase().replace(/\s/g, '_');
+
+  if (lowerCaseFruit === 'lime') {
+    return (
+      <div className={`inline-flex items-center justify-center rounded-full bg-[#76fb00] ${effectiveSizeClass.circle}`} role="img" aria-label="lime">
+        {/* Green filled circle for lime */}
+      </div>
+    );
+  }
+
+  if (lowerCaseFruit === 'plum') {
+    return (
+      <div className={`inline-flex items-center justify-center rounded-full bg-[#b10090] ${effectiveSizeClass.circle}`} role="img" aria-label="plum">
+        {/* Purple filled circle for plum */}
+      </div>
+    );
+  }
+
+  const emoji = fruitEmojis[lowerCaseFruit] || '❓'; // Fallback emoji
 
   return (
-    <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`} role="img" aria-label={fruit.replace(/_/g, ' ')}>
+    <span className={`inline-flex items-center justify-center ${effectiveSizeClass.emoji}`} role="img" aria-label={fruit.replace(/_/g, ' ')}>
       {emoji}
     </span>
   );
