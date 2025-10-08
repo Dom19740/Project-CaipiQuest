@@ -141,7 +141,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
       <CardHeader className="bg-orange-100/80 dark:bg-orange-700/80 border-b border-orange-200 dark:border-orange-600 rounded-t-xl p-4">
         <CardTitle className="text-xl sm:text-2xl text-orange-900 dark:text-orange-100 flex items-center justify-between font-semibold">
           <span className="flex items-center">
-            <Users className="mr-2 h-6 w-6" /> Party
+            <Users className="mr-2 h-6 w-6" /> Share Code
           </span>
           <div className="flex items-center space-x-2">
             <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
