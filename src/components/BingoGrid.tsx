@@ -109,7 +109,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             <Button
               variant="outline"
               size="icon"
-              className="w-full h-full bg-gradient-to-br from-orange-400 to-pink-400 dark:from-orange-800 dark:to-pink-800 text-lime-900 dark:text-lime-100 rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600 text-2xl hover:scale-105 transition-transform"
+              className="w-full h-full bg-white dark:bg-gray-800 text-lime-900 dark:text-lime-100 rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600 text-2xl hover:scale-105 transition-transform"
               aria-label="View selected fruits"
             >
               🛒
@@ -143,7 +143,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
       {/* Top row labels */}
       {displayFruits.map((fruit, index) => (
-        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-400 to-pink-400 dark:from-orange-800 dark:to-pink-800 text-lime-900 dark:text-lime-100 rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600">
+        <div key={`col-label-${index}`} className="aspect-square flex items-center justify-center bg-white dark:bg-gray-800 text-lime-900 dark:text-lime-100 rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600">
           <FruitIcon fruit={fruit} size="lg" />
         </div>
       ))}
@@ -152,7 +152,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
       {Array(gridSize).fill(null).map((_, rowIndex) => (
         <React.Fragment key={`row-${rowIndex}`}>
           {/* Left column labels */}
-          <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-orange-400 to-pink-400 dark:from-orange-800 dark:to-pink-800 text-lime-900 dark:text-lime-100 rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600">
+          <div className="aspect-square flex items-center justify-center bg-white dark:bg-gray-800 text-lime-900 dark:text-lime-100 rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600">
             <FruitIcon fruit={displayFruits[rowIndex]} size="lg" />
           </div>
 
@@ -171,8 +171,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
               >
                 <div className="flex space-x-1 mb-1">
-                  <FruitIcon fruit={fruit1} size="sm" /> {/* Reverted to size="sm" */}
-                  <FruitIcon fruit={fruit2} size="sm" /> {/* Reverted to size="sm" */}
+                  <FruitIcon fruit={fruit1} size="sm" />
+                  <FruitIcon fruit={fruit2} size="sm" />
                 </div>
                 {isCenterCell && <span className="text-xs text-lime-900 dark:text-lime-100">FREE</span>}
               </div>
