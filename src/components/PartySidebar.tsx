@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input"; // Re-added for player name dialog
-import { Label } from "@/components/ui/label"; // Re-added for player name dialog
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Dialog, // Re-added for player name dialog
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Copy, Share2, Users, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client'; // Re-added for player name update
+import { supabase } from '@/integrations/supabase/client';
 
 // Define interfaces to match use-game-room-realtime.ts
 interface BingoAlert {
@@ -40,7 +40,7 @@ interface PartySidebarProps {
   onRefreshPlayers: () => void;
   onLeaveParty: () => void;
   myPlayerName: string;
-  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>; // Added to allow updating player name
+  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
@@ -54,10 +54,10 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
   setMyPlayerName,
 }) => {
   const [isPlayerNameDialogOpen, setIsPlayerNameDialogOpen] = useState(false);
-  const [tempPlayerName, setTempPlayerName] = useState(myPlayerName); // For dialog input
+  const [tempPlayerName, setTempPlayerName] = useState(myPlayerName);
 
   useEffect(() => {
-    setTempPlayerName(myPlayerName); // Keep dialog input in sync with actual player name
+    setTempPlayerName(myPlayerName);
   }, [myPlayerName]);
 
   const handleUpdatePlayerName = async () => {
@@ -77,7 +77,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
       setMyPlayerName(tempPlayerName.trim());
       toast.success("Player name updated!");
       setIsPlayerNameDialogOpen(false);
-      onRefreshPlayers(); // Refresh player list to show updated name
+      onRefreshPlayers();
     } catch (error: any) {
       console.error("Error updating player name:", error.message);
       toast.error(`Failed to update player name: ${error.message}`);
@@ -104,7 +104,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
         toast.error("Failed to share party.");
       }
     } else {
-      handleCopyPartyCode(); // Fallback to copy if share API not available
+      handleCopyPartyCode();
     }
   };
 
@@ -137,6 +137,32 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
             <RefreshCw className="h-4 w-4 mr-1" /> Refresh
           </Button>
         </CardTitle>
+
+        {/* Moved Party Code and Share Buttons here */}
+        <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600 mb-2">
+          <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
+            {partyCode}
+          </span>
+          <div className="flex space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopyPartyCode}
+              className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
+            >
+              <Copy className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShareParty}
+              className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
         {myPlayerName && (
           <p className="text-sm text-orange-800 dark:text-orange-200">
             Playing as: <span className="font-medium">{myPlayerName}</span>
@@ -153,29 +179,6 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
       </CardHeader>
       <CardContent className="p-4 space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600">
-            <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
-              {partyCode}
-            </span>
-            <div className="flex space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCopyPartyCode}
-                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-              >
-                <Copy className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleShareParty}
-                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-              >
-                <Share2 className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
           <div>
             <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
               Players ({playerScores.length})
