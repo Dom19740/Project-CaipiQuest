@@ -31,14 +31,12 @@ const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
 
   switch (alert.type) {
     case 'rowCol':
-      return isMyAlert
-        ? 'text-red-800 dark:text-red-200 bg-red-300 dark:bg-red-800 border-red-500 dark:border-red-700'
-        : 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
-    case 'diagonal':
+    case 'diagonal': // Both rowCol and diagonal will use the same color scheme
       return isMyAlert
         ? 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700'
         : 'text-yellow-800 dark:text-yellow-200 bg-yellow-300 dark:bg-yellow-800 border-yellow-500 dark:border-yellow-700';
     case 'fullGrid':
+      // Full grid alerts remain distinct and celebratory
       return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl font-extrabold p-4 animate-pulse';
     default:
       return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
