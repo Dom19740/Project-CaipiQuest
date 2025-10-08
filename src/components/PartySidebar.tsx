@@ -11,6 +11,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Copy, Share2, Users, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
@@ -97,14 +108,17 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
         await navigator.share({
           title: "Join my CaipiQuest Bingo Party!",
           text: `Use code: ${partyCode}`,
-          url: window.location.href,
+          url: window.location.href, // Share the current URL
         });
         toast.success("Party shared successfully!");
       } catch (error) {
+        console.error("Failed to share party:", error);
         toast.error("Failed to share party.");
       }
     } else {
+      // Fallback for browsers that don't support navigator.share
       handleCopyPartyCode();
+      toast.info("Sharing not supported, party code copied instead!");
     }
   };
 
@@ -129,7 +143,6 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
-          {/* Party Code and Share Buttons moved inline with the title */}
           <div className="flex items-center space-x-2">
             <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
               {partyCode}
@@ -154,7 +167,6 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-6">
-        {/* Bingo Alerts moved here, with the refresh button */}
         {alerts.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center justify-between">
@@ -196,13 +208,30 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
               ))}
             </ul>
           </div>
-          <Button
-            onClick={onLeaveParty}
-            variant="destructive"
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-          >
-            Leave Party
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
+              >
+                Leave Party
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="w-[calc(100%-2rem)] bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 p-6 text-card-foreground">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-2">
+                  Are you sure you want to leave?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-gray-900 dark:text-gray-100 text-base sm:text-lg">
+                  Save the room code to re-enter.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="mt-4">
+                <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onLeaveParty} className="bg-red-800 hover:bg-red-900 text-white h-12 text-base sm:text-lg">Leave Party</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
       </CardContent>
