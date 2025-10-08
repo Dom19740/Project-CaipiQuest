@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lemon } from 'lucide-react'; // Import Lemon icon from lucide-react
+import { Citrus } from 'lucide-react'; // Corrected import to Citrus icon from lucide-react
 
 interface FruitIconProps {
   fruit: string; // This will be the English name
@@ -35,8 +35,8 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const normalizedFruitName = fruit.toLowerCase().replace(/\s/g, '_');
 
   if (normalizedFruitName === 'lime') {
-    // Use Lucide-React Lemon icon for lime
-    return <Lemon className={`inline-flex items-center justify-center text-lime-600 dark:text-lime-400 ${effectiveSizeClass}`} />;
+    // Use Lucide-React Citrus icon for lime
+    return <Citrus className={`inline-flex items-center justify-center text-lime-600 dark:text-lime-400 ${effectiveSizeClass}`} />;
   }
 
   const emoji = fruitEmojiMap[normalizedFruitName];
