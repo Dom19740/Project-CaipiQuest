@@ -82,6 +82,21 @@ const GameRoom: React.FC = () => {
     }
   }, [isLoadingInitialData, roomId, user, gridSize, fetchAndSetAllGameStates]);
 
+  // Effect to save current room info to local storage
+  useEffect(() => {
+    if (roomId && partyCode) {
+      localStorage.setItem('lastActiveRoomId', roomId);
+      localStorage.setItem('lastActivePartyCode', partyCode);
+      console.log(`GameRoom - Saved last active room: ${roomId} (${partyCode})`);
+    }
+  }, [roomId, partyCode]);
+
+  const handleLeaveParty = () => {
+    localStorage.removeItem('lastActiveRoomId');
+    localStorage.removeItem('lastActivePartyCode');
+    console.log("GameRoom - Cleared last active room from local storage.");
+    navigate('/lobby');
+  };
 
   if (isLoadingSession || isLoadingInitialData || !user || !roomId || playerSelectedFruits.length !== gridSize) {
     return (
@@ -130,7 +145,7 @@ const GameRoom: React.FC = () => {
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
               Refresh
             </Button>
-            <LeavePartyDialog onConfirm={() => navigate('/lobby')} />
+            <LeavePartyDialog onConfirm={handleLeaveParty} /> {/* Updated onConfirm handler */}
           </div>
         </div>
       </div>

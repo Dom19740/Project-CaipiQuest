@@ -13,6 +13,8 @@ const Lobby = () => {
   const [partyCodeInput, setPartyCodeInput] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [lastActiveRoomId, setLastActiveRoomId] = useState<string | null>(null);
+  const [lastActivePartyCode, setLastActivePartyCode] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user, isLoading } = useSession();
 
@@ -23,6 +25,16 @@ const Lobby = () => {
       localStorage.removeItem('playerName');
     }
   }, [playerName]);
+
+  // Effect to load last active room from local storage
+  useEffect(() => {
+    const storedRoomId = localStorage.getItem('lastActiveRoomId');
+    const storedPartyCode = localStorage.getItem('lastActivePartyCode');
+    if (storedRoomId && storedPartyCode) {
+      setLastActiveRoomId(storedRoomId);
+      setLastActivePartyCode(storedPartyCode);
+    }
+  }, []);
 
   useEffect(() => {
     const ensureSession = async () => {
@@ -83,7 +95,7 @@ const Lobby = () => {
     }
   };
 
-  const handleJoinParty = async () => {
+  const handleJoinPartyLogic = async (targetRoomId: string, targetPartyCode: string) => {
     if (!user || !user.id) {
       showError('A session could not be established. Please refresh and try again.');
       return;
@@ -98,12 +110,12 @@ const Lobby = () => {
       const { data: partyData, error: partyError } = await supabase
         .from('rooms')
         .select('id, grid_size')
-        .eq('code', partyCodeInput.toUpperCase())
+        .eq('id', targetRoomId)
         .single();
 
       if (partyError) {
         if (partyError.code === 'PGRST116') {
-          throw new Error('Party not found. Please check the code.');
+          throw new Error('Party not found. It might have been deleted.');
         }
         throw partyError;
       }
@@ -122,7 +134,7 @@ const Lobby = () => {
 
       const hasExistingFruits = existingGameState?.selected_fruits && existingGameState.selected_fruits.length === partyData.grid_size;
 
-      showSuccess(`Found party "${partyCodeInput.toUpperCase()}"!`);
+      showSuccess(`Joining party "${targetPartyCode}"!`);
 
       if (hasExistingFruits) {
         console.log("Lobby - Player has existing game state, navigating directly to game room.");
@@ -135,8 +147,23 @@ const Lobby = () => {
     } catch (error: any) {
       console.error('Lobby - Error joining party:', error.message);
       showError(`Failed to join party: ${error.message}`);
+      // If joining fails, clear the stored room info as it might be invalid
+      localStorage.removeItem('lastActiveRoomId');
+      localStorage.removeItem('lastActivePartyCode');
+      setLastActiveRoomId(null);
+      setLastActivePartyCode(null);
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const handleJoinParty = () => {
+    handleJoinPartyLogic(partyCodeInput.toUpperCase(), partyCodeInput.toUpperCase());
+  };
+
+  const handleJoinLastActiveParty = () => {
+    if (lastActiveRoomId && lastActivePartyCode) {
+      handleJoinPartyLogic(lastActiveRoomId, lastActivePartyCode);
     }
   };
 
@@ -165,6 +192,18 @@ const Lobby = () => {
             aria-label="Your Player Name"
           />
         </div>
+
+        {lastActiveRoomId && lastActivePartyCode && (
+          <div className="mb-6 w-full max-w-md mx-auto">
+            <Button
+              onClick={handleJoinLastActiveParty}
+              disabled={isJoining || isCreating || !playerName.trim() || !isSessionReady}
+              className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+            >
+              {isJoining ? 'Joining...' : `Join Current Game (${lastActivePartyCode})`}
+            </Button>
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-6 justify-center items-center lg:items-stretch">
           <Card className="w-full max-w-md bg-emerald-200/80 dark:bg-emerald-900/80 border-emerald-500 dark:border-emerald-800 shadow-lg text-card-foreground p-6 rounded-xl">
