@@ -35,6 +35,7 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
+    setMyPlayerName, // Destructure setMyPlayerName
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
@@ -140,6 +141,7 @@ const GameRoom: React.FC = () => {
             onRefreshPlayers={() => fetchAndSetAllGameStates(gridSize)}
             onLeaveParty={handleLeaveParty}
             myPlayerName={myPlayerName}
+            setMyPlayerName={setMyPlayerName} // Pass the setter
           />
 
           {/* Buttons (LeavePartyDialog is already here) */}
@@ -147,7 +149,7 @@ const GameRoom: React.FC = () => {
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-lime-700 hover:bg-lime-800 text-white py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
               Refresh Global
             </Button>
-            <LeavePartyDialog onConfirm={handleLeaveParty} />
+            {/* LeavePartyDialog is now handled within PartySidebar */}
           </div>
         </div>
       </div>

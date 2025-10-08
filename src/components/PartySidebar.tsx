@@ -1,8 +1,19 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input"; // Re-added for player name dialog
+import { Label } from "@/components/ui/label"; // Re-added for player name dialog
+import {
+  Dialog, // Re-added for player name dialog
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Copy, Share2, Users, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client'; // Re-added for player name update
 
 // Define interfaces to match use-game-room-realtime.ts
 interface BingoAlert {
@@ -29,6 +40,7 @@ interface PartySidebarProps {
   onRefreshPlayers: () => void;
   onLeaveParty: () => void;
   myPlayerName: string;
+  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>; // Added to allow updating player name
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
@@ -39,7 +51,39 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
   onRefreshPlayers,
   onLeaveParty,
   myPlayerName,
+  setMyPlayerName,
 }) => {
+  const [isPlayerNameDialogOpen, setIsPlayerNameDialogOpen] = useState(false);
+  const [tempPlayerName, setTempPlayerName] = useState(myPlayerName); // For dialog input
+
+  useEffect(() => {
+    setTempPlayerName(myPlayerName); // Keep dialog input in sync with actual player name
+  }, [myPlayerName]);
+
+  const handleUpdatePlayerName = async () => {
+    if (!currentUserId || !tempPlayerName.trim()) {
+      toast.error("Player name cannot be empty.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("game_states")
+        .update({ player_name: tempPlayerName.trim(), updated_at: new Date().toISOString() })
+        .eq("player_id", currentUserId);
+
+      if (error) throw error;
+
+      setMyPlayerName(tempPlayerName.trim());
+      toast.success("Player name updated!");
+      setIsPlayerNameDialogOpen(false);
+      onRefreshPlayers(); // Refresh player list to show updated name
+    } catch (error: any) {
+      console.error("Error updating player name:", error.message);
+      toast.error(`Failed to update player name: ${error.message}`);
+    }
+  };
+
   const handleCopyPartyCode = () => {
     if (partyCode) {
       navigator.clipboard.writeText(partyCode);
@@ -96,6 +140,14 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
         {myPlayerName && (
           <p className="text-sm text-orange-800 dark:text-orange-200">
             Playing as: <span className="font-medium">{myPlayerName}</span>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => setIsPlayerNameDialogOpen(true)}
+              className="ml-2 p-0 h-auto text-orange-700 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-100"
+            >
+              (Change)
+            </Button>
           </p>
         )}
       </CardHeader>
@@ -166,6 +218,41 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           </div>
         )}
       </CardContent>
+
+      {/* Player Name Dialog */}
+      <Dialog open={isPlayerNameDialogOpen} onOpenChange={setIsPlayerNameDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-6 rounded-lg shadow-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-orange-700 dark:text-orange-300">Set Your Player Name</DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Please enter a name to be displayed in the party.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="playerName" className="text-right text-orange-800 dark:text-orange-200">
+                Name
+              </Label>
+              <Input
+                id="playerName"
+                value={tempPlayerName}
+                onChange={(e) => setTempPlayerName(e.target.value)}
+                className="col-span-3 p-2 rounded-md border border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-gray-700 text-orange-900 dark:text-orange-100 focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-500"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="submit"
+              onClick={handleUpdatePlayerName}
+              disabled={!tempPlayerName.trim()}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Save name
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
