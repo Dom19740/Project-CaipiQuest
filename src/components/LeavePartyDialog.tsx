@@ -30,7 +30,7 @@ const LeavePartyDialog: React.FC<LeavePartyDialogProps> = ({ onConfirm }) => {
             Are you sure you want to leave?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-gray-900 dark:text-gray-100 text-base sm:text-lg">
-            This action will take you back to the lobby. Your game state in this party will be saved.
+            Save the room code to re-enter.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">

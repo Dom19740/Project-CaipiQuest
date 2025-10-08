@@ -142,7 +142,7 @@ const GameRoom: React.FC = () => {
 
           {/* Buttons */}
           <div className="flex flex-row gap-2 justify-center w-full">
-            <Button onClick={handleGlobalRefresh} className="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
+            <Button onClick={handleGlobalRefresh} className="flex-1 bg-caipi hover:bg-caipi-hover text-white py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
               Refresh
             </Button>
             <LeavePartyDialog onConfirm={handleLeaveParty} /> {/* Updated onConfirm handler */}
