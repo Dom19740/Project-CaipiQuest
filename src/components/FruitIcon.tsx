@@ -20,6 +20,8 @@ const fruitEmojis: { [key: string]: string } = {
   dragon_fruit: '🐉',
   banana: '🍌',
   watermelon: '🍉',
+  lime: '🟢', // Added emoji for lime
+  plum: '🫐', // Updated emoji for plum
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
@@ -32,21 +34,7 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const effectiveSizeClass = sizeClasses[size];
   const lowerCaseFruit = fruit.toLowerCase().replace(/\s/g, '_');
 
-  if (lowerCaseFruit === 'lime') {
-    return (
-      <div className={`inline-flex items-center justify-center rounded-full bg-[#76fb00] border border-black ${effectiveSizeClass.circle}`} role="img" aria-label="lime">
-        {/* Green filled circle for lime with black border */}
-      </div>
-    );
-  }
-
-  if (lowerCaseFruit === 'plum') {
-    return (
-      <div className={`inline-flex items-center justify-center rounded-full bg-[#b10090] border border-black ${effectiveSizeClass.circle}`} role="img" aria-label="plum">
-        {/* Purple filled circle for plum with black border */}
-      </div>
-    );
-  }
+  // Removed specific rendering for lime and plum, now they use emojis from fruitEmojis
 
   const emoji = fruitEmojis[lowerCaseFruit] || '❓'; // Fallback emoji
 
