@@ -3,10 +3,10 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
-import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
+import MadeWithDyad from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
-import BingoWinAnimation from '@/components/BingoWinAnimation'; // Import the new component
+import BingoWinAnimation from '@/components/BingoWinAnimation';
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -35,7 +35,7 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
-    setMyPlayerName,
+    setMyPlayerName, // Destructure setMyPlayerName
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
@@ -60,7 +60,7 @@ const GameRoom: React.FC = () => {
     handleCellToggle,
     handleBingo,
     handleResetGame,
-    handleGlobalRefresh, // Still needed for the hook, but button removed
+    handleGlobalRefresh,
     showWinAnimation,
     setShowWinAnimation,
   } = useGameLogic(

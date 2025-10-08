@@ -1,17 +1,36 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Share2, Copy } from 'lucide-react';
+import { Users, Share2, Copy, Trophy } from 'lucide-react'; // Added Trophy icon
 import { showSuccess, showError } from '@/utils/toast';
+import LeavePartyDialog from './LeavePartyDialog'; // Import LeavePartyDialog
+import { Input } from '@/components/ui/input'; // Import Input for player name editing
+
+// Import interfaces from the hook where they are defined
+import { BingoAlert, PlayerScore } from '@/hooks/use-game-room-realtime';
 
 interface PartySidebarProps {
   partyCode: string;
-  players: { id: string; name: string }[];
+  playerScores: PlayerScore[]; // Renamed from 'players' to match prop name
+  alerts: BingoAlert[]; // Added alerts prop
+  currentUserId: string; // Added currentUserId prop
+  onRefreshPlayers: () => void; // Added onRefreshPlayers prop
   onLeaveParty: () => void;
-  isHost: boolean;
+  myPlayerName: string; // Added myPlayerName prop
+  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>; // Added setMyPlayerName prop
+  // Removed isHost as it's not being passed or used
 }
 
-const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, players, onLeaveParty, isHost }) => {
+const PartySidebar: React.FC<PartySidebarProps> = ({
+  partyCode,
+  playerScores,
+  alerts,
+  currentUserId,
+  onRefreshPlayers,
+  onLeaveParty,
+  myPlayerName,
+  setMyPlayerName,
+}) => {
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(partyCode);
@@ -26,9 +45,9 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, players, onLeave
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join my Fruit Bingo Party!',
-          text: `Join my Fruit Bingo party with code: ${partyCode}`,
-          url: window.location.href, // Or a specific join URL if available
+          title: 'Join my CaipiQuest Bingo Party!',
+          text: `Join my CaipiQuest Bingo party with code: ${partyCode}`,
+          url: window.location.href,
         });
         showSuccess('Party code shared!');
       } catch (error) {
@@ -38,10 +57,28 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, players, onLeave
         }
       }
     } else {
-      // Fallback for browsers that don't support Web Share API
       handleCopyCode();
       showSuccess('Party code copied to clipboard (Web Share not supported).');
     }
+  };
+
+  const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
+    switch (type) {
+      case 'rowCol':
+        return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
+      case 'diagonal':
+        return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
+      case 'fullGrid':
+        return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
+      default:
+        return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
+    }
+  };
+
+  const handlePlayerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setMyPlayerName(newName);
+    localStorage.setItem('playerName', newName); // Update local storage immediately
   };
 
   return (
@@ -79,22 +116,48 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, players, onLeave
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-4 overflow-y-auto">
-        <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-100 mb-3">Players ({players.length})</h3>
-        <ul className="space-y-2">
-          {players.map((player) => (
-            <li key={player.id} className="flex items-center text-orange-700 dark:text-orange-200">
-              <Users className="mr-2 h-4 w-4" /> {player.name} {player.id === localStorage.getItem('player_id') ? '(You)' : ''}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-100 mb-2">Your Name</h3>
+          <Input
+            type="text"
+            value={myPlayerName}
+            onChange={handlePlayerNameChange}
+            className="w-full text-center border-orange-600 focus:border-orange-800 focus:ring-orange-800 text-base py-2 h-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-300"
+            aria-label="Your Player Name"
+          />
+        </div>
+
+        <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-100 mb-3">Players ({playerScores.length})</h3>
+        <ul className="space-y-2 mb-4">
+          {playerScores.sort((a, b) => b.caipisCount - a.caipisCount).map((player) => (
+            <li key={player.id} className={`flex items-center justify-between p-2 rounded-md shadow-sm ${player.isMe ? 'bg-orange-200 dark:bg-orange-700' : 'bg-orange-100 dark:bg-orange-800'} text-orange-800 dark:text-orange-100`}>
+              <span className="flex items-center">
+                <Users className="mr-2 h-4 w-4" /> {player.name} {player.isMe ? '(You)' : ''}
+              </span>
+              <span className="flex items-center text-sm font-bold">
+                <Trophy className="mr-1 h-4 w-4 text-yellow-500" /> {player.caipisCount}
+              </span>
             </li>
           ))}
         </ul>
+
+        <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-100 mb-3">Bingo Alerts</h3>
+        <div className="max-h-[150px] overflow-y-auto p-2 bg-orange-50 dark:bg-orange-800 rounded-lg border border-orange-200 dark:border-orange-700 shadow-inner">
+          {alerts.length === 0 ? (
+            <p className="text-gray-800 dark:text-gray-300 italic text-sm">No bingo alerts yet...</p>
+          ) : (
+            <ul className="space-y-2">
+              {alerts.map((alert) => (
+                <li key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm ${getAlertClasses(alert.type)}`}>
+                  {alert.message}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </CardContent>
       <CardFooter className="p-4 border-t border-orange-200 dark:border-orange-600 bg-orange-100/80 dark:bg-orange-700/80 rounded-b-xl">
-        <Button
-          onClick={onLeaveParty}
-          className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-full"
-        >
-          Leave Party
-        </Button>
+        <LeavePartyDialog onConfirm={onLeaveParty} />
       </CardFooter>
     </Card>
   );
