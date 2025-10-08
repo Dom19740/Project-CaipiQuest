@@ -7,7 +7,7 @@ interface FruitIconProps {
 
 const fruitEmojis: { [key: string]: string } = {
   passionfruit: '💜',
-  lemon: '🍋',
+  lemon: '🍋‍🟩',
   strawberry: '🍓',
   mango: '🥭',
   pineapple: '🍍',
@@ -20,15 +20,15 @@ const fruitEmojis: { [key: string]: string } = {
   dragon_fruit: '🐉',
   banana: '🍌',
   watermelon: '🍉',
-  lime: '🍋‍🟩', // Added emoji for lime
-  plum: '🫐', // Updated emoji for plum
+  lime: '🟢',
+  plum: '🫐',
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
     sm: { emoji: 'text-base', circle: 'w-4 h-4' },
     md: { emoji: 'text-xl', circle: 'w-6 h-6' },
-    lg: { emoji: 'text-2xl', circle: 'w-8 h-8' },
+    lg: { emoji: 'text-4xl', circle: 'w-8 h-8' }, // Increased font size for 'lg'
   };
 
   const effectiveSizeClass = sizeClasses[size];
