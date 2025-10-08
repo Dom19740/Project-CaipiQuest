@@ -8,6 +8,7 @@ interface GameRoomData {
   gridSize: number;
   partyCode: string;
   partyCreatorId: string | null;
+  partyCreatorName: string | null; // Added
   myGameStateId: string | null;
   myGridData: boolean[][];
   myPlayerName: string;
@@ -17,6 +18,7 @@ interface GameRoomData {
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>;
   setPlayerSelectedFruits: React.Dispatch<React.SetStateAction<string[]>>;
   setGridSize: React.Dispatch<React.SetStateAction<number>>;
+  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>; // Added
 }
 
 export const useGameRoomData = (roomId: string | undefined, initialSelectedFruitsFromState: string[] | undefined, initialGridSizeFromState: number | undefined): GameRoomData => {
@@ -27,6 +29,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
   const [gridSize, setGridSize] = useState<number>(initialGridSizeFromState || 5);
   const [partyCode, setPartyCode] = useState<string>('');
   const [partyCreatorId, setPartyCreatorId] = useState<string | null>(null);
+  const [partyCreatorName, setPartyCreatorName] = useState<string | null>(null); // Added
   const [myGameStateId, setMyGameStateId] = useState<string | null>(null);
   const [myGridData, setMyGridData] = useState<boolean[][]>(Array(gridSize).fill(null).map(() => Array(gridSize).fill(false))); // Fixed initialization
   const [myPlayerName, setMyPlayerName] = useState<string>(localStorage.getItem('playerName') || '');
@@ -129,7 +132,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
       setIsLoadingInitialData(true);
       const { data: party, error: partyError } = await supabase
         .from('rooms') // Still refers to 'rooms' table in DB
-        .select('code, created_by, bingo_alerts, grid_size')
+        .select('code, created_by, created_by_name, bingo_alerts, grid_size') // Added created_by_name
         .eq('id', roomId)
         .single();
 
@@ -142,6 +145,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
       }
       setPartyCode(party.code);
       setPartyCreatorId(party.created_by);
+      setPartyCreatorName(party.created_by_name); // Set party creator name
       const currentPartyGridSize = party.grid_size || 5;
       setGridSize(currentPartyGridSize);
 
@@ -192,6 +196,7 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
     gridSize,
     partyCode,
     partyCreatorId,
+    partyCreatorName, // Returned
     myGameStateId,
     myGridData,
     myPlayerName,
@@ -201,5 +206,6 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
+    setMyPlayerName,
   };
 };

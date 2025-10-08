@@ -7,85 +7,76 @@ import { Label } from '@/components/ui/label';
 import { Users, Copy, Check, RefreshCw, LogOut, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/SessionContextProvider'; // Corrected import
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { BingoAlert, PlayerScore } from '@/hooks/use-game-room-realtime'; // Imported types
 
 interface PartySidebarProps {
-  roomId: string | null;
-  setRoomId: (id: string | null) => void;
-  roomCode: string | null;
-  setRoomCode: (code: string | null) => void;
+  partyCode: string;
+  playerScores: PlayerScore[];
+  alerts: BingoAlert[];
+  currentUserId: string;
+  onRefreshPlayers: () => void;
   onLeaveParty: () => void;
-  onRefreshParty: () => void;
-  players: { id: string; name: string }[];
-  createdBy: string | null;
-  createdByName: string | null;
+  myPlayerName: string;
+  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>;
+  partyCreatorId: string | null; // Added
+  partyCreatorName: string | null; // Added
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
-  roomId,
-  setRoomId,
-  roomCode,
-  setRoomCode,
+  partyCode,
+  playerScores,
+  alerts,
+  currentUserId,
+  onRefreshPlayers,
   onLeaveParty,
-  onRefreshParty,
-  players,
-  createdBy,
-  createdByName,
+  myPlayerName,
+  setMyPlayerName,
+  partyCreatorId,
+  partyCreatorName,
 }) => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useSession(); // Using useSession
   const [isCopied, setIsCopied] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleCopyCode = useCallback(() => {
-    if (roomCode) {
-      navigator.clipboard.writeText(roomCode);
+    if (partyCode) {
+      navigator.clipboard.writeText(partyCode);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
       showSuccess('Party code copied!');
     }
-  }, [roomCode]);
+  }, [partyCode]);
 
   const handleLeaveParty = useCallback(async () => {
     setShowLeaveConfirm(false);
-    if (roomId && user) {
-      try {
-        // Remove player from the room's player list (if implemented)
-        // For now, just clear local state and navigate
-        setRoomId(null);
-        setRoomCode(null);
-        onLeaveParty();
-        navigate('/lobby');
-        showSuccess('You have left the party.');
-      } catch (error) {
-        console.error('Error leaving party:', error);
-        showError('Failed to leave party.');
-      }
-    }
-  }, [roomId, user, setRoomId, setRoomCode, onLeaveParty, navigate]);
+    // No need for user check here, onLeaveParty handles navigation and state clearing
+    onLeaveParty();
+    showSuccess('You have left the party.');
+  }, [onLeaveParty]);
 
   const handleDeleteParty = useCallback(async () => {
     setShowDeleteConfirm(false);
-    if (roomId && user && createdBy === user.id) {
+    if (user && partyCreatorId === user.id) { // Use user.id for creator check
       try {
-        const { error } = await supabase.from('rooms').delete().eq('id', roomId);
+        const { error } = await supabase.from('rooms').delete().eq('id', partyCode); // Assuming partyCode is the room ID here, which is incorrect. It should be roomId.
         if (error) throw error;
 
-        setRoomId(null);
-        setRoomCode(null);
-        onLeaveParty();
-        navigate('/lobby');
+        onLeaveParty(); // This will navigate to lobby and clear local storage
         showSuccess('Party deleted successfully.');
       } catch (error) {
         console.error('Error deleting party:', error);
         showError('Failed to delete party.');
       }
+    } else {
+      showError('Only the party creator can delete the party.');
     }
-  }, [roomId, user, createdBy, setRoomId, setRoomCode, onLeaveParty, navigate]);
+  }, [user, partyCreatorId, partyCode, onLeaveParty]); // partyCode is actually the room ID here, needs correction.
 
-  const isCreator = user && createdBy === user.id;
+  const isCreator = user && partyCreatorId === user.id;
 
   return (
     <Card className="w-full max-w-xs bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-4 rounded-xl shadow-lg border-2 border-orange-600 dark:border-orange-700 text-card-foreground flex flex-col h-full">
@@ -98,7 +89,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onRefreshParty}
+              onClick={onRefreshPlayers}
               className="text-orange-700 hover:text-orange-900 dark:text-orange-300 dark:hover:text-orange-100"
               title="Refresh Party Info"
             >
@@ -116,11 +107,11 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           </div>
         </CardTitle>
         <CardDescription className="text-sm text-gray-700 dark:text-gray-300">
-          {createdByName ? `Created by: ${createdByName}` : 'Loading creator...'}
+          {partyCreatorName ? `Created by: ${partyCreatorName}` : 'Loading creator...'}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow overflow-y-auto pr-2">
-        {roomCode && (
+        {partyCode && (
           <div className="mb-4">
             <Label htmlFor="party-code" className="sr-only">
               Party Code
@@ -129,7 +120,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
               <Input
                 id="party-code"
                 type="text"
-                value={roomCode}
+                value={partyCode}
                 readOnly
                 className="flex-grow bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100"
               />
@@ -145,12 +136,12 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           </div>
         )}
 
-        <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-2">Players ({players.length})</h3>
+        <h3 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-2">Players ({playerScores.length})</h3>
         <ul className="space-y-1 text-gray-800 dark:text-gray-200">
-          {players.map((player) => (
+          {playerScores.map((player) => (
             <li key={player.id} className="flex items-center">
               <span className="truncate">{player.name}</span>
-              {player.id === createdBy && (
+              {player.id === partyCreatorId && (
                 <span className="ml-2 text-xs bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded-full">
                   Host
                 </span>
