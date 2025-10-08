@@ -1,5 +1,5 @@
 import React from 'react';
-import LimeIcon from '@/assets/fruits/lime.svg?react'; // Import SVG as a React component
+import { Lemon } from 'lucide-react'; // Import Lemon icon from lucide-react
 
 interface FruitIconProps {
   fruit: string; // This will be the English name
@@ -8,7 +8,7 @@ interface FruitIconProps {
 
 const fruitEmojiMap: { [key: string]: string } = {
   passionfruit: '💜',
-  lemon: '🍋',
+  lemon: '🍋', // Keeping lemon as emoji for distinction
   strawberry: '🍓',
   mango: '🥭',
   pineapple: '🍍',
@@ -26,7 +26,7 @@ const fruitEmojiMap: { [key: string]: string } = {
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
-    sm: 'w-4 h-4', // Tailwind classes for SVG size
+    sm: 'w-4 h-4',
     md: 'w-6 h-6',
     lg: 'w-8 h-8',
   };
@@ -35,7 +35,8 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const normalizedFruitName = fruit.toLowerCase().replace(/\s/g, '_');
 
   if (normalizedFruitName === 'lime') {
-    return <LimeIcon className={`inline-flex items-center justify-center text-lime-600 dark:text-lime-400 ${effectiveSizeClass}`} />;
+    // Use Lucide-React Lemon icon for lime
+    return <Lemon className={`inline-flex items-center justify-center text-lime-600 dark:text-lime-400 ${effectiveSizeClass}`} />;
   }
 
   const emoji = fruitEmojiMap[normalizedFruitName];
