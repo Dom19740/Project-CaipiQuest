@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Added Link
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -208,9 +208,9 @@ const Lobby = () => {
             </CardContent>
           </Card>
         </div>
-        <Link to="/" className="mt-8 w-full max-w-md">
-          <Button variant="outline" className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12 border-gray-400 dark:border-gray-600">
-            Return to Welcome Screen
+        <Link to="/" className="mt-6 w-full max-w-md">
+          <Button variant="outline" className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300 text-xs border-gray-400 dark:border-gray-600">
+            Return
           </Button>
         </Link>
       </div>
