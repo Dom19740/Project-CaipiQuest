@@ -208,8 +208,8 @@ const Lobby = () => {
             </CardContent>
           </Card>
         </div>
-        <Link to="/" className="mt-6 w-full max-w-md">
-          <Button variant="outline" className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300 text-xs border-gray-400 dark:border-gray-600">
+        <Link to="/" className="mt-8 max-w-md mx-auto block">
+          <Button variant="outline" className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300 text-xs border-gray-400 dark:border-gray-600">
             Return
           </Button>
         </Link>
