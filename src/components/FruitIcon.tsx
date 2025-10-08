@@ -9,7 +9,7 @@ const fruitEmojis: { [key: string]: string } = {
   passionfruit: '💜',
   lemon: '🍋‍🟩',
   strawberry: '🍓',
-  mango: '🥭',
+  mango: '🍋‍🟩',
   pineapple: '🍍',
   red_fruits: '🍒',
   guava: '🍐',
