@@ -17,7 +17,6 @@ interface GameRoomData {
   setMyGridData: React.Dispatch<React.SetStateAction<boolean[][]>>;
   setPlayerSelectedFruits: React.Dispatch<React.SetStateAction<string[]>>;
   setGridSize: React.Dispatch<React.SetStateAction<number>>;
-  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>; // Added setMyPlayerName
 }
 
 export const useGameRoomData = (roomId: string | undefined, initialSelectedFruitsFromState: string[] | undefined, initialGridSizeFromState: number | undefined): GameRoomData => {
@@ -202,6 +201,5 @@ export const useGameRoomData = (roomId: string | undefined, initialSelectedFruit
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
-    setMyPlayerName,
   };
 };
