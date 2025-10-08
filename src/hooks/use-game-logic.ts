@@ -38,6 +38,7 @@ export const useGameLogic = (
 ) => {
   const { user } = useSession();
   const generateAlertId = useAlertIdGenerator(); // Use the new hook for ID generation
+  const [showWinAnimation, setShowWinAnimation] = useState(false); // New state for win animation
 
   const handleCellToggle = useCallback(async (row: number, col: number) => {
     if (!myGameStateId || !user || !partyId) return; // Changed from roomId
@@ -117,6 +118,9 @@ export const useGameLogic = (
       console.error('useGameLogic - Error recording global bingo:', updatePartyAlertsError); // Changed from updateRoomAlertsError
     } else {
       showSuccess(message);
+      if (newAlert.playerId === user.id) { // Only show win animation for the current user
+        setShowWinAnimation(true);
+      }
     }
   }, [partyId, user, myPlayerName, generateAlertId]); // Changed from roomId
 
@@ -169,5 +173,7 @@ export const useGameLogic = (
     handleBingo,
     handleResetGame,
     handleGlobalRefresh,
+    showWinAnimation, // Expose the state
+    setShowWinAnimation, // Expose the setter
   };
 };

@@ -6,6 +6,7 @@ import PartySidebar from '@/components/PartySidebar';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
+import BingoWinAnimation from '@/components/BingoWinAnimation'; // Import the new component
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
@@ -59,6 +60,8 @@ const GameRoom: React.FC = () => {
     handleBingo,
     handleResetGame,
     handleGlobalRefresh,
+    showWinAnimation, // Get the win animation state
+    setShowWinAnimation, // Get the setter for win animation state
   } = useGameLogic(
     roomId,
     myGameStateId,
@@ -135,6 +138,8 @@ const GameRoom: React.FC = () => {
         isOpen={showNewPlayerAlert}
         onClose={() => setShowNewPlayerAlert(false)}
       />
+
+      <BingoWinAnimation show={showWinAnimation} onClose={() => setShowWinAnimation(false)} /> {/* New win animation component */}
 
       <MadeWithDyad />
     </div>
