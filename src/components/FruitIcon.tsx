@@ -1,4 +1,5 @@
 import React from 'react';
+import LimeIcon from '@/assets/fruits/lime.svg?react'; // Import SVG as a React component
 
 interface FruitIconProps {
   fruit: string; // This will be the English name
@@ -6,7 +7,6 @@ interface FruitIconProps {
 }
 
 const fruitEmojiMap: { [key: string]: string } = {
-  lime: '🍋‍🟩',
   passionfruit: '💜',
   lemon: '🍋',
   strawberry: '🍓',
@@ -26,22 +26,34 @@ const fruitEmojiMap: { [key: string]: string } = {
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
-    sm: 'text-base', // Smaller emoji size
-    md: 'text-xl', // Medium emoji size
-    lg: 'text-2xl', // Larger emoji size
+    sm: 'w-4 h-4', // Tailwind classes for SVG size
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
   };
 
   const effectiveSizeClass = sizeClasses[size];
-  const NormalizedFruitName = fruit.toLowerCase().replace(/\s/g, '_');
-  const emoji = fruitEmojiMap[NormalizedFruitName];
+  const normalizedFruitName = fruit.toLowerCase().replace(/\s/g, '_');
+
+  if (normalizedFruitName === 'lime') {
+    return <LimeIcon className={`inline-flex items-center justify-center text-lime-600 dark:text-lime-400 ${effectiveSizeClass}`} />;
+  }
+
+  const emoji = fruitEmojiMap[normalizedFruitName];
 
   if (!emoji) {
     console.warn(`No emoji found for fruit: ${fruit}`);
-    return <span className={effectiveSizeClass}>❓</span>;
+    return <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`}>❓</span>;
   }
 
+  // For emojis, we use text size classes
+  const emojiTextSizeClasses = {
+    sm: 'text-base',
+    md: 'text-xl',
+    lg: 'text-2xl',
+  };
+
   return (
-    <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`}>
+    <span className={`inline-flex items-center justify-center ${emojiTextSizeClasses[size]}`}>
       {emoji}
     </span>
   );
