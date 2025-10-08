@@ -65,6 +65,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        caipi: {
+          DEFAULT: "#6cceef",
+          hover: "#5bbcdb", // A slightly darker shade for hover
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

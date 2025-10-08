@@ -185,7 +185,7 @@ const Lobby = () => {
               <Button
                 onClick={handleJoinParty}
                 disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-caipi hover:bg-caipi-hover text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isJoining ? 'Joining...' : 'Join'}
               </Button>
@@ -201,7 +201,7 @@ const Lobby = () => {
               <Button
                 onClick={handleCreateParty}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
-                className="w-full bg-lime-700 hover:bg-lime-800 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-caipi hover:bg-caipi-hover text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isCreating ? 'Creating...' : 'Create'}
               </Button>

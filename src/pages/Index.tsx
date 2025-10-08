@@ -24,7 +24,7 @@ const Index = () => {
           className="mx-auto my-8 max-w-full h-auto rounded-lg shadow-lg border-2 border-lime-500 dark:border-lime-800"
         />
         <Link to="/lobby">
-          <Button className="w-full sm:w-auto px-10 py-5 text-lg bg-lime-700 hover:bg-lime-800 text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 h-14">
+          <Button className="w-full sm:w-auto px-10 py-5 text-lg bg-caipi hover:bg-caipi-hover text-white font-bold rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 h-14">
             Play CaipiQuest
           </Button>
         </Link>

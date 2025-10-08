@@ -99,7 +99,7 @@ const FruitSelection: React.FC = () => {
           <Button
             onClick={handleProceed}
             disabled={isProceedDisabled}
-            className="w-full bg-lime-800 hover:bg-lime-900 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
+            className="w-full bg-caipi hover:bg-caipi-hover text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
           >
             Start Game ({selectedFruits.length}/{fixedGridSize})
           </Button>
