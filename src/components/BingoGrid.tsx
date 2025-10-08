@@ -27,25 +27,15 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   const CSS_GRID_DIMENSION = gridSize + 1;
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
 
-  // NEW: Use a ref to track bingos *this specific grid instance* has already reported
-  // This prevents the onBingo callback from being fired multiple times for the same bingo
-  // by the same player's grid, while still allowing other players to trigger their own.
   const reportedBingosRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Reset reported bingos when the game resets
     if (resetKey !== 0) {
       reportedBingosRef.current = new Set();
     }
-    // When initial alerts are loaded, populate reportedBingosRef with *this player's* existing bingos
-    // This ensures that if a player refreshes, they don't re-trigger bingos they already achieved.
     if (initialAlertsLoaded && partyBingoAlerts) {
-      // We need to filter for the current user's alerts if we want to prevent re-triggering for them
-      // However, the BingoGrid component doesn't have access to the current user ID.
-      // The `useGameLogic` hook already handles deduplication in the database per player.
-      // So, for the BingoGrid's local `reportedBingosRef`, we should only add bingos that *this instance* has reported.
-      // For now, we'll keep it simple and let `useGameLogic` handle the per-player deduplication.
-      // The `reportedBingosRef` here will primarily prevent rapid re-triggering from UI changes.
+      // This ref is primarily for preventing rapid re-triggering from UI changes.
+      // The `useGameLogic` hook handles per-player deduplication in the database.
     }
   }, [resetKey, initialAlertsLoaded, partyBingoAlerts]);
 
@@ -54,7 +44,6 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
     if (!checkedCells || checkedCells.length === 0) return;
 
     const checkLine = (line: boolean[], type: 'rowCol' | 'diagonal', message: string, canonicalId: string) => {
-      // Only trigger onBingo if this specific grid instance hasn't reported this canonicalId yet
       if (line.every(cell => cell) && !reportedBingosRef.current.has(canonicalId)) {
         onBingo(type, message, canonicalId);
         reportedBingosRef.current.add(canonicalId);
@@ -63,13 +52,13 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
 
     // Check rows
     for (let i = 0; i < gridSize; i++) {
-      checkLine(checkedCells[i], 'rowCol', `completed a row!`, `row-${i}`);
+      checkLine(checkedCells[i], 'rowCol', `completed a line!`, `row-${i}`);
     }
 
     // Check columns
     for (let j = 0; j < gridSize; j++) {
       const column = Array(gridSize).fill(false).map((_, i) => checkedCells[i][j]);
-      checkLine(column, 'rowCol', `completed a column!`, `col-${j}`);
+      checkLine(column, 'rowCol', `completed a line!`, `col-${j}`);
     }
 
     // Check diagonals
@@ -88,7 +77,6 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   }, [checkedCells, gridSize, onBingo]);
 
   useEffect(() => {
-    // Only check for bingos once initial data is loaded to avoid premature triggers
     if (initialAlertsLoaded) {
       checkBingo();
     }
