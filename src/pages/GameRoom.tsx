@@ -97,9 +97,11 @@ const GameRoom: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}
         <div className="flex-1 flex flex-col items-center justify-center gap-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold drop-shadow-lg text-center text-foreground w-full">
-            🍹 <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900">CaipiQuest Bingo!</span> 🍹
-          </h1>
+          <img
+            src="/title_caipiquest_bingo.png"
+            alt="CaipiQuest Bingo!"
+            className="max-w-full h-auto w-80 sm:w-96 md:w-[400px] lg:w-[450px] xl:w-[500px] drop-shadow-lg"
+          />
           <BingoGrid
             onBingo={handleBingo}
             resetKey={resetKey}
