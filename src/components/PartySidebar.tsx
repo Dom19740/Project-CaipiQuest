@@ -1,198 +1,79 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Copy, Share2, PlusCircle, Users, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Copy, Share2, Users, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
+// Define interfaces to match use-game-room-realtime.ts
+interface BingoAlert {
+  id: string;
+  type: 'rowCol' | 'diagonal' | 'fullGrid';
+  message: string;
+  playerName?: string;
+  playerId?: string;
+  canonicalId?: string;
+}
+
+interface PlayerScore {
+  id: string;
+  name: string;
+  caipisCount: number;
+  isMe: boolean;
+}
+
 interface PartySidebarProps {
-  roomId: string | null;
-  setRoomId: (id: string | null) => void;
-  roomCode: string | null;
-  setRoomCode: (code: string | null) => void;
-  players: { id: string; name: string }[];
-  setPlayers: (players: { id: string; name: string }[]) => void;
-  onRoomCreated: (roomId: string, roomCode: string) => void;
-  onRoomJoined: (roomId: string, roomCode: string) => void;
-  onLeaveRoom: () => void;
-  playerName: string;
-  setPlayerName: (name: string) => void;
-  gridSize: number;
-  setGridSize: (size: number) => void;
-  bingoAlerts: { message: string; timestamp: string }[];
+  partyCode: string;
+  playerScores: PlayerScore[];
+  alerts: BingoAlert[];
+  currentUserId: string;
+  onRefreshPlayers: () => void;
+  onLeaveParty: () => void;
+  myPlayerName: string;
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
-  roomId,
-  setRoomId,
-  roomCode,
-  setRoomCode,
-  players,
-  setPlayers,
-  onRoomCreated,
-  onRoomJoined,
-  onLeaveRoom,
-  playerName,
-  setPlayerName,
-  gridSize,
-  setGridSize,
-  bingoAlerts,
+  partyCode,
+  playerScores,
+  alerts,
+  currentUserId,
+  onRefreshPlayers,
+  onLeaveParty,
+  myPlayerName,
 }) => {
-  const [newRoomCode, setNewRoomCode] = useState("");
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
-  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
-  const [isPlayerNameDialogOpen, setIsPlayerNameDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchPlayerName = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("first_name")
-          .eq("id", user.id)
-          .single();
-        if (data?.first_name) {
-          setPlayerName(data.first_name);
-        } else {
-          setIsPlayerNameDialogOpen(true);
-        }
-      } else {
-        setIsPlayerNameDialogOpen(true);
-      }
-    };
-    fetchPlayerName();
-  }, [setPlayerName]);
-
-  const generateRoomCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
-  const handleCreateRoom = async () => {
-    setIsCreatingRoom(true);
-    const code = generateRoomCode();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      toast.error("You must be logged in to create a room.");
-      setIsCreatingRoom(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("rooms")
-        .insert({ code, created_by: user.id, created_by_name: playerName, grid_size: gridSize })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      onRoomCreated(data.id, data.code);
-      toast.success(`Room "${data.code}" created successfully!`);
-    } catch (error: any) {
-      toast.error(`Error creating room: ${error.message}`);
-    } finally {
-      setIsCreatingRoom(false);
+  const handleCopyPartyCode = () => {
+    if (partyCode) {
+      navigator.clipboard.writeText(partyCode);
+      toast.success("Party code copied to clipboard!");
     }
   };
 
-  const handleJoinRoom = async () => {
-    setIsJoiningRoom(true);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      toast.error("You must be logged in to join a room.");
-      setIsJoiningRoom(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("rooms")
-        .select("id, code, grid_size")
-        .eq("code", newRoomCode.toUpperCase())
-        .single();
-
-      if (error) throw error;
-
-      onRoomJoined(data.id, data.code);
-      setGridSize(data.grid_size);
-      toast.success(`Joined room "${data.code}"!`);
-    } catch (error: any) {
-      toast.error(`Error joining room: ${error.message}`);
-    } finally {
-      setIsJoiningRoom(false);
-    }
-  };
-
-  const handleUpdatePlayerName = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user && playerName) {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ first_name: playerName })
-        .eq("id", user.id);
-      if (error) {
-        toast.error(`Error updating player name: ${error.message}`);
-      } else {
-        toast.success("Player name updated!");
-        setIsPlayerNameDialogOpen(false);
-      }
-    }
-  };
-
-  const handleCopyRoomCode = () => {
-    if (roomCode) {
-      navigator.clipboard.writeText(roomCode);
-      toast.success("Room code copied to clipboard!");
-    }
-  };
-
-  const handleShareRoom = async () => {
-    if (roomCode && navigator.share) {
+  const handleShareParty = async () => {
+    if (partyCode && navigator.share) {
       try {
         await navigator.share({
-          title: "Join my CaipiQuest Bingo Room!",
-          text: `Use code: ${roomCode}`,
+          title: "Join my CaipiQuest Bingo Party!",
+          text: `Use code: ${partyCode}`,
           url: window.location.href,
         });
-        toast.success("Room shared successfully!");
+        toast.success("Party shared successfully!");
       } catch (error) {
-        toast.error("Failed to share room.");
+        toast.error("Failed to share party.");
       }
     } else {
-      handleCopyRoomCode(); // Fallback to copy if share API not available
+      handleCopyPartyCode(); // Fallback to copy if share API not available
     }
   };
 
-  const handleRefreshPlayers = async () => {
-    if (roomId) {
-      const { data, error } = await supabase
-        .from("game_states")
-        .select("player_id, player_name")
-        .eq("room_id", roomId);
-
-      if (error) {
-        toast.error(`Error fetching players: ${error.message}`);
-        return;
-      }
-
-      const uniquePlayers = Array.from(new Map(data.map(p => [p.player_id, p])).values());
-      setPlayers(uniquePlayers.map(p => ({ id: p.player_id, name: p.player_name || "Unknown Player" })));
-      toast.success("Player list refreshed!");
+  const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
+    switch (type) {
+      case 'rowCol':
+        return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
+      case 'diagonal':
+        return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
+      case 'fullGrid':
+        return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
+      default:
+        return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
     }
   };
 
@@ -203,164 +84,88 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
-          {roomId && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRefreshPlayers}
-              className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-            >
-              <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefreshPlayers}
+            className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
+          >
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
         </CardTitle>
-        {playerName && (
+        {myPlayerName && (
           <p className="text-sm text-orange-800 dark:text-orange-200">
-            Playing as: <span className="font-medium">{playerName}</span>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => setIsPlayerNameDialogOpen(true)}
-              className="ml-2 p-0 h-auto text-orange-700 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-100"
-            >
-              (Change)
-            </Button>
+            Playing as: <span className="font-medium">{myPlayerName}</span>
           </p>
         )}
       </CardHeader>
       <CardContent className="p-4 space-y-6">
-        {!roomId ? (
-          <div className="space-y-4">
-            <Button
-              onClick={handleCreateRoom}
-              disabled={isCreatingRoom || !playerName}
-              className="w-full bg-caipi hover:bg-caipi-hover text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-            >
-              <PlusCircle className="mr-2 h-5 w-5" />
-              {isCreatingRoom ? "Creating..." : "Create New Room"}
-            </Button>
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Enter Room Code"
-                value={newRoomCode}
-                onChange={(e) => setNewRoomCode(e.target.value)}
-                className="w-full p-3 pr-12 rounded-lg border border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-gray-700 text-orange-900 dark:text-orange-100 placeholder:text-orange-500 dark:placeholder:text-orange-300 focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-500"
-              />
+        <div className="space-y-4">
+          <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600">
+            <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
+              {partyCode}
+            </span>
+            <div className="flex space-x-2">
               <Button
-                onClick={handleJoinRoom}
-                disabled={isJoiningRoom || !newRoomCode || !playerName}
-                className="absolute right-0 top-0 h-full px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-r-lg"
+                variant="ghost"
+                size="icon"
+                onClick={handleCopyPartyCode}
+                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
               >
-                Join
+                <Copy className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShareParty}
+                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
+              >
+                <Share2 className="h-5 w-5" />
               </Button>
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600">
-              <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
-                {roomCode}
-              </span>
-              <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCopyRoomCode}
-                  className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
+          <div>
+            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
+              Players ({playerScores.length})
+            </h3>
+            <ul className="space-y-2 max-h-40 overflow-y-auto pr-2">
+              {playerScores.map((player) => (
+                <li
+                  key={player.id}
+                  className="flex items-center bg-orange-50 dark:bg-gray-700 p-2 rounded-md text-orange-800 dark:text-orange-200"
                 >
-                  <Copy className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleShareRoom}
-                  className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
-                Players ({players.length})
-              </h3>
-              <ul className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                {players.map((player) => (
-                  <li
-                    key={player.id}
-                    className="flex items-center bg-orange-50 dark:bg-gray-700 p-2 rounded-md text-orange-800 dark:text-orange-200"
-                  >
-                    <Users className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
-                    {player.name} {player.id === supabase.auth.getUser().then(u => u.data.user?.id) ? "(You)" : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <Button
-              onClick={onLeaveRoom}
-              variant="destructive"
-              className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-            >
-              Leave Room
-            </Button>
+                  <Users className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
+                  {player.name} {player.isMe ? "(You)" : ""}
+                  <span className="ml-auto text-sm font-bold">{player.caipisCount} Caipis</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
+          <Button
+            onClick={onLeaveParty}
+            variant="destructive"
+            className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
+          >
+            Leave Party
+          </Button>
+        </div>
 
         {/* Bingo Alerts */}
-        {bingoAlerts.length > 0 && (
+        {alerts.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
               Bingo Alerts
             </h3>
             <div className="max-h-32 overflow-y-auto pr-2">
-              {bingoAlerts.map((alert, index) => (
-                <div key={index} className="bg-yellow-100 dark:bg-yellow-800 p-2 rounded-md text-yellow-900 dark:text-yellow-100 text-sm mb-1">
-                  <span className="font-medium">{alert.message}</span>
-                  <span className="text-xs text-yellow-700 dark:text-yellow-300 ml-2">
-                    ({new Date(alert.timestamp).toLocaleTimeString()})
-                  </span>
+              {alerts.map((alert) => (
+                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert.type)} mb-1`}>
+                  {alert.message}
                 </div>
               ))}
             </div>
           </div>
         )}
       </CardContent>
-
-      {/* Player Name Dialog */}
-      <Dialog open={isPlayerNameDialogOpen} onOpenChange={setIsPlayerNameDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-6 rounded-lg shadow-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-orange-700 dark:text-orange-300">Set Your Player Name</DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
-              Please enter a name to be displayed in the party.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="playerName" className="text-right text-orange-800 dark:text-orange-200">
-                Name
-              </Label>
-              <Input
-                id="playerName"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="col-span-3 p-2 rounded-md border border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-gray-700 text-orange-900 dark:text-orange-100 focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-500"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="submit"
-              onClick={handleUpdatePlayerName}
-              disabled={!playerName}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-            >
-              Save name
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 };

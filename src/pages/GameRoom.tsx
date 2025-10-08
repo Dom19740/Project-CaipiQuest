@@ -129,23 +129,25 @@ const GameRoom: React.FC = () => {
           />
         </div>
 
-        {/* Right Panel: Combined Card and Buttons */}
+        {/* Right Panel: Party Sidebar and Buttons */}
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
-          {partyCode && (
-            <PartySidebar
-              partyCode={partyCode}
-              playerScores={playerScores}
-              alerts={partyBingoAlerts}
-              currentUserId={user.id}
-            />
-          )}
+          {/* PartySidebar component */}
+          <PartySidebar
+            partyCode={partyCode}
+            playerScores={playerScores}
+            alerts={partyBingoAlerts}
+            currentUserId={user.id}
+            onRefreshPlayers={() => fetchAndSetAllGameStates(gridSize)}
+            onLeaveParty={handleLeaveParty}
+            myPlayerName={myPlayerName}
+          />
 
-          {/* Buttons */}
+          {/* Buttons (LeavePartyDialog is already here) */}
           <div className="flex flex-row gap-2 justify-center w-full">
             <Button onClick={handleGlobalRefresh} className="flex-1 bg-lime-700 hover:bg-lime-800 text-white py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
-              Refresh
+              Refresh Global
             </Button>
-            <LeavePartyDialog onConfirm={handleLeaveParty} /> {/* Updated onConfirm handler */}
+            <LeavePartyDialog onConfirm={handleLeaveParty} />
           </div>
         </div>
       </div>
@@ -156,7 +158,7 @@ const GameRoom: React.FC = () => {
         onClose={() => setShowNewPlayerAlert(false)}
       />
 
-      <BingoWinAnimation show={showWinAnimation} onClose={() => setShowWinAnimation(false)} /> {/* New win animation component */}
+      <BingoWinAnimation show={showWinAnimation} onClose={() => setShowWinAnimation(false)} />
 
       <MadeWithDyad />
     </div>
