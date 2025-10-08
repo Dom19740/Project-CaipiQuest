@@ -20,19 +20,33 @@ const fruitEmojis: { [key: string]: string } = {
   dragon_fruit: '🐉',
   banana: '🍌',
   watermelon: '🍉',
-  lime: '🍋‍🟩',
+  // lime: '🍋‍🟩', // Removed the ZWJ emoji for lime
   plum: '🫐',
+};
+
+const fruitImages: { [key: string]: string } = {
+  lime: '/lime.png', // Path to the lime image
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
-    sm: { emoji: 'text-base', circle: 'w-4 h-4' },
-    md: { emoji: 'text-xl', circle: 'w-6 h-6' },
-    lg: { emoji: 'text-4xl', circle: 'w-8 h-8' }, // Increased font size for 'lg'
+    sm: { emoji: 'text-base', img: 'w-4 h-4' },
+    md: { emoji: 'text-xl', img: 'w-6 h-6' },
+    lg: { emoji: 'text-4xl', img: 'w-8 h-8' },
   };
 
   const effectiveSizeClass = sizeClasses[size];
   const lowerCaseFruit = fruit.toLowerCase().replace(/\s/g, '_');
+
+  if (fruitImages[lowerCaseFruit]) {
+    return (
+      <img
+        src={fruitImages[lowerCaseFruit]}
+        alt={fruit.replace(/_/g, ' ')}
+        className={`inline-block ${effectiveSizeClass.img}`}
+      />
+    );
+  }
 
   const emoji = fruitEmojis[lowerCaseFruit] || '❓'; // Fallback emoji
 
