@@ -7,7 +7,7 @@ interface FruitIconProps {
 
 const fruitEmojis: { [key: string]: string } = {
   passionfruit: '💜',
-  lemon: '🍋',
+  lemon: '🍋‍🟩',
   strawberry: '🍓',
   mango: '🥭',
   pineapple: '🍍',
