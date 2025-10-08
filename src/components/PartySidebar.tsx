@@ -144,7 +144,6 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
           <div className="flex items-center space-x-2">
-            <span className="text-base font-medium text-orange-900 dark:text-orange-100">Share Code:</span>
             <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
               {partyCode}
             </span>
