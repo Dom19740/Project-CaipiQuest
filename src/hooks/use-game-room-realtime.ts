@@ -27,6 +27,7 @@ interface GameRoomRealtimeData {
   setShowNewPlayerAlert: React.Dispatch<React.SetStateAction<boolean>>;
   fetchAndSetAllGameStates: (currentGridSize: number) => Promise<void>;
   initialAlertsLoaded: boolean;
+  partyCreatorName: string | null; // Added partyCreatorName
 }
 
 // New function to count unique caipis
@@ -68,10 +69,11 @@ export const useGameRoomRealtime = (
   const { user } = useSession();
 
   const [partyBingoAlerts, setPartyBingoAlerts] = useState<BingoAlert[]>([]);
-  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]); // Initialize as empty array
+  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
   const [initialAlertsLoaded, setInitialAlertsLoaded] = useState(false);
+  const [partyCreatorName, setPartyCreatorName] = useState<string | null>(null); // New state for creator name
 
   const partyBingoAlertsRef = useRef<BingoAlert[]>([]);
 
@@ -89,11 +91,11 @@ export const useGameRoomRealtime = (
 
     if (allGameStatesError) {
       console.error('useGameRoomRealtime - Error fetching all game states:', allGameStatesError);
-      setPlayerScores([]); // Ensure it's an empty array on error
+      setPlayerScores([]);
       return;
     }
 
-    const scores: PlayerScore[] = (allGameStates || []).map(gs => ({ // Ensure allGameStates is an array
+    const scores: PlayerScore[] = (allGameStates || []).map(gs => ({
       id: gs.player_id,
       name: gs.player_name,
       caipisCount: countCheckedCaipis(gs.grid_data || [], gs.selected_fruits || [], currentGridSize),
@@ -101,7 +103,7 @@ export const useGameRoomRealtime = (
     }));
     setPlayerScores(scores);
 
-    const myGameState = (allGameStates || []).find(gs => gs.player_id === user.id); // Ensure allGameStates is an array
+    const myGameState = (allGameStates || []).find(gs => gs.player_id === user.id);
     if (myGameState) {
       const centerCellIndex = Math.floor(currentGridSize / 2);
       const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false));
@@ -117,28 +119,31 @@ export const useGameRoomRealtime = (
     }
   }, [partyId, user, setMyGridData, setPlayerSelectedFruits]);
 
-  const fetchInitialPartyAlerts = useCallback(async () => {
+  const fetchInitialPartyData = useCallback(async () => { // Renamed from fetchInitialPartyAlerts
     if (!partyId) return;
     const { data: party, error } = await supabase
       .from('rooms')
-      .select('bingo_alerts')
+      .select('bingo_alerts, created_by_name, grid_size') // Also fetch created_by_name and grid_size
       .eq('id', partyId)
       .single();
 
     if (error) {
-      console.error('useGameRoomRealtime - Error fetching initial party alerts:', error);
-      setPartyBingoAlerts([]); // Ensure it's an empty array on error
+      console.error('useGameRoomRealtime - Error fetching initial party data:', error);
+      setPartyBingoAlerts([]);
+      setPartyCreatorName(null);
       return;
     }
     setPartyBingoAlerts(party?.bingo_alerts || []);
     partyBingoAlertsRef.current = party?.bingo_alerts || [];
+    setPartyCreatorName(party?.created_by_name || null);
+    setGridSize(party?.grid_size || 5); // Update grid size from room data
     setInitialAlertsLoaded(true);
-  }, [partyId]);
+  }, [partyId, setGridSize]); // Added setGridSize to dependencies
 
   useEffect(() => {
     if (!partyId || !user) return;
 
-    fetchInitialPartyAlerts();
+    fetchInitialPartyData(); // Call the updated fetch function
 
     const channel = supabase
       .channel(`party:${partyId}`)
@@ -190,7 +195,7 @@ export const useGameRoomRealtime = (
           filter: `id=eq.${partyId}`,
         },
         async (payload) => {
-          const updatedParty = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number };
+          const updatedParty = payload.new as { last_refreshed_at?: string; bingo_alerts?: BingoAlert[]; grid_size?: number; created_by_name?: string };
 
           if (updatedParty.last_refreshed_at) {
             await fetchAndSetAllGameStates(gridSize);
@@ -199,6 +204,12 @@ export const useGameRoomRealtime = (
           if (updatedParty.bingo_alerts) {
             setPartyBingoAlerts(updatedParty.bingo_alerts || []);
           }
+          if (updatedParty.grid_size) {
+            setGridSize(updatedParty.grid_size);
+          }
+          if (updatedParty.created_by_name) {
+            setPartyCreatorName(updatedParty.created_by_name);
+          }
         }
       )
       .subscribe();
@@ -206,7 +217,7 @@ export const useGameRoomRealtime = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyAlerts]);
+  }, [partyId, user, gridSize, myGridData, setMyGridData, setPlayerSelectedFruits, setGridSize, fetchAndSetAllGameStates, initializeOrUpdateGameState, playerScores, fetchInitialPartyData]);
 
   return {
     partyBingoAlerts,
@@ -216,5 +227,6 @@ export const useGameRoomRealtime = (
     setShowNewPlayerAlert,
     fetchAndSetAllGameStates,
     initialAlertsLoaded,
+    partyCreatorName, // Return the new state
   };
 };

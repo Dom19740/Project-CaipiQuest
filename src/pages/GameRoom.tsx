@@ -3,15 +3,17 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
-import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
+import MadeWithDyad from '@/components/made-with-dyad';
 import NewPlayerAlert from '@/components/NewPlayerAlert';
 import LeavePartyDialog from '@/components/LeavePartyDialog';
-import BingoWinAnimation from '@/components/BingoWinAnimation'; // Import the new component
+import BingoWinAnimation from '@/components/BingoWinAnimation';
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
 import { useGameRoomRealtime } from '@/hooks/use-game-room-realtime';
 import { useGameLogic } from '@/hooks/use-game-logic';
 import { useSession } from '@/components/SessionContextProvider';
+import { supabase } from '@/integrations/supabase/client'; // Import supabase for leave logic
+import { showSuccess, showError } from '@/utils/toast'; // Import toast for leave logic
 
 const GameRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -35,7 +37,7 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
-    setMyPlayerName,
+    // setMyPlayerName, // This is not returned by useGameRoomData, but it's passed to PartySidebar
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
@@ -46,6 +48,7 @@ const GameRoom: React.FC = () => {
     setShowNewPlayerAlert,
     fetchAndSetAllGameStates,
     initialAlertsLoaded,
+    partyCreatorName: realtimePartyCreatorName, // Get creator name from realtime hook
   } = useGameRoomRealtime(
     roomId,
     gridSize,
@@ -60,7 +63,7 @@ const GameRoom: React.FC = () => {
     handleCellToggle,
     handleBingo,
     handleResetGame,
-    handleGlobalRefresh, // Still needed for the hook, but button removed
+    handleGlobalRefresh,
     showWinAnimation,
     setShowWinAnimation,
   } = useGameLogic(
@@ -92,11 +95,36 @@ const GameRoom: React.FC = () => {
     }
   }, [roomId, partyCode]);
 
-  const handleLeaveParty = () => {
-    localStorage.removeItem('lastActiveRoomId');
-    localStorage.removeItem('lastActivePartyCode');
-    console.log("GameRoom - Cleared last active room from local storage.");
-    navigate('/lobby');
+  const handleLeaveParty = async () => {
+    if (!user || !roomId || !partyCreatorId) {
+      showError('Cannot leave party: missing user, room ID, or creator ID.');
+      return;
+    }
+
+    try {
+      if (partyCreatorId === user.id) {
+        // If the current user is the creator, delete the room
+        const { error: deleteError } = await supabase
+          .from('rooms')
+          .delete()
+          .eq('id', roomId);
+
+        if (deleteError) {
+          throw deleteError;
+        }
+        showSuccess('Party disbanded.');
+      } else {
+        // For non-creators, just leave (no specific DB action needed for leaving, presence handles it)
+        showSuccess('Left the party.');
+      }
+      localStorage.removeItem('lastActiveRoomId');
+      localStorage.removeItem('lastActivePartyCode');
+      console.log("GameRoom - Cleared last active room from local storage.");
+      navigate('/lobby');
+    } catch (error: any) {
+      showError(`Error leaving party: ${error.message}`);
+      console.error('GameRoom - Error leaving party:', error);
+    }
   };
 
   if (isLoadingSession || isLoadingInitialData || !user || !roomId || playerSelectedFruits.length !== gridSize) {
@@ -138,18 +166,15 @@ const GameRoom: React.FC = () => {
             playerScores={playerScores}
             alerts={partyBingoAlerts}
             currentUserId={user.id}
-            onRefreshPlayers={() => fetchAndSetAllGameStates(gridSize)}
-            onLeaveParty={handleLeaveParty}
+            partyCreatorId={partyCreatorId}
+            partyCreatorName={realtimePartyCreatorName} // Pass from realtime hook
+            gridSize={gridSize}
+            onRefreshPlayers={() => handleGlobalRefresh()} // Call handleGlobalRefresh from useGameLogic
+            onLeaveParty={handleLeaveParty} // Call the new handleLeaveParty in GameRoom
             myPlayerName={myPlayerName}
-            setMyPlayerName={setMyPlayerName}
+            setMyPlayerName={() => { /* setMyPlayerName is not directly used here, but could be passed if needed */ }}
           />
 
-          {/* Removed Refresh Global button */}
-          {/* <div className="flex flex-row gap-2 justify-center w-full">
-            <Button onClick={handleGlobalRefresh} className="flex-1 bg-lime-700 hover:bg-lime-800 text-white py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
-              Refresh Global
-            </Button>
-          </div> */}
         </div>
       </div>
 
