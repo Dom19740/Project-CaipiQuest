@@ -6,13 +6,32 @@ import { Label } from '@/components/ui/label';
 import { Copy, Users, RefreshCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
-import { useSession } from '@/components/SessionContextProvider'; // Corrected import
+import LeavePartyDialog from '@/components/LeavePartyDialog'; // Import LeavePartyDialog
+
+interface BingoAlert {
+  id: string;
+  type: 'rowCol' | 'diagonal' | 'fullGrid';
+  message: string;
+  playerName?: string;
+  playerId?: string;
+  canonicalId?: string;
+}
+
+interface PlayerScore {
+  id: string;
+  name: string;
+  caipisCount: number;
+  isMe: boolean;
+}
 
 interface PartySidebarProps {
   roomId: string;
   roomCode: string;
-  players: { id: string; name: string }[];
+  players: PlayerScore[];
+  alerts: BingoAlert[];
+  currentUserId: string | undefined;
   onRefreshPlayers: () => void;
+  onLeaveParty: () => void; // Added
   createdBy: string | null;
   createdByName: string | null;
 }
@@ -21,13 +40,14 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
   roomId,
   roomCode,
   players,
+  alerts,
+  currentUserId,
   onRefreshPlayers,
+  onLeaveParty, // Destructured
   createdBy,
   createdByName,
 }) => {
   const [copied, setCopied] = useState(false);
-  const { user } = useSession(); // Corrected hook usage
-  const currentUserId = user?.id;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(roomCode);
@@ -96,19 +116,35 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <ul className="space-y-1">
             {players.map((player) => (
               <li key={player.id} className="flex items-center text-orange-800 dark:text-orange-200">
-                <Users className="mr-2 h-4 w-4" /> {player.name}
+                <Users className="mr-2 h-4 w-4" /> {player.name} ({player.caipisCount} Caipis)
                 {player.id === createdBy && <span className="ml-2 text-xs text-orange-600 dark:text-orange-400">(Host)</span>}
+                {player.isMe && <span className="ml-2 text-xs text-orange-600 dark:text-orange-400">(You)</span>}
               </li>
             ))}
           </ul>
         </div>
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-orange-900 dark:text-orange-100">Recent Alerts</h3>
+          {alerts.length === 0 ? (
+            <p className="text-gray-800 dark:text-gray-300 italic text-sm">No recent alerts.</p>
+          ) : (
+            <ul className="space-y-1 max-h-40 overflow-y-auto">
+              {alerts.map((alert) => (
+                <li key={alert.id} className="text-orange-800 dark:text-orange-200 text-sm">
+                  {alert.message}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </CardContent>
-      <CardFooter className="p-4 border-t border-orange-200 dark:border-orange-700 text-sm text-orange-700 dark:text-orange-300">
+      <CardFooter className="p-4 border-t border-orange-200 dark:border-orange-700 flex flex-col gap-4">
         {createdByName && (
-          <p>
+          <p className="text-sm text-orange-700 dark:text-orange-300">
             Party created by <span className="font-semibold">{createdByName}</span>
           </p>
         )}
+        <LeavePartyDialog onConfirm={onLeaveParty} />
       </CardFooter>
     </Card>
   );
