@@ -5,32 +5,39 @@ interface FruitIconProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
+const fruitEmojis: { [key: string]: string } = {
+  lime: '🍋',
+  passionfruit: '💜',
+  lemon: '🍋',
+  strawberry: '🍓',
+  mango: '🥭',
+  pineapple: '🍍',
+  red_fruits: '🍒',
+  guava: '🍈',
+  ginger: '🫚',
+  tangerine: '🍊',
+  kiwi: '🥝',
+  cashew: '🌰',
+  dragon_fruit: '🐉',
+  banana: '🍌',
+  plum: '🫐',
+  watermelon: '🍉',
+};
+
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
+    sm: 'text-base', // Roughly 16px
+    md: 'text-xl',   // Roughly 24px
+    lg: 'text-2xl',  // Roughly 32px
   };
 
   const effectiveSizeClass = sizeClasses[size];
-  const normalizedFruitName = fruit.toLowerCase().replace(/\s/g, '_');
-
-  // Construct the path to the PNG image
-  const imagePath = `/src/assets/fruit_pngs/${normalizedFruitName}.png`;
-  const defaultImagePath = `/src/assets/fruit_pngs/default_fruit.png`;
+  const emoji = fruitEmojis[fruit.toLowerCase().replace(/\s/g, '_')] || '❓'; // Fallback emoji
 
   return (
-    <img
-      src={imagePath}
-      alt={fruit.replace(/_/g, ' ')}
-      className={`inline-flex items-center justify-center object-contain ${effectiveSizeClass}`}
-      onError={(e) => {
-        // Fallback to a default image if the specific fruit PNG is not found
-        e.currentTarget.src = defaultImagePath;
-        e.currentTarget.onerror = null; // Prevent infinite loop if default also fails
-        console.warn(`PNG not found for fruit: ${fruit}. Using default.`);
-      }}
-    />
+    <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`} role="img" aria-label={fruit.replace(/_/g, ' ')}>
+      {emoji}
+    </span>
   );
 };
 
