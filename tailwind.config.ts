@@ -19,7 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'], // Add Inter to sans-serif stack
+        sans: ['Poppins', 'sans-serif'], // Changed to Poppins
       },
       colors: {
         border: "hsl(var(--border))",
