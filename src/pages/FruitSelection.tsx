@@ -75,7 +75,7 @@ const FruitSelection: React.FC = () => {
             Choose Your Fruits
           </CardTitle>
           <CardDescription className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-6 leading-relaxed">
-            Select 5 fruits for your bingo grid. Lime is already chosen for the center!
+            Select 5 fruits for your bingo grid.
           </CardDescription>
         </CardHeader>
         <CardContent>
