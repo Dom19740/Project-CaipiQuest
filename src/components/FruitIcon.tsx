@@ -34,8 +34,6 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const effectiveSizeClass = sizeClasses[size];
   const lowerCaseFruit = fruit.toLowerCase().replace(/\s/g, '_');
 
-  // Removed specific rendering for lime and plum, now they use emojis from fruitEmojis
-
   const emoji = fruitEmojis[lowerCaseFruit] || '❓'; // Fallback emoji
 
   return (
