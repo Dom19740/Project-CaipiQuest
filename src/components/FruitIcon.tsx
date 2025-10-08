@@ -5,24 +5,24 @@ interface FruitIconProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-// Mapping all fruit names to their PNG paths in src/assets/fruit_pngs
+// Mapping all fruit names to their PNG paths in public/fruit_pngs
 const fruitImages: { [key: string]: string } = {
-  passionfruit: '/src/assets/fruit_pngs/passionfruit.png',
-  lemon: '/src/assets/fruit_pngs/lemon.png',
-  strawberry: '/src/assets/fruit_pngs/strawberry.png',
-  mango: '/src/assets/fruit_pngs/mango.png',
-  pineapple: '/src/assets/fruit_pngs/pineapple.png',
-  red_fruits: '/src/assets/fruit_pngs/berries.png', // Assuming 'berries.png' for 'red_fruits'
-  guava: '/src/assets/fruit_pngs/guava.png',
-  ginger: '/src/assets/fruit_pngs/ginger.png',
-  tangerine: '/src/assets/fruit_pngs/tangerine.png',
-  kiwi: '/src/assets/fruit_pngs/kiwi.png',
-  cashew: '/src/assets/fruit_pngs/cashew.png',
-  dragon_fruit: '/src/assets/fruit_pngs/dragon.png', // Assuming 'dragon.png' for 'dragon_fruit'
-  banana: '/src/assets/fruit_pngs/banana.png',
-  watermelon: '/src/assets/fruit_pngs/watermelon.png',
-  lime: '/src/assets/fruit_pngs/lime.png',
-  plum: '/src/assets/fruit_pngs/plum.png',
+  passionfruit: '/fruit_pngs/passionfruit.png',
+  lemon: '/fruit_pngs/lemon.png',
+  strawberry: '/fruit_pngs/strawberry.png',
+  mango: '/fruit_pngs/mango.png',
+  pineapple: '/fruit_pngs/pineapple.png',
+  red_fruits: '/fruit_pngs/berries.png', // Assuming 'berries.png' for 'red_fruits'
+  guava: '/fruit_pngs/guava.png',
+  ginger: '/fruit_pngs/ginger.png',
+  tangerine: '/fruit_pngs/tangerine.png',
+  kiwi: '/fruit_pngs/kiwi.png',
+  cashew: '/fruit_pngs/cashew.png',
+  dragon_fruit: '/fruit_pngs/dragon.png', // Assuming 'dragon.png' for 'dragon_fruit'
+  banana: '/fruit_pngs/banana.png',
+  watermelon: '/fruit_pngs/watermelon.png',
+  lime: '/fruit_pngs/lime.png',
+  plum: '/fruit_pngs/plum.png',
 };
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
