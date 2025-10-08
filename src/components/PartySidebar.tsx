@@ -76,7 +76,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
         </div>
 
         {/* Player List Section */}
-        <div className="bg-blue-200/70 dark:bg-blue-900/70 border border-blue-500 dark:border-blue-800 rounded-lg p-3 shadow-inner">
+        <div className="bg-lime-200/70 dark:bg-lime-900/70 border border-lime-500 dark:border-lime-800 rounded-lg p-3 shadow-inner">
           {playerScores.length === 0 ? (
             <p className="text-gray-800 dark:text-gray-300 italic text-sm sm:text-base">No players in this party yet.</p>
           ) : (
