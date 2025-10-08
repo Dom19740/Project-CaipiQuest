@@ -82,48 +82,55 @@ export const useGameLogic = (
   const handleBingo = useCallback(async (type: 'rowCol' | 'diagonal' | 'fullGrid', baseMessage: string, canonicalId: string) => { // Added canonicalId
     if (!partyId || !user || !myPlayerName) return; // Changed from roomId
 
-    const { data: currentParty, error: fetchPartyError } = await supabase // Changed from currentRoom, fetchRoomError
+    const { data: currentParty, error: fetchPartyError } = await supabase
       .from('rooms')
-      .select('bingo_alerts')
-      .eq('id', partyId) // Changed from roomId
+      .select('bingo_alerts, full_grid_bingo_achieved_by') // Fetch new column
+      .eq('id', partyId)
       .single();
 
-    if (fetchPartyError) { // Changed from fetchRoomError
-      showError('Failed to fetch party alerts.'); // Changed from room alerts
-      console.error('useGameLogic - Error fetching party alerts for bingo:', fetchPartyError); // Changed from room alerts, fetchRoomError
+    if (fetchPartyError) {
+      showError('Failed to fetch party alerts.');
+      console.error('useGameLogic - Error fetching party alerts for bingo:', fetchPartyError);
       return;
     }
 
-    const existingAlerts = currentParty?.bingo_alerts || []; // Changed from currentRoom
-    // Check if an alert with the same canonicalId and player ID already exists in the DB
+    const existingAlerts = currentParty?.bingo_alerts || [];
     const alreadyAlerted = existingAlerts.some(alert => alert.canonicalId === canonicalId && alert.playerId === user.id);
 
     if (alreadyAlerted) {
       console.log(`Bingo for ${canonicalId} by ${myPlayerName} already recorded in DB. Skipping.`);
-      return; // Do not add duplicate alert to DB
+      return;
     }
 
     const message = `BINGO! ${myPlayerName} ${baseMessage}`;
-    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id, canonicalId }; // Store canonicalId
+    const newAlert: BingoAlert = { id: generateAlertId(), type, message, playerName: myPlayerName, playerId: user.id, canonicalId };
 
     const updatedAlerts = [newAlert, ...existingAlerts];
+    let updatePayload: { bingo_alerts: BingoAlert[]; full_grid_bingo_achieved_by?: string } = { bingo_alerts: updatedAlerts };
 
-    const { error: updatePartyAlertsError } = await supabase // Changed from updateRoomAlertsError
-      .from('rooms')
-      .update({ bingo_alerts: updatedAlerts })
-      .eq('id', partyId); // Changed from roomId
-
-    if (updatePartyAlertsError) { // Changed from updateRoomAlertsError
-      showError('Failed to record bingo alert globally.');
-      console.error('useGameLogic - Error recording global bingo:', updatePartyAlertsError); // Changed from updateRoomAlertsError
-    } else {
-      showSuccess(message);
-      // Only show win animation for the current user and if it's a full grid bingo
-      if (type === 'fullGrid' && newAlert.playerId === user.id) {
-        setShowWinAnimation(true);
+    // Logic for full grid bingo animation
+    if (type === 'fullGrid') {
+      if (!currentParty.full_grid_bingo_achieved_by) {
+        // This player is the first to achieve a full grid bingo
+        updatePayload.full_grid_bingo_achieved_by = user.id;
+        setShowWinAnimation(true); // Trigger animation for this player
+      } else {
+        console.log(`Full grid bingo already achieved by ${currentParty.full_grid_bingo_achieved_by}. Not triggering animation for ${user.id}.`);
       }
     }
-  }, [partyId, user, myPlayerName, generateAlertId]); // Changed from roomId
+
+    const { error: updatePartyAlertsError } = await supabase
+      .from('rooms')
+      .update(updatePayload)
+      .eq('id', partyId);
+
+    if (updatePartyAlertsError) {
+      showError('Failed to record bingo alert globally.');
+      console.error('useGameLogic - Error recording global bingo:', updatePartyAlertsError);
+    } else {
+      showSuccess(message);
+    }
+  }, [partyId, user, myPlayerName, generateAlertId]);
 
   const handleResetGame = useCallback(async () => {
     if (!myGameStateId || !user || !playerSelectedFruits) return;
@@ -152,7 +159,7 @@ export const useGameLogic = (
   }, [myGameStateId, user, playerSelectedFruits, gridSize, setResetKey, setMyGridData]);
 
   const handleGlobalRefresh = useCallback(async () => {
-    if (!partyId || !user) return; // Changed from roomId
+    if (!partyId || !user) return;
 
     await fetchAndSetAllGameStates(gridSize);
     showSuccess('Your data has been refreshed!');
@@ -160,21 +167,21 @@ export const useGameLogic = (
     const { error } = await supabase
       .from('rooms')
       .update({ last_refreshed_at: new Date().toISOString() })
-      .eq('id', partyId) // Changed from roomId
+      .eq('id', partyId)
       .eq('created_by', user.id);
 
     if (error) {
-      showError('Failed to trigger global refresh for others. Only the party creator can do this.'); // Changed from room creator
+      showError('Failed to trigger global refresh for others. Only the party creator can do this.');
       console.error('useGameLogic - Error triggering global refresh:', error);
     }
-  }, [partyId, user, gridSize, fetchAndSetAllGameStates]); // Changed from roomId
+  }, [partyId, user, gridSize, fetchAndSetAllGameStates]);
 
   return {
     handleCellToggle,
     handleBingo,
     handleResetGame,
     handleGlobalRefresh,
-    showWinAnimation, // Expose the state
-    setShowWinAnimation, // Expose the setter
+    showWinAnimation,
+    setShowWinAnimation,
   };
 };
