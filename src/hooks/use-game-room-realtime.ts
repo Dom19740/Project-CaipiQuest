@@ -40,15 +40,6 @@ const countCheckedCaipis = (grid: boolean[][], selectedFruits: string[], gridSiz
 
   const currentDisplayFruits = [...selectedFruits];
 
-  // Removed: Lime-specific logic for center cell
-  // const limeIndex = currentDisplayFruits.indexOf('lime');
-  // if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
-  //   [currentDisplayFruits[CENTER_CELL_INDEX], currentDisplayFruits[limeIndex]] = [currentDisplayFruits[limeIndex], currentDisplayFruits[CENTER_CELL_INDEX]];
-  // } else if (limeIndex === -1) {
-  //   console.warn("Lime not found in selected fruits for caipi counting, returning 0.");
-  //   return 0;
-  // }
-
   for (let rowIndex = 0; rowIndex < gridSize; rowIndex++) {
     for (let colIndex = 0; colIndex < gridSize; colIndex++) {
       const isCenterCell = rowIndex === CENTER_CELL_INDEX && colIndex === CENTER_CELL_INDEX;
@@ -77,7 +68,7 @@ export const useGameRoomRealtime = (
   const { user } = useSession();
 
   const [partyBingoAlerts, setPartyBingoAlerts] = useState<BingoAlert[]>([]);
-  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
+  const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]); // Initialize as empty array
   const [showNewPlayerAlert, setShowNewPlayerAlert] = useState(false);
   const [newPlayerJoinedName, setNewPlayerJoinedName] = useState('');
   const [initialAlertsLoaded, setInitialAlertsLoaded] = useState(false);
@@ -98,10 +89,11 @@ export const useGameRoomRealtime = (
 
     if (allGameStatesError) {
       console.error('useGameRoomRealtime - Error fetching all game states:', allGameStatesError);
+      setPlayerScores([]); // Ensure it's an empty array on error
       return;
     }
 
-    const scores: PlayerScore[] = allGameStates.map(gs => ({
+    const scores: PlayerScore[] = (allGameStates || []).map(gs => ({ // Ensure allGameStates is an array
       id: gs.player_id,
       name: gs.player_name,
       caipisCount: countCheckedCaipis(gs.grid_data || [], gs.selected_fruits || [], currentGridSize),
@@ -109,7 +101,7 @@ export const useGameRoomRealtime = (
     }));
     setPlayerScores(scores);
 
-    const myGameState = allGameStates.find(gs => gs.player_id === user.id);
+    const myGameState = (allGameStates || []).find(gs => gs.player_id === user.id); // Ensure allGameStates is an array
     if (myGameState) {
       const centerCellIndex = Math.floor(currentGridSize / 2);
       const fetchedGrid = myGameState.grid_data || Array(currentGridSize).fill(null).map(() => Array(currentGridSize).fill(false));
@@ -135,6 +127,7 @@ export const useGameRoomRealtime = (
 
     if (error) {
       console.error('useGameRoomRealtime - Error fetching initial party alerts:', error);
+      setPartyBingoAlerts([]); // Ensure it's an empty array on error
       return;
     }
     setPartyBingoAlerts(party?.bingo_alerts || []);
