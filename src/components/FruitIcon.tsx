@@ -1,28 +1,9 @@
 import React from 'react';
-import { Citrus } from 'lucide-react'; // Corrected import to Citrus icon from lucide-react
 
 interface FruitIconProps {
   fruit: string; // This will be the English name
   size?: 'sm' | 'md' | 'lg';
 }
-
-const fruitEmojiMap: { [key: string]: string } = {
-  passionfruit: '💜',
-  lemon: '🍋', // Keeping lemon as emoji for distinction
-  strawberry: '🍓',
-  mango: '🥭',
-  pineapple: '🍍',
-  red_fruits: '🍒',
-  guava: '🍈',
-  ginger: '🫚',
-  tangerine: '🍊',
-  kiwi: '🥝',
-  cashew: '🌰',
-  dragon_fruit: '🐉',
-  banana: '🍌',
-  plum: '🫐',
-  watermelon: '🍉',
-};
 
 const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const sizeClasses = {
@@ -34,29 +15,22 @@ const FruitIcon: React.FC<FruitIconProps> = ({ fruit, size = 'md' }) => {
   const effectiveSizeClass = sizeClasses[size];
   const normalizedFruitName = fruit.toLowerCase().replace(/\s/g, '_');
 
-  if (normalizedFruitName === 'lime') {
-    // Use Lucide-React Citrus icon for lime
-    return <Citrus className={`inline-flex items-center justify-center text-lime-600 dark:text-lime-400 ${effectiveSizeClass}`} />;
-  }
-
-  const emoji = fruitEmojiMap[normalizedFruitName];
-
-  if (!emoji) {
-    console.warn(`No emoji found for fruit: ${fruit}`);
-    return <span className={`inline-flex items-center justify-center ${effectiveSizeClass}`}>❓</span>;
-  }
-
-  // For emojis, we use text size classes
-  const emojiTextSizeClasses = {
-    sm: 'text-base',
-    md: 'text-xl',
-    lg: 'text-2xl',
-  };
+  // Construct the path to the PNG image
+  const imagePath = `/src/assets/fruit_pngs/${normalizedFruitName}.png`;
+  const defaultImagePath = `/src/assets/fruit_pngs/default_fruit.png`;
 
   return (
-    <span className={`inline-flex items-center justify-center ${emojiTextSizeClasses[size]}`}>
-      {emoji}
-    </span>
+    <img
+      src={imagePath}
+      alt={fruit.replace(/_/g, ' ')}
+      className={`inline-flex items-center justify-center object-contain ${effectiveSizeClass}`}
+      onError={(e) => {
+        // Fallback to a default image if the specific fruit PNG is not found
+        e.currentTarget.src = defaultImagePath;
+        e.currentTarget.onerror = null; // Prevent infinite loop if default also fails
+        console.warn(`PNG not found for fruit: ${fruit}. Using default.`);
+      }}
+    />
   );
 };
 
