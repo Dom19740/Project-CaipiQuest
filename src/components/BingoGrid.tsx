@@ -77,13 +77,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   }, [initialGridState, initialAlertsLoaded, checkBingo]);
 
   const displayFruits = [...selectedFruits];
-  const limeIndex = displayFruits.indexOf('lime');
-  if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
-    [displayFruits[CENTER_CELL_INDEX], displayFruits[limeIndex]] = [displayFruits[limeIndex], displayFruits[CENTER_CELL_INDEX]];
-  } else if (limeIndex === -1) {
-    console.warn("Lime not found in selected fruits, adding it to center.");
-    displayFruits[CENTER_CELL_INDEX] = 'lime';
-  }
+  // Removed: Logic to force lime into the center cell
+  // Removed: console.warn("Lime not found in selected fruits, adding it to center.");
 
   return (
     <div

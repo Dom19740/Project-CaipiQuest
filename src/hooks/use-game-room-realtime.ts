@@ -40,13 +40,14 @@ const countCheckedCaipis = (grid: boolean[][], selectedFruits: string[], gridSiz
 
   const currentDisplayFruits = [...selectedFruits];
 
-  const limeIndex = currentDisplayFruits.indexOf('lime');
-  if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
-    [currentDisplayFruits[CENTER_CELL_INDEX], currentDisplayFruits[limeIndex]] = [currentDisplayFruits[limeIndex], currentDisplayFruits[CENTER_CELL_INDEX]];
-  } else if (limeIndex === -1) {
-    console.warn("Lime not found in selected fruits for caipi counting, returning 0.");
-    return 0;
-  }
+  // Removed: Lime-specific logic for center cell
+  // const limeIndex = currentDisplayFruits.indexOf('lime');
+  // if (limeIndex !== -1 && limeIndex !== CENTER_CELL_INDEX) {
+  //   [currentDisplayFruits[CENTER_CELL_INDEX], currentDisplayFruits[limeIndex]] = [currentDisplayFruits[limeIndex], currentDisplayFruits[CENTER_CELL_INDEX]];
+  // } else if (limeIndex === -1) {
+  //   console.warn("Lime not found in selected fruits for caipi counting, returning 0.");
+  //   return 0;
+  // }
 
   for (let rowIndex = 0; rowIndex < gridSize; rowIndex++) {
     for (let colIndex = 0; colIndex < gridSize; colIndex++) {

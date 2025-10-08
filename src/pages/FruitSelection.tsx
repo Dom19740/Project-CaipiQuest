@@ -31,7 +31,7 @@ const FruitSelection: React.FC = () => {
   const { roomId } = location.state || {};
 
   const fixedGridSize = 5;
-  const [selectedFruits, setSelectedFruits] = useState<string[]>(['lime']);
+  const [selectedFruits, setSelectedFruits] = useState<string[]>([]); // Changed: Initial state is now empty
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,8 +42,7 @@ const FruitSelection: React.FC = () => {
   }, [roomId, navigate]);
 
   const handleFruitToggle = (fruitName: string, isChecked: boolean) => {
-    if (fruitName === 'lime') return;
-
+    // Removed: if (fruitName === 'lime') return; - Lime can now be freely selected
     if (isChecked) {
       if (selectedFruits.length < fixedGridSize) {
         setSelectedFruits(prev => [...prev, fruitName]);
@@ -85,7 +84,7 @@ const FruitSelection: React.FC = () => {
                 key={fruit.name}
                 className={`flex flex-col items-center justify-center p-3 sm:p-4 border rounded-lg transition-all duration-200 ease-in-out
                   ${selectedFruits.includes(fruit.name) ? 'bg-lime-400 dark:bg-lime-700 border-lime-700 dark:border-lime-500 shadow-md' : 'bg-gray-100 dark:bg-gray-800 border-gray-400 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'}
-                  ${fruit.name === 'lime' ? 'cursor-not-allowed bg-lime-500 dark:bg-lime-900 border-lime-800 dark:border-lime-600' : 'cursor-pointer hover:scale-105'}
+                  ${fruit.name === 'lime' ? 'cursor-pointer hover:scale-105' : 'cursor-pointer hover:scale-105'}
                 `}
                 onClick={() => handleFruitToggle(fruit.name, !selectedFruits.includes(fruit.name))}
               >
