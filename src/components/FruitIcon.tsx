@@ -6,7 +6,7 @@ interface FruitIconProps {
 }
 
 const fruitEmojiMap: { [key: string]: string } = {
-  lime: '🍋',
+  lime: '🍋‍🟩',
   passionfruit: '💜',
   lemon: '🍋',
   strawberry: '🍓',
