@@ -26,7 +26,6 @@ const GameRoom: React.FC = () => {
     gridSize,
     partyCode,
     partyCreatorId,
-    partyCreatorName, // Destructured new prop
     myGameStateId,
     myGridData,
     myPlayerName,
@@ -135,7 +134,6 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
           {/* PartySidebar component */}
           <PartySidebar
-            roomId={roomId} // Pass roomId
             partyCode={partyCode}
             playerScores={playerScores}
             alerts={partyBingoAlerts}
@@ -144,8 +142,6 @@ const GameRoom: React.FC = () => {
             onLeaveParty={handleLeaveParty}
             myPlayerName={myPlayerName}
             setMyPlayerName={setMyPlayerName}
-            partyCreatorId={partyCreatorId}
-            partyCreatorName={partyCreatorName}
           />
 
           {/* Removed Refresh Global button */}
