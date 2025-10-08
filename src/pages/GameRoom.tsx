@@ -108,7 +108,7 @@ const GameRoom: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center pt-6 pb-8 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 relative overflow-hidden">
       
       <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start w-full max-w-6xl">
         {/* Left section: Title and Bingo Grid */}
