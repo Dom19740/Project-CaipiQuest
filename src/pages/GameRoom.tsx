@@ -5,6 +5,7 @@ import BingoGrid from '@/components/BingoGrid';
 import PartySidebar from '@/components/PartySidebar';
 import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
 import NewPlayerAlert from '@/components/NewPlayerAlert';
+import LeavePartyDialog from '@/components/LeavePartyDialog';
 import BingoWinAnimation from '@/components/BingoWinAnimation'; // Import the new component
 
 import { useGameRoomData } from '@/hooks/use-game-room-data';
@@ -25,7 +26,6 @@ const GameRoom: React.FC = () => {
     gridSize,
     partyCode,
     partyCreatorId,
-    partyCreatorName, // Destructured
     myGameStateId,
     myGridData,
     myPlayerName,
@@ -35,6 +35,7 @@ const GameRoom: React.FC = () => {
     setMyGridData,
     setPlayerSelectedFruits,
     setGridSize,
+    setMyPlayerName,
   } = useGameRoomData(roomId, initialSelectedFruitsFromState, undefined);
 
   const {
@@ -133,16 +134,22 @@ const GameRoom: React.FC = () => {
         <div className="flex flex-col gap-4 w-full lg:w-1/3 lg:max-w-md">
           {/* PartySidebar component */}
           <PartySidebar
-            roomId={roomId}
-            roomCode={partyCode}
-            players={playerScores || []} // Ensure players is always an array
+            partyCode={partyCode}
+            playerScores={playerScores}
             alerts={partyBingoAlerts}
             currentUserId={user.id}
             onRefreshPlayers={() => fetchAndSetAllGameStates(gridSize)}
-            onLeaveParty={handleLeaveParty} // Pass the handler
-            createdBy={partyCreatorId}
-            createdByName={partyCreatorName} // Pass the creator's name
+            onLeaveParty={handleLeaveParty}
+            myPlayerName={myPlayerName}
+            setMyPlayerName={setMyPlayerName}
           />
+
+          {/* Removed Refresh Global button */}
+          {/* <div className="flex flex-row gap-2 justify-center w-full">
+            <Button onClick={handleGlobalRefresh} className="flex-1 bg-lime-700 hover:bg-lime-800 text-white py-3 px-3 rounded-md shadow-lg text-sm sm:text-base transition-all duration-300 ease-in-out transform hover:scale-105 h-12">
+              Refresh Global
+            </Button>
+          </div> */}
         </div>
       </div>
 
