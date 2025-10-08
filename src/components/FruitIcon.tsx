@@ -6,14 +6,14 @@ interface FruitIconProps {
 }
 
 const fruitEmojis: { [key: string]: string } = {
-  lime: '🍈', // Changed to melon for a green-ish look
+  lime: '🍏', // Changed to green apple for a distinct green look
   passionfruit: '💜',
-  lemon: '🍋', // Lemon remains yellow
+  lemon: '🍋',
   strawberry: '🍓',
   mango: '🥭',
   pineapple: '🍍',
   red_fruits: '🍒',
-  guava: '🍐', // Changed to pear
+  guava: '🍐',
   ginger: '🫚',
   tangerine: '🍊',
   kiwi: '🥝',
