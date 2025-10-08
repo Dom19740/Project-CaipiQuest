@@ -165,7 +165,7 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             return (
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
-                className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-4 border-gray-500 dark:border-gray-600
+                className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-2 border-gray-500 dark:border-gray-600
                   ${isCenterCell ? 'bg-lime-500 dark:bg-lime-800 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-400 dark:bg-lime-700 hover:bg-lime-500 dark:hover:bg-lime-600 hover:scale-105' : 'bg-white dark:bg-gray-800 hover:bg-lime-200 dark:hover:bg-gray-700 hover:scale-105'}
                 `}
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
