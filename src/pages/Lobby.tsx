@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,40 +62,7 @@ const Lobby = () => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const handleCreateParty = async () => {
-    if (!user || !user.id) {
-      showError('A session could not be established. Please refresh and try again.');
-      return;
-    }
-    if (!playerName.trim()) {
-      showError('Please enter your name to create a party.');
-      return;
-    }
-
-    setIsCreating(true);
-    const newPartyCode = generatePartyCode();
-    const fixedGridSize = 5;
-    try {
-      const { data: partyData, error: partyError } = await supabase
-        .from('rooms')
-        .insert({ code: newPartyCode, created_by: user.id, created_by_name: playerName, grid_size: fixedGridSize })
-        .select()
-        .single();
-
-      if (partyError) throw partyError;
-      console.log("Lobby - Party created:", partyData);
-
-      showSuccess(`Party "${newPartyCode}" created!`);
-      navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: fixedGridSize } });
-    } catch (error: any) {
-      console.error('Lobby - Error creating party:', error.message);
-      showError(`Failed to create party: ${error.message}`);
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleJoinPartyLogic = async (targetRoomId: string, targetPartyCode: string) => {
+  const handleJoinPartyLogic = useCallback(async (targetRoomId: string, targetPartyCode: string) => {
     if (!user || !user.id) {
       showError('A session could not be established. Please refresh and try again.');
       return;
@@ -105,12 +72,11 @@ const Lobby = () => {
       return;
     }
 
-    setIsJoining(true);
     try {
       const { data: partyData, error: partyError } = await supabase
         .from('rooms')
         .select('id, grid_size')
-        .eq('id', targetRoomId)
+        .eq('id', targetRoomId) // Now targetRoomId is guaranteed to be a UUID
         .single();
 
       if (partyError) {
@@ -152,18 +118,86 @@ const Lobby = () => {
       localStorage.removeItem('lastActivePartyCode');
       setLastActiveRoomId(null);
       setLastActivePartyCode(null);
+    }
+  }, [user, playerName, navigate]); // Added navigate to dependencies
+
+  const handleCreateParty = async () => {
+    if (!user || !user.id) {
+      showError('A session could not be established. Please refresh and try again.');
+      return;
+    }
+    if (!playerName.trim()) {
+      showError('Please enter your name to create a party.');
+      return;
+    }
+
+    setIsCreating(true);
+    const newPartyCode = generatePartyCode();
+    const fixedGridSize = 5;
+    try {
+      const { data: partyData, error: partyError } = await supabase
+        .from('rooms')
+        .insert({ code: newPartyCode, created_by: user.id, created_by_name: playerName, grid_size: fixedGridSize })
+        .select()
+        .single();
+
+      if (partyError) throw partyError;
+      console.log("Lobby - Party created:", partyData);
+
+      showSuccess(`Party "${newPartyCode}" created!`);
+      navigate(`/select-fruits`, { state: { roomId: partyData.id, gridSize: fixedGridSize } });
+    } catch (error: any) {
+      console.error('Lobby - Error creating party:', error.message);
+      showError(`Failed to create party: ${error.message}`);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleJoinParty = async () => {
+    if (!user || !user.id) {
+      showError('A session could not be established. Please refresh and try again.');
+      return;
+    }
+    if (!playerName.trim()) {
+      showError('Please enter your name to join a party.');
+      return;
+    }
+    if (!partyCodeInput.trim()) {
+      showError('Please enter a party code.');
+      return;
+    }
+
+    setIsJoining(true);
+    try {
+      const codeToJoin = partyCodeInput.toUpperCase();
+      const { data: roomData, error: fetchRoomError } = await supabase
+        .from('rooms')
+        .select('id, grid_size')
+        .eq('code', codeToJoin) // Query by 'code' column
+        .single();
+
+      if (fetchRoomError) {
+        if (fetchRoomError.code === 'PGRST116') { // No rows found
+          throw new Error('Party not found. Please check the code.');
+        }
+        throw fetchRoomError;
+      }
+
+      await handleJoinPartyLogic(roomData.id, codeToJoin);
+    } catch (error: any) {
+      console.error('Lobby - Error joining party by code:', error.message);
+      showError(`Failed to join party: ${error.message}`);
     } finally {
       setIsJoining(false);
     }
   };
 
-  const handleJoinParty = () => {
-    handleJoinPartyLogic(partyCodeInput.toUpperCase(), partyCodeInput.toUpperCase());
-  };
-
-  const handleJoinLastActiveParty = () => {
+  const handleJoinLastActiveParty = async () => {
     if (lastActiveRoomId && lastActivePartyCode) {
-      handleJoinPartyLogic(lastActiveRoomId, lastActivePartyCode);
+      setIsJoining(true);
+      await handleJoinPartyLogic(lastActiveRoomId, lastActivePartyCode);
+      setIsJoining(false);
     }
   };
 
