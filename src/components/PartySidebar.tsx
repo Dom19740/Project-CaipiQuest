@@ -1,138 +1,169 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Copy, Share2, Users, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Users, Copy, Check, Loader2, LogOut, RefreshCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-// Define interfaces to match use-game-room-realtime.ts
-interface BingoAlert {
-  id: string;
-  type: 'rowCol' | 'diagonal' | 'fullGrid';
-  message: string;
-  playerName?: string;
-  playerId?: string;
-  canonicalId?: string;
-}
-
-interface PlayerScore {
-  id: string;
-  name: string;
-  caipisCount: number;
-  isMe: boolean;
-}
+import { showSuccess, showError } from '@/utils/toast';
 
 interface PartySidebarProps {
-  partyCode: string;
-  playerScores: PlayerScore[];
-  alerts: BingoAlert[];
-  currentUserId: string;
-  onRefreshPlayers: () => void;
-  onLeaveParty: () => void;
-  myPlayerName: string;
-  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>;
+  roomId: string | null;
+  setRoomId: (id: string | null) => void;
+  setGridSize: (size: number) => void;
+  setCreatedBy: (id: string | null) => void;
+  setCreatedByName: (name: string | null) => void;
+  setBingoAlerts: (alerts: any[]) => void;
+  setFullGridBingoAchievedBy: (id: string | null) => void;
+  setPlayers: (players: { id: string; name: string }[]) => void;
+  players: { id: string; name: string }[];
+  createdBy: string | null;
+  createdByName: string | null;
+  gridSize: number;
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
-  partyCode,
-  playerScores,
-  alerts,
-  currentUserId,
-  onRefreshPlayers,
-  onLeaveParty,
-  myPlayerName,
-  setMyPlayerName,
+  roomId,
+  setRoomId,
+  setGridSize,
+  setCreatedBy,
+  setCreatedByName,
+  setBingoAlerts,
+  setFullGridBingoAchievedBy,
+  setPlayers,
+  players,
+  createdBy,
+  createdByName,
+  gridSize,
 }) => {
-  const [isPlayerNameDialogOpen, setIsPlayerNameDialogOpen] = useState(false);
-  const [tempPlayerName, setTempPlayerName] = useState(myPlayerName);
+  const navigate = useNavigate();
+  const [isCopied, setIsCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [playerName, setPlayerName] = useState<string>('');
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    setTempPlayerName(myPlayerName);
-  }, [myPlayerName]);
-
-  const handleUpdatePlayerName = async () => {
-    if (!currentUserId || !tempPlayerName.trim()) {
-      toast.error("Player name cannot be empty.");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("game_states")
-        .update({ player_name: tempPlayerName.trim(), updated_at: new Date().toISOString() })
-        .eq("player_id", currentUserId);
-
-      if (error) throw error;
-
-      setMyPlayerName(tempPlayerName.trim());
-      toast.success("Player name updated!");
-      setIsPlayerNameDialogOpen(false);
-      onRefreshPlayers();
-    } catch (error: any) {
-      console.error("Error updating player name:", error.message);
-      toast.error(`Failed to update player name: ${error.message}`);
-    }
-  };
-
-  const handleCopyPartyCode = () => {
-    if (partyCode) {
-      navigator.clipboard.writeText(partyCode);
-      toast.success("Party code copied to clipboard!");
-    }
-  };
-
-  const handleShareParty = async () => {
-    if (partyCode && navigator.share) {
-      try {
-        await navigator.share({
-          title: "Join my CaipiQuest Bingo Party!",
-          text: `Use code: ${partyCode}`,
-          url: window.location.href, // Share the current URL
-        });
-        toast.success("Party shared successfully!");
-      } catch (error) {
-        console.error("Failed to share party:", error);
-        toast.error("Failed to share party.");
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', user.id)
+          .single();
+        if (profile && profile.first_name) {
+          setPlayerName(profile.first_name);
+        } else if (error) {
+          console.error('Error fetching profile:', error);
+        }
       }
-    } else {
-      // Fallback for browsers that don't support navigator.share
-      handleCopyPartyCode();
-      toast.info("Sharing not supported, party code copied instead!");
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (roomId) {
+      const channel = supabase
+        .channel(`room:${roomId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, payload => {
+          if (payload.eventType === 'UPDATE') {
+            const newRoom = payload.new as any;
+            setGridSize(newRoom.grid_size);
+            setCreatedBy(newRoom.created_by);
+            setCreatedByName(newRoom.created_by_name);
+            setBingoAlerts(newRoom.bingo_alerts || []);
+            setFullGridBingoAchievedBy(newRoom.full_grid_bingo_achieved_by);
+          }
+        })
+        .on('presence', { event: 'sync' }, () => {
+          const newState = channel.presenceState();
+          const currentPlayers = Object.values(newState).map((state: any) => ({
+            id: state[0].user_id,
+            name: state[0].player_name,
+          }));
+          setPlayers(currentPlayers);
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ user_id: userId, player_name: playerName });
+          }
+        });
+
+      return () => {
+        channel.unsubscribe();
+      };
+    }
+  }, [roomId, userId, playerName, setGridSize, setCreatedBy, setCreatedByName, setBingoAlerts, setFullGridBingoAchievedBy, setPlayers]);
+
+  const handleCopyCode = () => {
+    if (roomId) {
+      navigator.clipboard.writeText(roomId);
+      setIsCopied(true);
+      showSuccess('Party code copied!');
+      setTimeout(() => setIsCopied(false), 2000);
     }
   };
 
-  const getAlertClasses = (alert: BingoAlert, userId: string) => {
-    const isMyAlert = alert.playerId === userId;
+  const handleLeaveParty = async () => {
+    setLoading(true);
+    try {
+      if (roomId && userId) {
+        const { data: room, error: fetchRoomError } = await supabase
+          .from('rooms')
+          .select('created_by')
+          .eq('id', roomId)
+          .single();
 
-    if (alert.type === 'fullGrid') {
-      return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
+        if (fetchRoomError) {
+          throw fetchRoomError;
+        }
+
+        if (room && room.created_by === userId) {
+          // If the current user is the creator, delete the room
+          const { error: deleteError } = await supabase
+            .from('rooms')
+            .delete()
+            .eq('id', roomId);
+
+          if (deleteError) {
+            throw deleteError;
+          }
+          showSuccess('Party disbanded.');
+        } else {
+          showSuccess('Left the party.');
+        }
+      }
+      setRoomId(null);
+      navigate('/lobby');
+    } catch (error: any) {
+      showError(`Error leaving party: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    if (isMyAlert) {
-      return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
-    } else {
-      return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
+  const handleRefreshRoom = async () => {
+    setLoading(true);
+    try {
+      if (roomId && userId && createdBy === userId) {
+        const { error } = await supabase
+          .from('rooms')
+          .update({ last_refreshed_at: new Date().toISOString() })
+          .eq('id', roomId);
+
+        if (error) {
+          throw error;
+        }
+        showSuccess('Room refreshed!');
+      } else {
+        showError('Only the party creator can refresh the room.');
+      }
+    } catch (error: any) {
+      showError(`Error refreshing room: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,133 +174,91 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
-          <div className="flex items-center space-x-2">
-            <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
-              {partyCode}
-            </span>
+          {roomId && (
             <Button
               variant="ghost"
-              size="icon"
-              onClick={handleCopyPartyCode}
+              size="sm"
+              onClick={handleCopyCode}
               className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
             >
-              <Copy className="h-5 w-5" />
+              {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShareParty}
-              className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-          </div>
+          )}
         </CardTitle>
+        <CardDescription className="text-sm text-orange-800 dark:text-orange-200 mt-1">
+          Share the code with friends to play together
+        </CardDescription>
       </CardHeader>
-      <CardContent className="p-4 space-y-6">
-        {alerts.length > 0 && (
+      <CardContent className="p-4 space-y-4">
+        {roomId && (
           <div className="space-y-2">
-            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center justify-between">
-              <span>Bingo Alerts</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onRefreshPlayers}
-                className="text-orange-700 dark:text-orange-200 hover:bg-orange-200/50 dark:hover:bg-orange-600/50"
-              >
-                <RefreshCw className="h-4 w-4 mr-1" /> Refresh
-              </Button>
-            </h3>
-            <div className="max-h-32 overflow-y-auto pr-2">
-              {alerts.map((alert) => (
-                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert, currentUserId)} mb-1`}>
-                  {alert.message}
-                </div>
-              ))}
-            </div>
+            <Label htmlFor="party-code" className="text-orange-800 dark:text-orange-200">Party Code</Label>
+            <Input
+              id="party-code"
+              type="text"
+              value={roomId}
+              readOnly
+              className="bg-orange-50 dark:bg-gray-700 border-orange-200 dark:border-orange-600 text-orange-900 dark:text-orange-100 font-mono text-center text-lg"
+            />
           </div>
         )}
 
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-md font-semibold text-orange-900 dark:text-orange-100 mb-2">
-              Players ({playerScores.length})
-            </h3>
-            <ul className="space-y-2 max-h-40 overflow-y-auto pr-2">
-              {playerScores.map((player) => (
-                <li
-                  key={player.id}
-                  className="flex items-center bg-orange-50 dark:bg-gray-700 p-2 rounded-md text-orange-800 dark:text-orange-200"
-                >
-                  <Users className="h-4 w-4 mr-2 text-orange-600 dark:text-orange-400" />
-                  {player.name} {player.isMe ? "(You)" : ""}
-                  <span className="ml-auto text-sm font-bold">{player.caipisCount} Caipis</span>
-                </li>
-              ))}
-            </ul>
+        <div className="space-y-2">
+          <Label className="text-orange-800 dark:text-orange-200">Players ({players.length})</Label>
+          <div className="bg-orange-50 dark:bg-gray-700 border border-orange-200 dark:border-orange-600 rounded-md p-3 h-32 overflow-y-auto">
+            {players.length === 0 ? (
+              <p className="text-orange-600 dark:text-orange-300 text-sm italic">No players yet...</p>
+            ) : (
+              <ul className="space-y-1">
+                {players.map((player) => (
+                  <li key={player.id} className="flex items-center text-orange-900 dark:text-orange-100">
+                    <Users className="h-4 w-4 mr-2 text-orange-500 dark:text-orange-400" />
+                    {player.name} {player.id === createdBy && '(Host)'}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="destructive"
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-              >
-                Leave Party
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 p-6 text-card-foreground">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-2">
-                  Are you sure you want to leave?
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-900 dark:text-gray-100 text-base sm:text-lg">
-                  Save the room code to re-enter.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter className="mt-4">
-                <AlertDialogCancel className="h-12 text-base sm:text-lg">Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={onLeaveParty} className="bg-red-800 hover:bg-red-900 text-white h-12 text-base sm:text-lg">Leave Party</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
 
-      </CardContent>
+        <div className="space-y-2">
+          <Label className="text-orange-800 dark:text-orange-200">Grid Size</Label>
+          <Input
+            type="number"
+            value={gridSize}
+            readOnly
+            className="bg-orange-50 dark:bg-gray-700 border-orange-200 dark:border-orange-600 text-orange-900 dark:text-orange-100 text-center"
+          />
+        </div>
 
-      {/* Player Name Dialog (kept for potential future use or if user wants to re-add player name change) */}
-      <Dialog open={isPlayerNameDialogOpen} onOpenChange={setIsPlayerNameDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-6 rounded-lg shadow-lg">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-orange-700 dark:text-orange-300">Set Your Player Name</DialogTitle>
-            <DialogDescription className="text-gray-600 dark:text-gray-400">
-              Please enter a name to be displayed in the party.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="playerName" className="text-right text-orange-800 dark:text-orange-200">
-                Name
-              </Label>
-              <Input
-                id="playerName"
-                value={tempPlayerName}
-                onChange={(e) => setTempPlayerName(e.target.value)}
-                className="col-span-3 p-2 rounded-md border border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-gray-700 text-orange-900 dark:text-orange-100 focus:ring-2 focus:ring-orange-400 dark:focus:ring-orange-500"
-              />
-            </div>
+        {createdBy && createdByName && (
+          <div className="text-sm text-orange-800 dark:text-orange-200">
+            Host: <span className="font-semibold">{createdByName}</span>
           </div>
-          <DialogFooter>
+        )}
+
+        <div className="flex flex-col space-y-2">
+          {createdBy === userId && (
             <Button
-              type="submit"
-              onClick={handleUpdatePlayerName}
-              disabled={!tempPlayerName.trim()}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              onClick={handleRefreshRoom}
+              disabled={loading}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center"
             >
-              Save name
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
+              Refresh Room
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+          <Button
+            onClick={handleLeaveParty}
+            disabled={loading}
+            variant="destructive"
+            className="w-full flex items-center justify-center"
+          >
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
+            {createdBy === userId ? 'Disband Party' : 'Leave Party'}
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 };
