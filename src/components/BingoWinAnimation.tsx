@@ -39,10 +39,10 @@ const BingoWinAnimation: React.FC<BingoWinAnimationProps> = ({ show, onClose }) 
         />
       )}
       <div className="relative p-10 bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-500 dark:from-yellow-600 dark:via-orange-700 dark:to-pink-800 rounded-3xl shadow-glow border-8 border-white dark:border-gray-900 text-center animate-pop-in max-w-lg w-full mx-4 transform rotate-3">
-        <h2 className="text-6xl sm:text-7xl font-extrabold text-white drop-shadow-lg mb-4 animate-bounce-text">
+        <h2 className="text-6xl sm:text-7xl text-white drop-shadow-lg mb-4 animate-bounce-text">
           BINGO!
         </h2>
-        <p className="text-4xl sm:text-5xl font-bold text-white animate-fade-in-up">
+        <p className="text-4xl sm:text-5xl text-white animate-fade-in-up">
           You win!!
         </p>
       </div>

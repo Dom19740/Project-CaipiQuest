@@ -70,7 +70,7 @@ const CaipiQuest: React.FC = () => {
       case 'diagonal':
         return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
       case 'fullGrid':
-        return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl font-extrabold p-4 animate-pulse';
+        return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
       default:
         return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
     }
@@ -78,7 +78,7 @@ const CaipiQuest: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center pt-12 pb-8 px-4 sm:px-6 md:px-8 bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 relative overflow-hidden">
-      <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-8 drop-shadow-lg">
+      <h1 className="text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-8 drop-shadow-lg">
         CaipiQuest Bingo!
       </h1>
       <div className="flex flex-col lg:flex-row gap-8 items-start w-full max-w-6xl">
@@ -113,7 +113,7 @@ const CaipiQuest: React.FC = () => {
           </Card>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full bg-red-800 hover:bg-red-900 text-white font-bold py-3 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg h-12">
+              <Button variant="destructive" className="w-full bg-red-800 hover:bg-red-900 text-white py-3 px-4 rounded-md shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-base sm:text-lg h-12">
                 Reset Game
               </Button>
             </AlertDialogTrigger>

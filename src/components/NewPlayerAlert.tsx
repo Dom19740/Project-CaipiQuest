@@ -20,7 +20,7 @@ const NewPlayerAlert: React.FC<NewPlayerAlertProps> = ({ playerName, isOpen, onC
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="w-[calc(100%-2rem)] bg-white/90 dark:bg-gray-900/90 text-card-foreground rounded-2xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 p-6">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-2">Player Joined!</AlertDialogTitle>
+          <AlertDialogTitle className="text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-2">Player Joined!</AlertDialogTitle>
           <AlertDialogDescription className="text-gray-900 dark:text-gray-100 text-base sm:text-lg">
             {playerName} has entered the room!
           </AlertDialogDescription>

@@ -70,7 +70,7 @@ const FruitSelection: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 p-4 sm:p-6 md:p-8">
       <Card className="w-full max-w-2xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 text-card-foreground">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-4 drop-shadow-lg">
+          <CardTitle className="text-2xl sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-4 drop-shadow-lg">
             Choose Your Fruits
           </CardTitle>
           <CardDescription className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-6 leading-relaxed">
@@ -95,11 +95,11 @@ const FruitSelection: React.FC = () => {
               </div>
             ))}
           </div>
-          {error && <p className="text-red-700 dark:text-red-400 text-center mb-4 text-base sm:text-lg font-semibold">{error}</p>}
+          {error && <p className="text-red-700 dark:text-red-400 text-center mb-4 text-base sm:text-lg">{error}</p>}
           <Button
             onClick={handleProceed}
             disabled={isProceedDisabled}
-            className="w-full bg-caipi hover:bg-caipi-hover text-white font-bold py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
+            className="w-full bg-caipi hover:bg-caipi-hover text-white py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
           >
             Start Game ({selectedFruits.length}/{fixedGridSize})
           </Button>

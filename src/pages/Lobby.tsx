@@ -232,7 +232,7 @@ const Lobby = () => {
             <Button
               onClick={handleJoinLastActiveParty}
               disabled={isJoining || isCreating || !playerName.trim() || !isSessionReady}
-              className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+              className="w-full bg-purple-700 hover:bg-purple-800 text-white py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
             >
               {isJoining ? 'Joining...' : `Join Current Game (${lastActivePartyCode})`}
             </Button>
@@ -258,7 +258,7 @@ const Lobby = () => {
               <Button
                 onClick={handleJoinParty}
                 disabled={isJoining || isCreating || partyCodeInput.trim() === '' || !playerName.trim() || !isSessionReady}
-                className="w-full bg-caipi hover:bg-caipi-hover text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-caipi hover:bg-caipi-hover text-white py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isJoining ? 'Joining...' : 'Join'}
               </Button>
@@ -274,7 +274,7 @@ const Lobby = () => {
               <Button
                 onClick={handleCreateParty}
                 disabled={isCreating || isJoining || !playerName.trim() || !isSessionReady}
-                className="w-full bg-caipi hover:bg-caipi-hover text-white font-bold py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
+                className="w-full bg-caipi hover:bg-caipi-hover text-white py-3 px-4 rounded-md shadow-md transition-all duration-300 text-base sm:text-lg h-12"
               >
                 {isCreating ? 'Creating...' : 'Create'}
               </Button>
@@ -282,7 +282,7 @@ const Lobby = () => {
           </Card>
         </div>
         <Link to="/" className="mt-8 max-w-md mx-auto block">
-          <Button variant="outline" className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded-md shadow-md transition-all duration-300 text-xs border-gray-400 dark:border-gray-600">
+          <Button variant="outline" className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md shadow-md transition-all duration-300 text-xs border-gray-400 dark:border-gray-600">
             Return
           </Button>
         </Link>

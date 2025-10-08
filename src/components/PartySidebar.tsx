@@ -37,7 +37,7 @@ const getAlertClasses = (alert: BingoAlert, currentUserId: string | null) => {
         : 'text-yellow-800 dark:text-yellow-200 bg-yellow-300 dark:bg-yellow-800 border-yellow-500 dark:border-yellow-700';
     case 'fullGrid':
       // Full grid alerts remain distinct and celebratory
-      return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl font-extrabold p-4 animate-pulse';
+      return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
     default:
       return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
   }
@@ -86,7 +86,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({ partyCode, playerScores, al
                   key={player.id}
                   className={cn(
                     "flex justify-between items-center p-2 rounded-md border text-sm sm:text-base",
-                    player.isMe ? "bg-lime-300 dark:bg-lime-800 border-lime-600 dark:border-lime-700 font-bold text-gray-900 dark:text-gray-100" : "bg-gray-200 dark:bg-gray-800 border-gray-400 dark:border-gray-700 text-gray-900 dark:text-gray-200"
+                    player.isMe ? "bg-lime-300 dark:bg-lime-800 border-lime-600 dark:border-lime-700 text-gray-900 dark:text-gray-100" : "bg-gray-200 dark:bg-gray-800 border-gray-400 dark:border-gray-700 text-gray-900 dark:text-gray-200"
                   )}
                 >
                   <span className="text-inherit">{player.name} {player.isMe && "(You)"}</span>
