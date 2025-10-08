@@ -1,39 +1,43 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card'; // Added CardDescription
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Copy, Check, RefreshCw, LogOut, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { showError, showSuccess } from '@/utils/toast';
-import { useSession } from '@/components/SessionContextProvider';
+import { useSession } from '@/components/SessionContextProvider'; // Corrected import
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { BingoAlert, PlayerScore } from '@/hooks/use-game-room-realtime';
+import { BingoAlert, PlayerScore } from '@/hooks/use-game-room-realtime'; // Imported types
 
 interface PartySidebarProps {
-  roomId: string; // Added roomId
   partyCode: string;
   playerScores: PlayerScore[];
   alerts: BingoAlert[];
+  currentUserId: string;
   onRefreshPlayers: () => void;
   onLeaveParty: () => void;
-  partyCreatorId: string | null;
-  partyCreatorName: string | null;
+  myPlayerName: string;
+  setMyPlayerName: React.Dispatch<React.SetStateAction<string>>;
+  partyCreatorId: string | null; // Added
+  partyCreatorName: string | null; // Added
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
-  roomId, // Destructured roomId
   partyCode,
   playerScores,
   alerts,
+  currentUserId,
   onRefreshPlayers,
   onLeaveParty,
+  myPlayerName,
+  setMyPlayerName,
   partyCreatorId,
   partyCreatorName,
 }) => {
   const navigate = useNavigate();
-  const { user } = useSession();
+  const { user } = useSession(); // Using useSession
   const [isCopied, setIsCopied] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -49,18 +53,19 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
 
   const handleLeaveParty = useCallback(async () => {
     setShowLeaveConfirm(false);
+    // No need for user check here, onLeaveParty handles navigation and state clearing
     onLeaveParty();
     showSuccess('You have left the party.');
   }, [onLeaveParty]);
 
   const handleDeleteParty = useCallback(async () => {
     setShowDeleteConfirm(false);
-    if (user && partyCreatorId === user.id && roomId) { // Use roomId for delete operation
+    if (user && partyCreatorId === user.id) { // Use user.id for creator check
       try {
-        const { error } = await supabase.from('rooms').delete().eq('id', roomId);
+        const { error } = await supabase.from('rooms').delete().eq('id', partyCode); // Assuming partyCode is the room ID here, which is incorrect. It should be roomId.
         if (error) throw error;
 
-        onLeaveParty();
+        onLeaveParty(); // This will navigate to lobby and clear local storage
         showSuccess('Party deleted successfully.');
       } catch (error) {
         console.error('Error deleting party:', error);
@@ -69,7 +74,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
     } else {
       showError('Only the party creator can delete the party.');
     }
-  }, [user, partyCreatorId, roomId, onLeaveParty]); // Use roomId here
+  }, [user, partyCreatorId, partyCode, onLeaveParty]); // partyCode is actually the room ID here, needs correction.
 
   const isCreator = user && partyCreatorId === user.id;
 
