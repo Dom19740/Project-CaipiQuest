@@ -1,85 +1,169 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Copy, Check, Loader2, LogOut, RefreshCcw } from 'lucide-react';
-import { showSuccess } from '@/utils/toast';
-
-// Define PlayerScore and BingoAlert interfaces for clarity
-interface PlayerScore {
-  id: string;
-  name: string;
-  caipisCount: number;
-  isMe: boolean;
-}
-
-interface BingoAlert {
-  id: string;
-  type: 'rowCol' | 'diagonal' | 'fullGrid';
-  message: string;
-  playerName?: string;
-  playerId?: string;
-  canonicalId?: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { showSuccess, showError } from '@/utils/toast';
 
 interface PartySidebarProps {
-  partyCode: string; // The room code to display
-  playerScores: PlayerScore[]; // List of players and their scores
-  alerts: BingoAlert[]; // List of bingo alerts (not directly used in this component, but kept for consistency if needed later)
-  currentUserId: string; // The ID of the current user
-  partyCreatorId: string | null; // The ID of the party creator
-  partyCreatorName: string | null; // The name of the party creator
-  gridSize: number; // The grid size
-  onRefreshPlayers: () => void; // Function to refresh player data (only for host)
-  onLeaveParty: () => void; // Function to leave/disband the party
-  myPlayerName: string; // The current user's player name (not directly used in this component, but kept for consistency if needed later)
-  setMyPlayerName: (name: string) => void; // Function to update current user's player name (not directly used in this component, but kept for consistency if needed later)
+  roomId: string | null;
+  setRoomId: (id: string | null) => void;
+  setGridSize: (size: number) => void;
+  setCreatedBy: (id: string | null) => void;
+  setCreatedByName: (name: string | null) => void;
+  setBingoAlerts: (alerts: any[]) => void;
+  setFullGridBingoAchievedBy: (id: string | null) => void;
+  setPlayers: (players: { id: string; name: string }[]) => void;
+  players: { id: string; name: string }[];
+  createdBy: string | null;
+  createdByName: string | null;
+  gridSize: number;
 }
 
 const PartySidebar: React.FC<PartySidebarProps> = ({
-  partyCode,
-  playerScores,
-  // alerts, // Not directly used in this component's current rendering
-  currentUserId,
-  partyCreatorId,
-  partyCreatorName,
+  roomId,
+  setRoomId,
+  setGridSize,
+  setCreatedBy,
+  setCreatedByName,
+  setBingoAlerts,
+  setFullGridBingoAchievedBy,
+  setPlayers,
+  players,
+  createdBy,
+  createdByName,
   gridSize,
-  onRefreshPlayers,
-  onLeaveParty,
-  // myPlayerName, // Not directly used in this component's current rendering
-  // setMyPlayerName, // Not directly used in this component's current rendering
 }) => {
+  const navigate = useNavigate();
   const [isCopied, setIsCopied] = useState(false);
-  const [loading, setLoading] = useState(false); // Keep loading for local actions like refresh/leave
+  const [loading, setLoading] = useState(false);
+  const [playerName, setPlayerName] = useState<string>('');
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', user.id)
+          .single();
+        if (profile && profile.first_name) {
+          setPlayerName(profile.first_name);
+        } else if (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (roomId) {
+      const channel = supabase
+        .channel(`room:${roomId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, payload => {
+          if (payload.eventType === 'UPDATE') {
+            const newRoom = payload.new as any;
+            setGridSize(newRoom.grid_size);
+            setCreatedBy(newRoom.created_by);
+            setCreatedByName(newRoom.created_by_name);
+            setBingoAlerts(newRoom.bingo_alerts || []);
+            setFullGridBingoAchievedBy(newRoom.full_grid_bingo_achieved_by);
+          }
+        })
+        .on('presence', { event: 'sync' }, () => {
+          const newState = channel.presenceState();
+          const currentPlayers = Object.values(newState).map((state: any) => ({
+            id: state[0].user_id,
+            name: state[0].player_name,
+          }));
+          setPlayers(currentPlayers);
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ user_id: userId, player_name: playerName });
+          }
+        });
+
+      return () => {
+        channel.unsubscribe();
+      };
+    }
+  }, [roomId, userId, playerName, setGridSize, setCreatedBy, setCreatedByName, setBingoAlerts, setFullGridBingoAchievedBy, setPlayers]);
 
   const handleCopyCode = () => {
-    if (partyCode) {
-      navigator.clipboard.writeText(partyCode);
+    if (roomId) {
+      navigator.clipboard.writeText(roomId);
       setIsCopied(true);
       showSuccess('Party code copied!');
       setTimeout(() => setIsCopied(false), 2000);
     }
   };
 
-  const handleLeavePartyClick = () => {
-    // This will now just call the prop function, GameRoom handles the Supabase logic
-    onLeaveParty();
+  const handleLeaveParty = async () => {
+    setLoading(true);
+    try {
+      if (roomId && userId) {
+        const { data: room, error: fetchRoomError } = await supabase
+          .from('rooms')
+          .select('created_by')
+          .eq('id', roomId)
+          .single();
+
+        if (fetchRoomError) {
+          throw fetchRoomError;
+        }
+
+        if (room && room.created_by === userId) {
+          // If the current user is the creator, delete the room
+          const { error: deleteError } = await supabase
+            .from('rooms')
+            .delete()
+            .eq('id', roomId);
+
+          if (deleteError) {
+            throw deleteError;
+          }
+          showSuccess('Party disbanded.');
+        } else {
+          showSuccess('Left the party.');
+        }
+      }
+      setRoomId(null);
+      navigate('/lobby');
+    } catch (error: any) {
+      showError(`Error leaving party: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRefreshRoomClick = async () => {
-    if (partyCreatorId === currentUserId) {
-      setLoading(true);
-      try {
-        await onRefreshPlayers(); // Call the prop function to trigger refresh in parent
+  const handleRefreshRoom = async () => {
+    setLoading(true);
+    try {
+      if (roomId && userId && createdBy === userId) {
+        const { error } = await supabase
+          .from('rooms')
+          .update({ last_refreshed_at: new Date().toISOString() })
+          .eq('id', roomId);
+
+        if (error) {
+          throw error;
+        }
         showSuccess('Room refreshed!');
-      } catch (error: any) {
-        showError(`Error refreshing room: ${error.message}`);
-      } finally {
-        setLoading(false);
+      } else {
+        showError('Only the party creator can refresh the room.');
       }
-    } else {
-      showError('Only the party creator can refresh the room.');
+    } catch (error: any) {
+      showError(`Error refreshing room: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,7 +174,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
-          {partyCode && (
+          {roomId && (
             <Button
               variant="ghost"
               size="sm"
@@ -106,13 +190,13 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
-        {partyCode && (
+        {roomId && (
           <div className="space-y-2">
             <Label htmlFor="party-code" className="text-orange-800 dark:text-orange-200">Party Code</Label>
             <Input
               id="party-code"
               type="text"
-              value={partyCode}
+              value={roomId}
               readOnly
               className="bg-orange-50 dark:bg-gray-700 border-orange-200 dark:border-orange-600 text-orange-900 dark:text-orange-100 font-mono text-center text-lg"
             />
@@ -120,16 +204,16 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
         )}
 
         <div className="space-y-2">
-          <Label className="text-orange-800 dark:text-orange-200">Players ({playerScores.length})</Label>
+          <Label className="text-orange-800 dark:text-orange-200">Players ({players.length})</Label>
           <div className="bg-orange-50 dark:bg-gray-700 border border-orange-200 dark:border-orange-600 rounded-md p-3 h-32 overflow-y-auto">
-            {playerScores.length === 0 ? (
+            {players.length === 0 ? (
               <p className="text-orange-600 dark:text-orange-300 text-sm italic">No players yet...</p>
             ) : (
               <ul className="space-y-1">
-                {playerScores.map((player) => (
+                {players.map((player) => (
                   <li key={player.id} className="flex items-center text-orange-900 dark:text-orange-100">
                     <Users className="h-4 w-4 mr-2 text-orange-500 dark:text-orange-400" />
-                    {player.name} {player.id === partyCreatorId && '(Host)'}
+                    {player.name} {player.id === createdBy && '(Host)'}
                   </li>
                 ))}
               </ul>
@@ -147,16 +231,16 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
           />
         </div>
 
-        {partyCreatorId && partyCreatorName && (
+        {createdBy && createdByName && (
           <div className="text-sm text-orange-800 dark:text-orange-200">
-            Host: <span className="font-semibold">{partyCreatorName}</span>
+            Host: <span className="font-semibold">{createdByName}</span>
           </div>
         )}
 
         <div className="flex flex-col space-y-2">
-          {partyCreatorId === currentUserId && (
+          {createdBy === userId && (
             <Button
-              onClick={handleRefreshRoomClick}
+              onClick={handleRefreshRoom}
               disabled={loading}
               className="w-full bg-orange-600 hover:bg-orange-700 text-white flex items-center justify-center"
             >
@@ -165,13 +249,13 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
             </Button>
           )}
           <Button
-            onClick={handleLeavePartyClick}
+            onClick={handleLeaveParty}
             disabled={loading}
             variant="destructive"
             className="w-full flex items-center justify-center"
           >
             {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogOut className="mr-2 h-4 w-4" />}
-            {partyCreatorId === currentUserId ? 'Disband Party' : 'Leave Party'}
+            {createdBy === userId ? 'Disband Party' : 'Leave Party'}
           </Button>
         </div>
       </CardContent>
