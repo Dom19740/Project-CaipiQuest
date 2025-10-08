@@ -6,9 +6,11 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-500 via-yellow-400 via-orange-500 to-pink-600 p-4 sm:p-6 md:p-8">
       <div className="text-center bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-8 sm:p-10 md:p-12 rounded-3xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 transform hover:scale-102 transition-transform duration-300 ease-in-out max-w-3xl w-full">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 mb-6 drop-shadow-lg pb-2">
-          Welcome to CaipiQuest Bingo!
-        </h1>
+        <img
+          src="/title_caipiquest_welcome.png"
+          alt="Welcome to CaipiQuest Bingo!"
+          className="mx-auto max-w-full h-auto w-80 sm:w-96 md:w-[400px] lg:w-[450px] xl:w-[500px] drop-shadow-lg mb-6"
+        />
         <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
           Pick your favorite fruits to play.
           <br /><br />
