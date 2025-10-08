@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { showError } from '@/utils/toast';
 import FruitIcon from '@/components/FruitIcon';
-import MadeWithDyad from '@/components/made-with-dyad'; // Changed to default import
+import MadeWithDyad from '@/components/made-with-dyad';
 
 const allFruitsData = [
   { name: 'lime' },
@@ -31,7 +31,7 @@ const FruitSelection: React.FC = () => {
   const { roomId } = location.state || {};
 
   const fixedGridSize = 5;
-  const [selectedFruits, setSelectedFruits] = useState<string[]>([]); // Changed: Initial state is now empty
+  const [selectedFruits, setSelectedFruits] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,7 +42,6 @@ const FruitSelection: React.FC = () => {
   }, [roomId, navigate]);
 
   const handleFruitToggle = (fruitName: string, isChecked: boolean) => {
-    // Removed: if (fruitName === 'lime') return; - Lime can now be freely selected
     if (isChecked) {
       if (selectedFruits.length < fixedGridSize) {
         setSelectedFruits(prev => [...prev, fruitName]);
@@ -78,7 +77,15 @@ const FruitSelection: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+          {error && <p className="text-red-700 dark:text-red-400 text-center mb-4 text-base sm:text-lg">{error}</p>}
+          <Button
+            onClick={handleProceed}
+            disabled={isProceedDisabled}
+            className="w-full bg-lime-700 hover:bg-lime-800 text-white py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14 mb-6"
+          >
+            Start Game ({selectedFruits.length}/{fixedGridSize})
+          </Button>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {allFruitsData.map((fruit) => (
               <div
                 key={fruit.name}
@@ -95,14 +102,6 @@ const FruitSelection: React.FC = () => {
               </div>
             ))}
           </div>
-          {error && <p className="text-red-700 dark:text-red-400 text-center mb-4 text-base sm:text-lg">{error}</p>}
-          <Button
-            onClick={handleProceed}
-            disabled={isProceedDisabled}
-            className="w-full bg-lime-700 hover:bg-lime-800 text-white py-3 px-6 rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 text-lg h-14"
-          >
-            Start Game ({selectedFruits.length}/{fixedGridSize})
-          </Button>
         </CardContent>
       </Card>
       <MadeWithDyad />
