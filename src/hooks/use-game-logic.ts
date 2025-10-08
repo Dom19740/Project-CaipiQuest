@@ -47,10 +47,10 @@ export const useGameLogic = (
     const newGridData = myGridData.map(r => [...r]);
     const newState = !newGridData[row][col];
     newGridData[row][col] = newState;
-    // Removed symmetric toggling logic
-    // if (row !== col) {
-    //   newGridData[col][row] = newState;
-    // }
+    // Restored symmetric toggling logic
+    if (row !== col) {
+      newGridData[col][row] = newState;
+    }
     setMyGridData(newGridData);
 
     const { error: updateGameStateError } = await supabase
