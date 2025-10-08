@@ -171,8 +171,8 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
               >
                 <div className="flex space-x-1 mb-1">
-                  <FruitIcon fruit={fruit1} size="md" /> {/* Changed from size="sm" to size="md" */}
-                  <FruitIcon fruit={fruit2} size="md" /> {/* Changed from size="sm" to size="md" */}
+                  <FruitIcon fruit={fruit1} size="sm" /> {/* Reverted to size="sm" */}
+                  <FruitIcon fruit={fruit2} size="sm" /> {/* Reverted to size="sm" */}
                 </div>
                 {isCenterCell && <span className="text-xs text-lime-900 dark:text-lime-100">FREE</span>}
               </div>
