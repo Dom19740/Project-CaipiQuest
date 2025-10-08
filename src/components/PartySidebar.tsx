@@ -123,15 +123,15 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
 
   return (
     <Card className="w-full flex-1 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-gray-800 dark:to-gray-850 shadow-lg border-orange-300 dark:border-orange-600 border-2 rounded-xl text-card-foreground p-4">
-      <CardHeader className="bg-orange-100/80 dark:bg-orange-700/80 border-b border-orange-200 dark:border-orange-600 rounded-t-xl p-4">
-        <CardTitle className="text-xl sm:text-2xl text-orange-900 dark:text-orange-100 flex items-center justify-between mb-2 font-semibold">
+      <CardHeader className="bg-orange-100/80 dark:bg-orange-700/80 border-b border-orange-200 dark:border-orange-600 rounded-t-xl p-4 flex flex-col gap-2"> {/* Added flex-col and gap-2 */}
+        <CardTitle className="text-xl sm:text-2xl text-orange-900 dark:text-orange-100 flex items-center justify-between font-semibold"> {/* Removed mb-2 */}
           <span className="flex items-center">
             <Users className="mr-2 h-6 w-6" /> Party
           </span>
           {/* Refresh button moved to Bingo Alerts section */}
         </CardTitle>
 
-        <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600 mb-2">
+        <div className="flex items-center justify-between bg-orange-100 dark:bg-orange-700 p-3 rounded-lg border border-orange-200 dark:border-orange-600"> {/* Removed mb-2 */}
           <span className="font-mono text-lg font-bold text-orange-900 dark:text-orange-100">
             {partyCode}
           </span>
