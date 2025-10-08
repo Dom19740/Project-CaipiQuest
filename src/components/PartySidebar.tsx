@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Copy, Users, RefreshCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { showSuccess, showError } from '@/utils/toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useSession } from '@/components/SessionContextProvider'; // Corrected import
 
 interface PartySidebarProps {
   roomId: string;
@@ -26,7 +26,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
   createdByName,
 }) => {
   const [copied, setCopied] = useState(false);
-  const { user } = useAuth();
+  const { user } = useSession(); // Corrected hook usage
   const currentUserId = user?.id;
 
   const handleCopy = () => {
