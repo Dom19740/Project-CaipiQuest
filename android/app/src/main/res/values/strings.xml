@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CaipiQuest</string>
+    <string name="title_activity_main">CaipiQuest</string>
+    <string name="package_name">com.example.caipiquest</string>
+    <string name="custom_url_scheme">com.example.caipiquest</string>
+</resources>
