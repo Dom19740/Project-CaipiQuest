@@ -97,15 +97,15 @@
 
 @keyframes pop-in {
   0% {
-    transform: scale(0.5);
+    transform: scale(0.5) rotate(0deg);
     opacity: 0;
   }
   70% {
-    transform: scale(1.1);
+    transform: scale(1.1) rotate(5deg);
     opacity: 1;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) rotate(3deg);
   }
 }
 
@@ -145,4 +145,9 @@
 
 .animate-fade-in-up {
   animation: fade-in-up 0.8s ease-out 0.3s forwards;
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0.7), /* Gold glow */
+              0 0 40px 20px rgba(255, 165, 0, 0.5); /* Orange glow */
 }

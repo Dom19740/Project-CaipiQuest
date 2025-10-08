@@ -25,7 +25,7 @@ const BingoWinAnimation: React.FC<BingoWinAnimationProps> = ({ show, onClose }) 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
       {showConfetti && (
         <Confetti
           width={width}
@@ -38,11 +38,11 @@ const BingoWinAnimation: React.FC<BingoWinAnimationProps> = ({ show, onClose }) 
           tweenDuration={5000}
         />
       )}
-      <div className="relative p-8 bg-white/95 dark:bg-gray-900/95 rounded-3xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 text-center animate-pop-in max-w-lg w-full mx-4">
-        <h2 className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-4 animate-bounce-text">
+      <div className="relative p-10 bg-gradient-to-br from-yellow-300 via-orange-400 to-pink-500 dark:from-yellow-600 dark:via-orange-700 dark:to-pink-800 rounded-3xl shadow-glow border-8 border-white dark:border-gray-900 text-center animate-pop-in max-w-lg w-full mx-4 transform rotate-3">
+        <h2 className="text-6xl sm:text-7xl font-extrabold text-white drop-shadow-lg mb-4 animate-bounce-text">
           BINGO!
         </h2>
-        <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 animate-fade-in-up">
+        <p className="text-4xl sm:text-5xl font-bold text-white animate-fade-in-up">
           You win!!
         </p>
       </div>

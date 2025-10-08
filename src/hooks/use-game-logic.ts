@@ -118,7 +118,8 @@ export const useGameLogic = (
       console.error('useGameLogic - Error recording global bingo:', updatePartyAlertsError); // Changed from updateRoomAlertsError
     } else {
       showSuccess(message);
-      if (newAlert.playerId === user.id) { // Only show win animation for the current user
+      // Only show win animation for the current user and if it's a full grid bingo
+      if (type === 'fullGrid' && newAlert.playerId === user.id) {
         setShowWinAnimation(true);
       }
     }
