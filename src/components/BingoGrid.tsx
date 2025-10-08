@@ -38,16 +38,44 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
   const CENTER_CELL_INDEX = Math.floor(gridSize / 2);
 
   const reportedBingosRef = useRef<Set<string>>(new Set());
+  const [highlightedCells, setHighlightedCells] = useState<Set<string>>(new Set()); // Stores "row-col" strings for highlighting
 
   useEffect(() => {
     if (resetKey !== 0) {
       reportedBingosRef.current = new Set();
     }
-    if (initialAlertsLoaded && partyBingoAlerts) {
-      // This ref is primarily for preventing rapid re-triggering from UI changes.
-      // The `useGameLogic` hook handles per-player deduplication in the database.
-    }
-  }, [resetKey, initialAlertsLoaded, partyBingoAlerts]);
+    // This ref is primarily for preventing rapid re-triggering from UI changes.
+    // The `useGameLogic` hook handles per-player deduplication in the database.
+  }, [resetKey]);
+
+  useEffect(() => {
+    const newHighlightedCells = new Set<string>();
+    partyBingoAlerts.forEach(alert => {
+      if (alert.type === 'rowCol' || alert.type === 'diagonal') {
+        const [type, indexStr] = alert.canonicalId?.split('-') || [];
+        const index = parseInt(indexStr);
+
+        if (type === 'row' && !isNaN(index)) {
+          for (let col = 0; col < gridSize; col++) {
+            newHighlightedCells.add(`${index}-${col}`);
+          }
+        } else if (type === 'col' && !isNaN(index)) {
+          for (let row = 0; row < gridSize; row++) {
+            newHighlightedCells.add(`${row}-${index}`);
+          }
+        } else if (type === 'diag' && index === 1) { // Main diagonal
+          for (let i = 0; i < gridSize; i++) {
+            newHighlightedCells.add(`${i}-${i}`);
+          }
+        } else if (type === 'diag' && index === 2) { // Anti-diagonal
+          for (let i = 0; i < gridSize; i++) {
+            newHighlightedCells.add(`${i}-${gridSize - 1 - i}`);
+          }
+        }
+      }
+    });
+    setHighlightedCells(newHighlightedCells);
+  }, [partyBingoAlerts, gridSize]);
 
 
   const checkBingo = useCallback(() => {
@@ -162,11 +190,18 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
             const fruit1 = displayFruits[rowIndex];
             const fruit2 = displayFruits[colIndex];
 
+            const isChecked = checkedCells[rowIndex][colIndex];
+            const isHighlighted = highlightedCells.has(`${rowIndex}-${colIndex}`);
+
             return (
               <div
                 key={`cell-${rowIndex}-${colIndex}`}
                 className={`aspect-square flex flex-col items-center justify-center rounded-md shadow-sm transition-all duration-200 ease-in-out border-2 border-gray-500 dark:border-gray-600
-                  ${isCenterCell ? 'bg-lime-500 dark:bg-lime-800 cursor-not-allowed' : checkedCells[rowIndex][colIndex] ? 'bg-lime-400 dark:bg-lime-700 hover:bg-lime-500 dark:hover:bg-lime-600 hover:scale-105' : 'bg-white dark:bg-gray-800 hover:bg-lime-200 dark:hover:bg-gray-700 hover:scale-105'}
+                  ${isCenterCell ? 'bg-lime-500 dark:bg-lime-800 cursor-not-allowed' :
+                    isChecked && isHighlighted ? 'bg-yellow-400 dark:bg-yellow-700 hover:bg-yellow-500 dark:hover:bg-yellow-600 hover:scale-105' : // Highlighted and checked
+                    isChecked ? 'bg-lime-400 dark:bg-lime-700 hover:bg-lime-500 dark:hover:bg-lime-600 hover:scale-105' : // Just checked
+                    'bg-white dark:bg-gray-800 hover:bg-lime-200 dark:hover:bg-gray-700 hover:scale-105' // Not checked
+                  }
                 `}
                 onClick={() => !isCenterCell && onCellToggle(rowIndex, colIndex)}
               >
