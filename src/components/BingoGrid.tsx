@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FruitIcon from './FruitIcon';
+import { Button } from '@/components/ui/button'; // Import Button
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose, // Import DialogClose for the 'X' button
+} from "@/components/ui/dialog"; // Import Dialog components
+import { X } from 'lucide-react'; // Import X icon for closing
 
 interface BingoAlert {
   id: string;
@@ -92,8 +102,44 @@ const BingoGrid: React.FC<BingoGridProps> = ({ onBingo, resetKey, initialGridSta
         gridTemplateRows: `repeat(${CSS_GRID_DIMENSION}, minmax(0, 1fr))`,
       }}
     >
-      {/* Top-left empty corner */}
-      <div className="aspect-square flex items-center justify-center"></div>
+      {/* Top-left button for selected fruits */}
+      <div className="aspect-square flex items-center justify-center">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="w-full h-full bg-gradient-to-br from-orange-400 to-pink-400 dark:from-orange-800 dark:to-pink-800 text-lime-900 dark:text-lime-100 font-semibold rounded-md shadow-md border-2 border-lime-500 dark:border-lime-600 text-2xl hover:scale-105 transition-transform"
+              aria-label="View selected fruits"
+            >
+              🧺
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="w-[calc(100%-2rem)] max-w-md bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border-4 border-lime-600 dark:border-lime-700 p-6 text-card-foreground">
+            <DialogHeader className="flex flex-row items-center justify-between">
+              <DialogTitle className="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-lime-800 to-emerald-900 drop-shadow-lg mb-2">
+                Your Chosen Fruits
+              </DialogTitle>
+              <DialogClose asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <X className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </DialogClose>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {selectedFruits.map((fruit, index) => (
+                <div key={index} className="flex items-center space-x-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-300 dark:border-gray-700">
+                  <FruitIcon fruit={fruit} size="md" />
+                  <span className="text-base font-medium text-gray-900 dark:text-gray-100">
+                    {fruit.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Top row labels */}
       {displayFruits.map((fruit, index) => (
