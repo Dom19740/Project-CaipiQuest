@@ -108,16 +108,17 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
     }
   };
 
-  const getAlertClasses = (type: 'rowCol' | 'diagonal' | 'fullGrid') => {
-    switch (type) {
-      case 'rowCol':
-        return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
-      case 'diagonal':
-        return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
-      case 'fullGrid':
-        return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
-      default:
-        return 'text-gray-800 dark:text-gray-200 bg-gray-300 dark:bg-gray-700 border-gray-500 dark:border-gray-600';
+  const getAlertClasses = (alert: BingoAlert, userId: string) => {
+    const isMyAlert = alert.playerId === userId;
+
+    if (alert.type === 'fullGrid') {
+      return 'text-white bg-gradient-to-r from-purple-800 to-pink-900 border-purple-900 text-3xl p-4 animate-pulse';
+    }
+
+    if (isMyAlert) {
+      return 'text-blue-800 dark:text-blue-200 bg-blue-300 dark:bg-blue-800 border-blue-500 dark:border-blue-700';
+    } else {
+      return 'text-green-800 dark:text-green-200 bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-700';
     }
   };
 
@@ -169,7 +170,7 @@ const PartySidebar: React.FC<PartySidebarProps> = ({
             </h3>
             <div className="max-h-32 overflow-y-auto pr-2">
               {alerts.map((alert) => (
-                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert.type)} mb-1`}>
+                <div key={alert.id} className={`font-medium p-2 rounded-md border shadow-sm text-sm sm:text-base ${getAlertClasses(alert, currentUserId)} mb-1`}>
                   {alert.message}
                 </div>
               ))}
