@@ -4,7 +4,7 @@ android {
     namespace "com.dpbcreative.caipiquest"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.example.com.dpbcreative.com.dpbcreative.caipiquest"
+        applicationId "com.dpbcreative.caipiquest"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
