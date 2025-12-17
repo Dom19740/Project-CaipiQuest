@@ -1,4 +1,4 @@
-package com.example.caipiquest;
+package com.dpbcreative.caipiquest;
 
 import com.getcapacitor.BridgeActivity;
 
