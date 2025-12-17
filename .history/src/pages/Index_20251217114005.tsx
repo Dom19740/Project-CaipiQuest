@@ -14,6 +14,12 @@ const Index = () => {
         />
         <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
           Explore hundreds of delicious fruit combinations in this social, flavor-testing bingo game. 
+          <br /><br />
+          Pick your favorite fruits to play.
+          <br /><br />
+          Each time you drink a new combo of your fruits - mark your card.
+          <br /><br />
+          First person to get a line, diagonal or the entire card wins. Play for fun, points or bragging rights among your friends!
         </p>
         <img
           src="/welcome_grid.gif"
@@ -21,6 +27,8 @@ const Index = () => {
           className="mx-auto my-8 max-w-full h-auto rounded-lg shadow-lg border-2 border-lime-500 dark:border-lime-800"
         />        
         <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
+          Explore hundreds of delicious fruit combinations in this social, flavor-testing bingo game. 
+          <br /><br />
           Pick your favorite fruits to play.
           <br /><br />
           Each time you drink a new combo of your fruits - mark your card.

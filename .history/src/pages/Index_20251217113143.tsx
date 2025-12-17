@@ -14,28 +14,23 @@ const Index = () => {
         />
         <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
           Explore hundreds of delicious fruit combinations in this social, flavor-testing bingo game. 
+          <br /><br />
+          Pick your favorite fruits to play.
+          <br /><br />
+          Explore hundreds of delicious fruit combinations in this social, flavor-testing bingo game. Each time you drink a new combo of your fruits - mark your card.
+          <br /><br />
+          First person to get a line, diagonal or the entire card wins. Play for fun, points or bragging rights among your friends!
         </p>
         <img
           src="/welcome_grid.gif"
           alt="CaipiQuest Bingo Grid Example"
           className="mx-auto my-8 max-w-full h-auto rounded-lg shadow-lg border-2 border-lime-500 dark:border-lime-800"
-        />        
-        <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
-          Pick your favorite fruits to play.
-          <br /><br />
-          Each time you drink a new combo of your fruits - mark your card.
-          <br /><br />
-          First person to get a line, diagonal or the entire card wins. Play for fun, points or bragging rights among your friends!
-        </p>
+        />
         <Link to="/lobby">
           <Button className="w-full sm:w-auto px-10 py-5 text-lg bg-caipi hover:bg-caipi-hover text-white rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 h-14">
             Play CaipiQuest
           </Button>
         </Link>
-        <p className="text-base sm:text-lg text-gray-900 dark:text-gray-100 mb-8 max-w-prose mx-auto leading-relaxed">
-          <br /><br />
-          <strong>Please enjoy responsibly. Never drink and drive. Non-alcoholic Mocktails are highly encouraged!</strong>
-        </p>
       </div>
       <MadeWithDyad />
     </div>
